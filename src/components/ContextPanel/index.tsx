@@ -64,7 +64,7 @@ function BrowserTab({ session }: { session: BrowserSession }) {
 
   const busy = session.status === 'live' || session.status === 'connecting'
   const host = hostOf(session.pageUrl)
-  const meta = [host, session.status === 'live' ? 'View only' : null].filter(Boolean).join(' · ')
+  const meta = [host, session.status === 'live' && !session.control ? 'View only' : null].filter(Boolean).join(' · ')
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -72,7 +72,7 @@ function BrowserTab({ session }: { session: BrowserSession }) {
         <BrowserScreen session={session} expanded={expanded} onExpandedChange={setExpanded} />
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, minWidth: 0, padding: '0 8px', textAlign: 'center' }}>
           <p style={{ margin: 0, maxWidth: '100%', fontFamily: 'var(--font-body)', fontSize: 'var(--font-size-body)', lineHeight: 'var(--line-height-body)', color: busy && session.currentAction ? 'var(--neutral-800)' : 'var(--neutral-500)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {busy && session.currentAction ? session.currentAction : 'Agent’s screen'}
+            {busy && session.currentAction ? session.currentAction : session.control ? 'Your browser' : 'Agent’s screen'}
           </p>
           {meta && (
             <p style={{ margin: 0, maxWidth: '100%', fontFamily: 'var(--font-body)', fontSize: 'var(--font-size-caption)', lineHeight: 'var(--line-height-caption)', color: 'var(--neutral-500)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>

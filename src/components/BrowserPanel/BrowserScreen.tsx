@@ -11,10 +11,11 @@ import {
 } from '@strange-huge/icons'
 import { Button } from '@/components/Button'
 import { IconButton } from '@/components/IconButton'
+import { InputField } from '@/components/InputField'
 import { Spinner } from '@/components/Spinner'
 import { Tooltip } from '@/components/Tooltip'
 import { useFocusTrap } from '@/hooks/use-focus-trap'
-import type { BrowserSession, BrowserSessionStatus } from './use-browser-session'
+import type { BrowserInput, BrowserSession, BrowserSessionStatus } from './use-browser-session'
 
 // The agent's screen: the latest screencast frame, at the tab's own aspect ratio.
 // One element plays both roles — a thumbnail in the Context panel and a full-screen
@@ -90,6 +91,121 @@ export function StatusPill({ status, overlay }: { status: BrowserSessionStatus; 
   )
 }
 
+// ── Opening a browser of your own ─────────────────────────────────────────────
+
+function OpenForm({ session, large }: { session: BrowserSession; large: boolean }) {
+  const [url, setUrl] = useState('https://')
+  return (
+    <form
+      onSubmit={event => { event.preventDefault(); void session.open(url.trim()) }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', maxWidth: large ? 420 : 280 }}
+    >
+      <div style={{ display: 'flex', gap: 6 }}>
+        <InputField fluid size="small" value={url} onChange={setUrl} placeholder="https://" aria-label="Page to open" />
+        <Button type="submit" size="sm" disabled={session.opening || url.trim().length < 9}>Open</Button>
+      </div>
+      {session.openError && <p style={{ ...CAPTION, color: 'var(--red-400)' }}>{session.openError}</p>}
+    </form>
+  )
+}
+
+// ── Driving a tab of your own ─────────────────────────────────────────────────
+
+// CDP modifier bits: Alt 1, Ctrl 2, Meta 4, Shift 8.
+const modifiersOf = (event: { altKey: boolean; ctrlKey: boolean; metaKey: boolean; shiftKey: boolean }) =>
+  (event.altKey ? 1 : 0) | (event.ctrlKey ? 2 : 0) | (event.metaKey ? 4 : 0) | (event.shiftKey ? 8 : 0)
+const MOUSE_BUTTONS = ['left', 'middle', 'right'] as const
+// Windows virtual key codes for the keys Chrome only acts on when they carry one.
+const VIRTUAL_KEYS: Record<string, number> = {
+  Backspace: 8, Tab: 9, Enter: 13, Shift: 16, Control: 17, Alt: 18, Escape: 27, ' ': 32,
+  PageUp: 33, PageDown: 34, End: 35, Home: 36, ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40, Delete: 46,
+}
+
+/** Catches the pointer, wheel, keys, and pastes over the frame and sends them to the tab
+ * in the frame's own coordinates. */
+function ControlSurface({ send, imageRef }: { send: (input: BrowserInput) => void; imageRef: React.RefObject<HTMLImageElement | null> }) {
+  const surfaceRef = useRef<HTMLDivElement>(null)
+  const pendingMove = useRef<{ x: number; y: number; modifiers: number; buttons: number } | null>(null)
+
+  const pointAt = useCallback((event: { clientX: number; clientY: number }) => {
+    const image = imageRef.current
+    if (!image || !image.naturalWidth || !image.naturalHeight) return null
+    const rect = image.getBoundingClientRect()
+    const scale = Math.min(rect.width / image.naturalWidth, rect.height / image.naturalHeight)
+    const left = rect.left + (rect.width - image.naturalWidth * scale) / 2
+    const top = rect.top + (rect.height - image.naturalHeight * scale) / 2
+    return {
+      x: Math.round(Math.min(image.naturalWidth, Math.max(0, (event.clientX - left) / scale))),
+      y: Math.round(Math.min(image.naturalHeight, Math.max(0, (event.clientY - top) / scale))),
+    }
+  }, [imageRef])
+
+  const mouse = (type: string, event: React.PointerEvent, extra: Record<string, unknown> = {}) => {
+    const point = pointAt(event)
+    if (point) send({ mouse: { type, ...point, modifiers: modifiersOf(event), buttons: event.buttons, ...extra } })
+  }
+
+  const key = (type: 'keyDown' | 'keyUp', event: React.KeyboardEvent) => {
+    // Enter only submits when it carries a carriage return, as Chrome's own key handling sends it.
+    const text = event.key === 'Enter' ? '\r' : event.key.length === 1 ? event.key : ''
+    const typed = type === 'keyDown' && text !== '' && !event.ctrlKey && !event.metaKey
+    const code = VIRTUAL_KEYS[event.key] ?? (event.key.length === 1 ? event.key.toUpperCase().charCodeAt(0) : 0)
+    send({ key: {
+      type: type === 'keyDown' && !typed ? 'rawKeyDown' : type,
+      key: event.key, code: event.code, windowsVirtualKeyCode: code, nativeVirtualKeyCode: code,
+      modifiers: modifiersOf(event), autoRepeat: event.repeat,
+      ...(typed ? { text, unmodifiedText: text } : {}),
+    } })
+  }
+
+  // Wheel must be non-passive to keep the page behind the panel still.
+  useEffect(() => {
+    const surface = surfaceRef.current
+    if (!surface) return
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault()
+      const point = pointAt(event)
+      if (point) send({ mouse: { type: 'mouseWheel', ...point, deltaX: event.deltaX, deltaY: event.deltaY, modifiers: modifiersOf(event) } })
+    }
+    surface.addEventListener('wheel', onWheel, { passive: false })
+    return () => surface.removeEventListener('wheel', onWheel)
+  }, [pointAt, send])
+
+  return (
+    <div
+      ref={surfaceRef}
+      tabIndex={0}
+      aria-label="Your browser. Click, type, and scroll here."
+      onPointerDown={event => {
+        event.currentTarget.focus()
+        event.currentTarget.setPointerCapture(event.pointerId)
+        mouse('mousePressed', event, { button: MOUSE_BUTTONS[event.button] ?? 'none', clickCount: event.detail })
+      }}
+      onPointerUp={event => mouse('mouseReleased', event, { button: MOUSE_BUTTONS[event.button] ?? 'none', clickCount: event.detail })}
+      onPointerMove={event => {
+        const point = pointAt(event)
+        if (!point) return
+        const first = pendingMove.current === null
+        pendingMove.current = { ...point, modifiers: modifiersOf(event), buttons: event.buttons }
+        if (first) requestAnimationFrame(() => {
+          const move = pendingMove.current
+          pendingMove.current = null
+          if (move) send({ mouse: { type: 'mouseMoved', ...move, button: 'none' } })
+        })
+      }}
+      onContextMenu={event => event.preventDefault()}
+      onKeyDown={event => { if (event.key === 'Escape') return; event.preventDefault(); key('keyDown', event) }}
+      onKeyUp={event => { if (event.key === 'Escape') return; event.preventDefault(); key('keyUp', event) }}
+      onPaste={event => {
+        event.preventDefault()
+        const text = event.clipboardData.getData('text')
+        if (text) send({ text })
+      }}
+      style={{ position: 'absolute', inset: 0, cursor: 'default', outline: 'none', touchAction: 'none' }}
+    />
+  )
+}
+
 // ── Non-live states ───────────────────────────────────────────────────────────
 
 function StateMessage({ icon, title, body, action, large }: { icon: React.ReactNode; title: string; body?: string; action?: React.ReactNode; large: boolean }) {
@@ -138,13 +254,14 @@ function Shimmer() {
   )
 }
 
-function ScreenBody({ session, large, onFrameSize }: { session: BrowserSession; large: boolean; onFrameSize: (aspect: number) => void }) {
+function ScreenBody({ session, large, onFrameSize, imageRef }: { session: BrowserSession; large: boolean; onFrameSize: (aspect: number) => void; imageRef: React.RefObject<HTMLImageElement | null> }) {
   const iconSize = large ? 28 : 22
   switch (session.status) {
     case 'live':
       return session.frame ? (
         // eslint-disable-next-line @next/next/no-img-element -- a blob URL refreshed ten times a second has no place in next/image
         <img
+          ref={imageRef}
           src={session.frame}
           alt="Agent's browser, live"
           draggable={false}
@@ -188,7 +305,8 @@ function ScreenBody({ session, large, onFrameSize }: { session: BrowserSession; 
           large={large}
           icon={<AiWebBrowsingIcon size={iconSize} />}
           title="No browser running"
-          body="When the agent opens a web page, you can watch it work here, live."
+          body="Open a page to use it yourself, or watch the agent when it opens one."
+          action={<OpenForm session={session} large={large} />}
         />
       )
   }
@@ -265,6 +383,7 @@ export function BrowserScreen({ session, expanded, onExpandedChange }: BrowserSc
   const cardRef = useRef<HTMLDivElement>(null)
   const expandButtonRef = useRef<HTMLButtonElement>(null)
   const windowSize = useWindowSize(expanded)
+  const imageRef = useRef<HTMLImageElement>(null)
   // The frame's own aspect, read from the first decoded frame, so nothing is letterboxed.
   const [aspect, setAspect] = useState(DEFAULT_ASPECT)
   // On minimize the card flies back still `position: fixed`, aimed at its slot. Docking it
@@ -276,6 +395,8 @@ export function BrowserScreen({ session, expanded, onExpandedChange }: BrowserSc
   const lifted = expanded || returning
 
   const canExpand = session.status === 'live' || session.status === 'connecting'
+  // A tab of your own is driven in full screen; the thumbnail only watches.
+  const driving = expanded && session.control && session.status === 'live'
 
   const dock = useCallback(() => {
     window.clearTimeout(returnTimer.current)
@@ -385,13 +506,16 @@ export function BrowserScreen({ session, expanded, onExpandedChange }: BrowserSc
             <StatusPill status={session.status} />
             <AddressBar url={session.pageUrl} />
             <div style={{ flex: '1 0 0' }} />
-            {session.status === 'live' && (
+            {session.status === 'live' && !session.control && (
               <Tooltip content="You can watch the agent, but not click or type">
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 32, padding: '0 10px', borderRadius: 10, ...CAPTION, color: 'var(--neutral-600)', whiteSpace: 'nowrap' }}>
                   <ViewIcon size={16} />
                   View only
                 </span>
               </Tooltip>
+            )}
+            {session.control && session.status === 'live' && (
+              <Button variant="secondary" size="sm" onClick={() => session.send({ close: true })}>Close browser</Button>
             )}
             <Tooltip content="Minimize (Esc)">
               <IconButton variant="ghost" size="sm" icon={<ArrowShrinkTwoIcon size={20} />} aria-label="Minimize browser" onClick={collapse} />
@@ -411,7 +535,13 @@ export function BrowserScreen({ session, expanded, onExpandedChange }: BrowserSc
             backgroundColor: 'var(--neutral-100)',
           }}
         >
-          <ScreenBody session={session} large={expanded} onFrameSize={setAspect} />
+          <ScreenBody session={session} large={expanded} onFrameSize={setAspect} imageRef={imageRef} />
+          {driving && <ControlSurface send={session.send} imageRef={imageRef} />}
+          {driving && (
+            <span style={{ ...CAPTION, position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', padding: '4px 10px', borderRadius: 999, color: 'var(--neutral-white)', backgroundColor: 'var(--blue-500)', pointerEvents: 'none', whiteSpace: 'nowrap' }}>
+              You’re driving this browser
+            </span>
+          )}
 
           {/* What the agent is doing, over the page, in full screen. No exit animation:
               it would play mid-flight, stretched by the card's layout transform. */}

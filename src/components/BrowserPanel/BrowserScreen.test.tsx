@@ -10,6 +10,11 @@ function session(status: BrowserSessionStatus, extra: Partial<BrowserSession> = 
   return {
     status,
     frame: status === 'live' ? FRAME : null,
+    control: false,
+    send: () => {},
+    open: async () => {},
+    opening: false,
+    openError: null,
     steps: [],
     reconnect: () => {},
     ...extra,
@@ -56,10 +61,16 @@ describe('browserStepsOf', () => {
 })
 
 describe('BrowserScreen — thumbnail', () => {
-  it('idle: explains itself, offers no expand', () => {
+  it('idle: offers to open a page, no expand', () => {
     const html = render(session('idle'))
     expect(html).toContain('No browser running')
+    expect(html).toContain('Page to open')
+    expect(html).toContain('>Open<')
     expect(html).not.toContain('Expand browser to full screen')
+  })
+
+  it('idle: shows why the last open failed', () => {
+    expect(render(session('idle', { openError: 'could not open https://x: timed out' }))).toContain('could not open https://x: timed out')
   })
 
   it('connecting: says so, and can already be expanded', () => {
@@ -103,8 +114,20 @@ describe('BrowserScreen — full screen', () => {
     expect(html).not.toContain('Expand browser to full screen')
   })
 
-  it('says it is view only', () => {
-    expect(render(session('live'), true)).toContain('View only')
+  it('says it is view only when the agent drives', () => {
+    const html = render(session('live'), true)
+    expect(html).toContain('View only')
+    expect(html).not.toContain('Close browser')
+  })
+
+  it('a tab of your own: takes input and can be closed, in full screen only', () => {
+    const full = render(session('live', { control: true }), true)
+    expect(full).toContain('Close browser')
+    expect(full).toContain('You’re driving this browser')
+    expect(full).toContain('Your browser. Click, type, and scroll here.')
+    expect(full).not.toContain('View only')
+    const thumb = render(session('live', { control: true }))
+    expect(thumb).not.toContain('Your browser. Click, type, and scroll here.')
   })
 
   it('narrates the agent’s current step over the page', () => {
