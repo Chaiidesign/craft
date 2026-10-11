@@ -138,6 +138,8 @@ export interface UIMessage extends Message {
   modelMeta?: ModelSelectedMeta
   /** The turn's plan, when the backend sends one (`plan_updated`); replaced whole each time. */
   plan?: PlanItem[]
+  /** The tab the agent is driving (`browser_view`); sent again when it moves to another tab. */
+  browserView?: BrowserView
   /** Activities performed during response generation (tool uses, web search, etc.) */
   activities?: ActivityItem[]
   /** Arrival-ordered reasoning/tool trace for the active stream. Persisted
@@ -241,6 +243,13 @@ export interface ActivityItem {
   /** The agent's handle from `agent_started` (agent rows only): a persona's handler, a
    *  built-in agent's handle, or the connector slug for a connector specialist. */
   agentHandle?: string
+}
+
+/** The agent's browser tab, from the `browser_view` stream event. */
+export interface BrowserView {
+  /** Screencast websocket: JPEG frames as binary messages, `{ url }` as text on navigation. */
+  url:     string
+  pageUrl: string
 }
 
 /** One step of a turn's plan, from the `plan_updated` stream event. */

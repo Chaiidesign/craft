@@ -1,44 +1,24 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useChatContext } from '@/lib/chat-context-store'
-import type { ActivityStatus, UIMessage } from '@/types/chat'
+import type { ActivityStatus, BrowserView, UIMessage } from '@/types/chat'
 
-// The agent's live browser for the open chat — the single seam the UI reads from. NOT
-// wired yet. What the backend offers today (souvenir-server, services/skills/web):
-//   • One E2B Chrome per user + site, driven by `browser_*` tools.
-//   • A live view (noVNC page on the API origin, 36-min token) only via the
-//     `browser_handover` tool: a `user_prompt` event, kind "confirm", carrying
-//     `metadata.live_view_url`. It is interactive, for sign-in/captcha takeovers.
-//   • `GET /chats/{chat_id}/browser/live` (still in devapi.json) was removed on the
-//     backend on 2026-09-19; watching without a handover needs it back.
-//
-// Before linking, the API host has to be allowed by next.config.ts's CSP: there is no
-// `frame-src` today, so `default-src 'self'` blocks the live-view iframe.
+// The agent's live browser for the open chat. The backend announces the tab it is driving
+// with a `browser_view` event carrying a screencast websocket: JPEG frames arrive as binary
+// messages, the page URL as text. The socket closes when the agent's tab does.
 
 export type BrowserSessionStatus =
   /** No browser for this chat yet. */
   | 'idle'
-  /** Live view requested; waiting for the URL / first frame. */
+  /** Socket opening; waiting for the first frame. */
   | 'connecting'
-  /** Live view URL in hand and framed. */
+  /** Frames arriving. */
   | 'live'
-  /** The live view expired or the sandbox shut down — can be resumed. */
+  /** The agent's tab closed, or the view expired — can be reopened. */
   | 'ended'
-  /** The live view could not be fetched. */
+  /** The socket closed before a frame arrived. */
   | 'error'
-
-/** `BrowserLiveViewResponse`, camel-cased. */
-export interface BrowserLiveView {
-  url:       string
-  /** True when the viewer can watch but not drive the page (backend default). */
-  viewOnly:  boolean
-  expiresAt: string | null
-}
-
-export function toBrowserLiveView(raw: { url: string; view_only?: boolean; expires_at?: string | null }): BrowserLiveView {
-  return { url: raw.url, viewOnly: raw.view_only ?? true, expiresAt: raw.expires_at ?? null }
-}
 
 /** One thing the agent did in the browser, from this chat's `browser` activities. */
 export interface BrowserStep {
@@ -49,14 +29,15 @@ export interface BrowserStep {
 
 export interface BrowserSession {
   status:   BrowserSessionStatus
-  liveView: BrowserLiveView | null
+  /** Object URL of the latest frame. */
+  frame:    string | null
   /** What the agent is doing in the browser right now, while a step is running. */
   currentAction?: string
-  /** The page the agent is on, for the address bar. Unknown until the backend reports it. */
+  /** The page the agent is on, for the address bar. */
   pageUrl?: string
   /** Oldest first. */
   steps:    BrowserStep[]
-  /** Re-request the live view after it ended or failed. */
+  /** Open the socket again after it ended or failed. */
   reconnect: () => void
 }
 
@@ -76,20 +57,67 @@ export function browserStepsOf(messages: UIMessage[]): BrowserStep[] {
     }))
 }
 
+/** The newest tab the backend announced for this chat. */
+export function browserViewOf(messages: UIMessage[]): BrowserView | undefined {
+  return messages.findLast(message => message.role === 'assistant' && message.browserView)?.browserView
+}
+
+interface SocketState {
+  /** Which announced tab (and attempt) this state belongs to. */
+  key:     string
+  status:  'connecting' | 'live' | 'ended' | 'error'
+  frame:   string | null
+  pageUrl: string | undefined
+}
+
 export function useBrowserSession(): BrowserSession {
   const { messages } = useChatContext()
 
   const steps = useMemo(() => browserStepsOf(messages), [messages])
+  const view = browserViewOf(messages)
 
-  const current = steps.findLast(isRunningStep)
+  const [attempt, setAttempt] = useState(0)
+  const key = view ? `${view.url}#${attempt}` : ''
+  const [socket, setSocket] = useState<SocketState>({ key: '', status: 'connecting', frame: null, pageUrl: undefined })
+  const current = socket.key === key ? socket : null
 
-  // TODO(browser-live): drive status/liveView from the handover prompt's live_view_url (or
-  // a restored watch endpoint — see the header). Until then the session stays idle.
+  useEffect(() => {
+    if (!view) return
+    const patch = (change: Partial<SocketState>) => setSocket(prev => (
+      prev.key === key
+        ? { ...prev, ...change }
+        : { key, status: 'connecting', frame: null, pageUrl: view.pageUrl || undefined, ...change }
+    ))
+    const stream = new WebSocket(view.url)
+    stream.binaryType = 'blob'
+    let shown: string | null = null
+    stream.onmessage = event => {
+      if (typeof event.data === 'string') {
+        patch({ pageUrl: JSON.parse(event.data).url })
+        return
+      }
+      const next = URL.createObjectURL(event.data as Blob)
+      if (shown) URL.revokeObjectURL(shown)
+      shown = next
+      patch({ status: 'live', frame: next })
+    }
+    stream.onclose = () => patch({ status: shown ? 'ended' : 'error' })
+    return () => {
+      stream.onclose = null
+      stream.onmessage = null
+      stream.close()
+      if (shown) URL.revokeObjectURL(shown)
+    }
+  }, [view, key])
+
+  const running = steps.findLast(isRunningStep)
+
   return {
-    status:        'idle',
-    liveView:      null,
-    currentAction: current?.label,
+    status:        !view ? 'idle' : current ? current.status : 'connecting',
+    frame:         current?.frame ?? null,
+    currentAction: running?.label,
+    pageUrl:       !view ? undefined : current ? current.pageUrl : view.pageUrl || undefined,
     steps,
-    reconnect:     () => {},
+    reconnect:     () => setAttempt(count => count + 1),
   }
 }

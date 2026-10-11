@@ -1,15 +1,15 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { BrowserScreen } from '@/components/BrowserPanel/BrowserScreen'
-import { browserStepsOf, toBrowserLiveView, type BrowserSession, type BrowserSessionStatus } from '@/components/BrowserPanel/use-browser-session'
+import { browserStepsOf, browserViewOf, type BrowserSession, type BrowserSessionStatus } from '@/components/BrowserPanel/use-browser-session'
 import type { UIMessage } from '@/types/chat'
 
-const LIVE_URL = 'https://api.example.com/browser/access/token/view/screen.html?host=api.example.com'
+const FRAME = 'blob:http://localhost:3000/3f2a'
 
 function session(status: BrowserSessionStatus, extra: Partial<BrowserSession> = {}): BrowserSession {
   return {
     status,
-    liveView: status === 'live' ? { url: LIVE_URL, viewOnly: true, expiresAt: null } : null,
+    frame: status === 'live' ? FRAME : null,
     steps: [],
     reconnect: () => {},
     ...extra,
@@ -19,11 +19,18 @@ function session(status: BrowserSessionStatus, extra: Partial<BrowserSession> = 
 const render = (value: BrowserSession, expanded = false) =>
   renderToStaticMarkup(<BrowserScreen session={value} expanded={expanded} onExpandedChange={() => {}} />)
 
-describe('toBrowserLiveView', () => {
-  it('maps the backend response and defaults to view-only', () => {
-    expect(toBrowserLiveView({ url: 'u' })).toEqual({ url: 'u', viewOnly: true, expiresAt: null })
-    expect(toBrowserLiveView({ url: 'u', view_only: false, expires_at: '2026-10-04T12:36:00Z' }))
-      .toEqual({ url: 'u', viewOnly: false, expiresAt: '2026-10-04T12:36:00Z' })
+describe('browserViewOf', () => {
+  it('returns the newest announced tab, from any assistant reply', () => {
+    const first = { url: 'wss://api.example.com/browser/access/t1/screencast', pageUrl: 'https://a.example' }
+    const second = { url: 'wss://api.example.com/browser/access/t2/screencast', pageUrl: 'https://b.example' }
+    const messages: UIMessage[] = [
+      { id: 'a1', role: 'assistant', content: '', created_at: '', chat_id: 'c', browserView: first },
+      { id: 'u', role: 'user', content: '', created_at: '', chat_id: 'c' },
+      { id: 'a2', role: 'assistant', content: '', created_at: '', chat_id: 'c', browserView: second },
+      { id: 'a3', role: 'assistant', content: '', created_at: '', chat_id: 'c' },
+    ]
+    expect(browserViewOf(messages)).toBe(second)
+    expect(browserViewOf([])).toBeUndefined()
   })
 })
 
@@ -62,12 +69,11 @@ describe('BrowserScreen — thumbnail', () => {
     expect(html).toContain('Expand browser to full screen')
   })
 
-  it('live: frames the live view, inert, out of the tab order', () => {
+  it('live: draws the latest frame, inert', () => {
     const html = render(session('live'))
-    expect(html).toContain(`src="${LIVE_URL.replace(/&/g, '&amp;')}"`)
-    expect(html).toMatch(/<iframe[^>]*tabindex="-1"/)
-    expect(html).toMatch(/<iframe[^>]*pointer-events:none/)
-    expect(html).toMatch(/<iframe[^>]*referrerPolicy="no-referrer"|<iframe[^>]*referrerpolicy="no-referrer"/)
+    expect(html).toContain(`src="${FRAME}"`)
+    expect(html).toMatch(/<img[^>]*pointer-events:none/)
+    expect(html).toMatch(/<img[^>]*draggable="false"/)
     expect(html).toContain('Live')
     expect(html).toContain('Expand browser to full screen')
   })
@@ -96,17 +102,8 @@ describe('BrowserScreen — full screen', () => {
     expect(html).not.toContain('Expand browser to full screen')
   })
 
-  it('view-only: says so and offers no control', () => {
-    const html = render(session('live'), true)
-    expect(html).toContain('View only')
-    expect(html).not.toContain('Take control')
-  })
-
-  it('controllable: offers Take control, starting not pressed', () => {
-    const html = render(session('live', { liveView: { url: LIVE_URL, viewOnly: false, expiresAt: null } }), true)
-    expect(html).toContain('Take control')
-    expect(html).toMatch(/aria-pressed="false"/)
-    expect(html).not.toContain('You’re controlling the browser')
+  it('says it is view only', () => {
+    expect(render(session('live'), true)).toContain('View only')
   })
 
   it('narrates the agent’s current step over the page', () => {

@@ -1,24 +1,18 @@
 'use client'
 
 import React, { useState } from 'react'
-import { BROWSER_VIEW_ENABLED } from '@/lib/feature-flags'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/Tabs'
 import { BrowserScreen } from '@/components/BrowserPanel/BrowserScreen'
 import { useBrowserSession, type BrowserSession } from '@/components/BrowserPanel/use-browser-session'
 import { AnimatedList, ItemRow, OverviewTab, PanelCard, PanelSection, StepIcon, stepLabelStyle } from './Overview'
 
 // The "Context" side panel for a chat. The Overview tab (see ./Overview) shows what the
-// current turn is doing and what the chat has used; behind BROWSER_VIEW_ENABLED a Browser
-// tab shows the agent's live screen.
+// current turn is doing and what the chat has used; the Browser tab shows the agent's
+// live screen.
 
 type PanelTab = 'overview' | 'browser'
 
 export function ContextPanelContent() {
-  if (!BROWSER_VIEW_ENABLED) return <OverviewTab />
-  return <TabbedContextPanel />
-}
-
-function TabbedContextPanel() {
   const session = useBrowserSession()
 
   // Until the viewer picks a tab, follow the agent: once it opens a browser, show it.
@@ -70,7 +64,7 @@ function BrowserTab({ session }: { session: BrowserSession }) {
 
   const busy = session.status === 'live' || session.status === 'connecting'
   const host = hostOf(session.pageUrl)
-  const meta = [host, session.status === 'live' && session.liveView?.viewOnly ? 'View only' : null].filter(Boolean).join(' · ')
+  const meta = [host, session.status === 'live' ? 'View only' : null].filter(Boolean).join(' · ')
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

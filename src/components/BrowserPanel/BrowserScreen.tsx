@@ -7,7 +7,6 @@ import {
   AlertCircleIcon,
   ArrowExpandOneIcon,
   ArrowShrinkTwoIcon,
-  CursorCircleSelectionTwoIcon,
   ViewIcon,
 } from '@strange-huge/icons'
 import { Button } from '@/components/Button'
@@ -17,16 +16,16 @@ import { Tooltip } from '@/components/Tooltip'
 import { useFocusTrap } from '@/hooks/use-focus-trap'
 import type { BrowserSession, BrowserSessionStatus } from './use-browser-session'
 
-// The agent's screen. One element plays both roles — a thumbnail in the Context panel and a
-// full-screen viewer — so going between them never remounts the live-view iframe (a remount
-// would drop and re-open the stream). Expanding lifts the card to `position: fixed` and
+// The agent's screen: the latest screencast frame, drawn at the tab's size and scaled to
+// fit. One element plays both roles — a thumbnail in the Context panel and a full-screen
+// viewer — so going between them never remounts. Expanding lifts the card to `position: fixed` and
 // framer's layout animation flies it from its slot to the centre of the window and back.
 // Nothing above the side panel sets a transform/filter, so the fixed card escapes the
 // panel's overflow clipping and sits in the root stacking context.
 
-/** The live view's native resolution; the page is drawn at this size and scaled to fit. */
-const SCREEN_W = 1280
-const SCREEN_H = 800
+/** The tab's native size (Chrome's window in the microVM); frames are drawn at this size and scaled to fit. */
+const SCREEN_W = 1440
+const SCREEN_H = 900
 const ASPECT = SCREEN_W / SCREEN_H
 
 const HEADER_H = 52
@@ -181,26 +180,23 @@ function Shimmer() {
   )
 }
 
-function ScreenBody({ session, large, controlling }: { session: BrowserSession; large: boolean; controlling: boolean }) {
+function ScreenBody({ session, large }: { session: BrowserSession; large: boolean }) {
   const iconSize = large ? 28 : 22
   switch (session.status) {
-    case 'live': {
-      const url = session.liveView?.url
+    case 'live':
       return (
         <ScaledPage>
-          {url ? (
-            <iframe
-              src={url}
-              title="Agent's browser, live"
-              referrerPolicy="no-referrer"
-              allow="clipboard-read; clipboard-write"
-              tabIndex={controlling ? 0 : -1}
-              style={{ width: '100%', height: '100%', border: 0, display: 'block', pointerEvents: controlling ? 'auto' : 'none', backgroundColor: 'var(--neutral-white)' }}
+          {session.frame && (
+            // eslint-disable-next-line @next/next/no-img-element -- a blob URL refreshed ten times a second has no place in next/image
+            <img
+              src={session.frame}
+              alt="Agent's browser, live"
+              draggable={false}
+              style={{ width: '100%', height: '100%', display: 'block', objectFit: 'contain', pointerEvents: 'none', backgroundColor: 'var(--neutral-white)' }}
             />
-          ) : null}
+          )}
         </ScaledPage>
       )
-    }
     case 'connecting':
       return (
         <>
@@ -312,9 +308,6 @@ export function BrowserScreen({ session, expanded, onExpandedChange }: BrowserSc
   const cardRef = useRef<HTMLDivElement>(null)
   const expandButtonRef = useRef<HTMLButtonElement>(null)
   const windowSize = useWindowSize(expanded)
-  // Control is taken of one specific live view. Leaving full screen hands it back, and a
-  // view that ends or turns view-only can't be driven — nor can the next one, until asked.
-  const [controlledUrl, setControlledUrl] = useState<string | null>(null)
   // On minimize the card flies back still `position: fixed`, aimed at its slot. Docking it
   // straight away would put a still-large card inside the side panel, whose overflow clips
   // it for the whole flight. It docks once it lands.
@@ -324,8 +317,6 @@ export function BrowserScreen({ session, expanded, onExpandedChange }: BrowserSc
   const lifted = expanded || returning
 
   const canExpand = session.status === 'live' || session.status === 'connecting'
-  const canControl = session.status === 'live' && session.liveView !== null && !session.liveView.viewOnly
-  const controlling = expanded && canControl && controlledUrl === session.liveView?.url
 
   const dock = useCallback(() => {
     window.clearTimeout(returnTimer.current)
@@ -338,7 +329,6 @@ export function BrowserScreen({ session, expanded, onExpandedChange }: BrowserSc
   // Stable: useFocusTrap re-runs (and re-moves focus) whenever its onEscape changes.
   const collapse = useCallback(() => {
     const slot = slotRef.current?.getBoundingClientRect()
-    setControlledUrl(null)
     onExpandedChange(false)
     if (!slot) return
     setReturnRect({ top: slot.top, left: slot.left, width: slot.width, height: slot.height })
@@ -436,24 +426,13 @@ export function BrowserScreen({ session, expanded, onExpandedChange }: BrowserSc
             <StatusPill status={session.status} />
             <AddressBar url={session.pageUrl} />
             <div style={{ flex: '1 0 0' }} />
-            {session.status === 'live' && session.liveView?.viewOnly && (
+            {session.status === 'live' && (
               <Tooltip content="You can watch the agent, but not click or type">
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 32, padding: '0 10px', borderRadius: 10, ...CAPTION, color: 'var(--neutral-600)', whiteSpace: 'nowrap' }}>
                   <ViewIcon size={16} />
                   View only
                 </span>
               </Tooltip>
-            )}
-            {canControl && (
-              <Button
-                variant={controlling ? 'default' : 'secondary'}
-                size="sm"
-                leftIcon={<CursorCircleSelectionTwoIcon />}
-                onClick={() => setControlledUrl(controlling ? null : session.liveView?.url ?? null)}
-                aria-pressed={controlling}
-              >
-                {controlling ? 'Hand back' : 'Take control'}
-              </Button>
             )}
             <Tooltip content="Minimize (Esc)">
               <IconButton variant="ghost" size="sm" icon={<ArrowShrinkTwoIcon size={20} />} aria-label="Minimize browser" onClick={collapse} />
@@ -473,11 +452,11 @@ export function BrowserScreen({ session, expanded, onExpandedChange }: BrowserSc
             backgroundColor: 'var(--neutral-100)',
           }}
         >
-          <ScreenBody session={session} large={expanded} controlling={controlling} />
+          <ScreenBody session={session} large={expanded} />
 
           {/* What the agent is doing, over the page, in full screen. No exit animation:
               it would play mid-flight, stretched by the card's layout transform. */}
-          {expanded && session.status === 'live' && session.currentAction && !controlling && (
+          {expanded && session.status === 'live' && session.currentAction && (
               <m.div
                 key="action"
                 initial={{ opacity: 0, y: 8 }}
@@ -504,17 +483,6 @@ export function BrowserScreen({ session, expanded, onExpandedChange }: BrowserSc
                   <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{session.currentAction}</span>
                 </span>
               </m.div>
-          )}
-
-          {/* The control ring is its own element: a boxShadow on the `layout` element above
-              would be kept alive by framer's projection after `controlling` turns off. */}
-          {controlling && (
-            <div aria-hidden style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 0 2px var(--blue-500)', pointerEvents: 'none' }} />
-          )}
-          {controlling && (
-            <span style={{ ...CAPTION, position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', padding: '4px 10px', borderRadius: 999, color: 'var(--neutral-white)', backgroundColor: 'var(--blue-500)', pointerEvents: 'none', whiteSpace: 'nowrap' }}>
-              You’re controlling the browser
-            </span>
           )}
 
           {/* Thumbnail chrome: the whole screen is the expand button. Only once docked —

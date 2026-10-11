@@ -1258,6 +1258,16 @@ export function useStreamingChat({
             continue
           }
 
+          if (eventName === "browser_view") {
+            const url = asString(parsed.url)
+            const msgId = loadingMessageIdRef.current
+            if (url && msgId) {
+              const browserView = { url, pageUrl: asString(parsed.page_url) ?? "" }
+              setMessages((prev) => prev.map((msg) => (msg.id === msgId ? { ...msg, browserView } : msg)))
+            }
+            continue
+          }
+
           if (eventName === "memory_updated") {
             // Settings and memory-aware surfaces can refresh without coupling
             // the stream hook to their cache implementation.
