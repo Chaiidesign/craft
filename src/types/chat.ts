@@ -250,6 +250,8 @@ export interface BrowserView {
   /** Screencast websocket: JPEG frames as binary messages, `{ url }` as text on navigation. */
   url:     string
   pageUrl: string
+  /** The person is asked to drive this tab (a sign-in handover): input goes down the socket. */
+  control?: boolean
 }
 
 /** One step of a turn's plan, from the `plan_updated` stream event. */

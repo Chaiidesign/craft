@@ -54,7 +54,7 @@ export interface BrowserSession {
   status:   BrowserSessionStatus
   /** Object URL of the latest frame. */
   frame:    string | null
-  /** True for a tab the person opened: their input drives it. */
+  /** True for a tab the person opened, or one the agent handed over: their input drives it. */
   control:  boolean
   /** Send input to a controlled tab. Ignored otherwise. */
   send:     (input: BrowserInput) => void
@@ -109,7 +109,7 @@ export function useBrowserSession(): BrowserSession {
   const steps = useMemo(() => browserStepsOf(messages), [messages])
   const opened = useSyncExternalStore(subscribeOpened, () => openedView, () => null)
   const view = opened ?? browserViewOf(messages)
-  const control = opened !== null && view === opened
+  const control = view !== undefined && (view === opened || view.control === true)
 
   const [attempt, setAttempt] = useState(0)
   const [opening, setOpening] = useState(false)

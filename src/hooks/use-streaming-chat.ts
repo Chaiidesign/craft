@@ -1262,7 +1262,7 @@ export function useStreamingChat({
             const url = asString(parsed.url)
             const msgId = loadingMessageIdRef.current
             if (url && msgId) {
-              const browserView = { url, pageUrl: asString(parsed.page_url) ?? "" }
+              const browserView = { url, pageUrl: asString(parsed.page_url) ?? "", control: parsed.control === true }
               setMessages((prev) => prev.map((msg) => (msg.id === msgId ? { ...msg, browserView } : msg)))
             }
             continue
