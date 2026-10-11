@@ -152,21 +152,25 @@ describe('OverviewView', () => {
     expect(expanded(html, 'Skills')).toBe('false')
   })
 
-  it('never strikes finished steps through', () => {
-    const html = render([user('u'), reply('a', { activities: [step('1', 'tool-call', 'Finished'), step('2', 'tool-call', 'Running', 'executing'), step('3', 'tool-call', 'Failed', 'error')] })])
-    expect(html).toContain('Finished')
-    expect(html).not.toMatch(/line-through/)
+  it('strikes completed plan steps through, and nothing else', () => {
+    const plan = [
+      { id: 'p1', title: 'Finished', status: 'completed' as const },
+      { id: 'p2', title: 'Running', status: 'in_progress' as const },
+      { id: 'p3', title: 'Failed', status: 'failed' as const },
+    ]
+    const html = render([user('u'), reply('a', { plan })])
+    expect(html).toMatch(/line-through[^>]*>Finished</)
+    expect(html).not.toMatch(/line-through[^>]*>Running</)
+    expect(html).not.toMatch(/line-through[^>]*>Failed</)
   })
 
-  it('while working, lists every step with no “x of y steps” summary line, and animates the running one', () => {
+  it('while working without a plan, shows only the running step, animated', () => {
     const html = render([user('u'), reply('a', { isLoading: true, activities: [step('1', 'tool-call', 'One'), step('2', 'tool-call', 'Two', 'executing')] })], { startedAt: T0 })
     expect(html).toContain('Working')
-    expect(html).toContain('One')
-    // The old visible summary is gone; the pill's compact 1/2 reads this out via its aria-label.
+    expect(html).not.toContain('>One<')
     expect(html).not.toMatch(/>\d+ of \d+ steps</)
-    // The running label is drawn as clipped gradient text (the shimmer); a done one is plain.
+    // The running label is drawn as clipped gradient text (the shimmer).
     expect(html).toMatch(/background-clip:text[^>]*>Two</)
-    expect(html).not.toMatch(/background-clip:text[^>]*>One</)
   })
 
   it('says “Thinking…” before the first step', () => {
@@ -215,15 +219,14 @@ describe('OverviewView', () => {
     expect(render([user('u'), reply('a', { isError: true })])).toContain('Something went wrong before any steps ran')
   })
 
-  it('shows every progress step, but folds the other long lists behind “Show more”', () => {
+  it('sums a finished turn without a plan to one line, and folds long lists behind “Show more”', () => {
     const steps = Array.from({ length: 11 }, (_, i) => step(`s${i}`, 'tool-call', `Step ${i}`))
     const html = render([user('u'), reply('a', {
-      activities: steps,
+      activities: [...steps, step('bad', 'tool-call', 'Broke', 'error')],
       webCitations: Array.from({ length: 9 }, (_, i) => ({ title: `Source ${i}`, url: `https://s${i}.example.com` })),
     })])
-    expect(html).not.toContain('earlier step')
-    expect(html).toContain('>Step 0<')
-    expect(html).toContain('>Step 10<')
+    expect(html).not.toContain('>Step 0<')
+    expect(html).toContain('12 steps, 1 failed')
     expect(html).toContain('Show 3 more sources')
   })
 
@@ -313,11 +316,10 @@ describe('plan card and step count', () => {
     expect(done).toMatch(/Done<span aria-label="5 of 5 steps done"[^>]*>5\/5<\/span><span[^>]*>· 1m 52s/)
   })
 
-  it('without a plan, counts finished tool steps; with none, shows no count', () => {
-    expect(stepCount([step('1', 'tool-call', 'a'), step('2', 'tool-call', 'b', 'executing'), step('3', 'tool-call', 'c', 'error')], null)).toEqual({ done: 1, total: 3 })
-    expect(stepCount([], null)).toBeNull()
-    expect(stepCount([], plan)).toEqual({ done: 1, total: 5 })
-    expect(render([user('u'), reply('a')])).not.toMatch(/\d\/\d/)
+  it('counts plan steps only; tool steps are not progress', () => {
+    expect(stepCount(null)).toBeNull()
+    expect(stepCount(plan)).toEqual({ done: 1, total: 5 })
+    expect(render([user('u'), reply('a', { activities: [step('1', 'tool-call', 'a'), step('2', 'tool-call', 'b')] })])).not.toMatch(/\d\/\d/)
   })
 
   it('hides a detail that only repeats the label in another case', () => {

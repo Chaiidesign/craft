@@ -168,8 +168,7 @@ function ScreenBody({ session, large, onFrameSize }: { session: BrowserSession; 
           large={large}
           icon={<AiWebBrowsingIcon size={iconSize} />}
           title="Browser session ended"
-          body="It went to sleep after the agent finished. Resume to keep watching."
-          action={<Button variant="secondary" size="sm" onClick={session.reconnect}>Resume</Button>}
+          body="The agent closed its tab when the turn finished. The next browser turn shows here."
         />
       )
     case 'error':

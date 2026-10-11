@@ -15,7 +15,7 @@ export type BrowserSessionStatus =
   | 'connecting'
   /** Frames arriving. */
   | 'live'
-  /** The agent's tab closed, or the view expired — can be reopened. */
+  /** The agent's tab closed with its turn, or the view expired. */
   | 'ended'
   /** The socket closed before a frame arrived. */
   | 'error'
@@ -37,7 +37,7 @@ export interface BrowserSession {
   pageUrl?: string
   /** Oldest first. */
   steps:    BrowserStep[]
-  /** Open the socket again after it ended or failed. */
+  /** Open the socket again after a failed connection. */
   reconnect: () => void
 }
 
@@ -91,9 +91,16 @@ export function useBrowserSession(): BrowserSession {
     const stream = new WebSocket(view.url)
     stream.binaryType = 'blob'
     let shown: string | null = null
+    let finished = false
     stream.onmessage = event => {
       if (typeof event.data === 'string') {
-        patch({ pageUrl: JSON.parse(event.data).url })
+        const note = JSON.parse(event.data)
+        if (note.ended) {
+          finished = true
+          patch({ status: 'ended' })
+          return
+        }
+        patch({ pageUrl: note.url })
         return
       }
       const next = URL.createObjectURL(event.data as Blob)
@@ -101,7 +108,7 @@ export function useBrowserSession(): BrowserSession {
       shown = next
       patch({ status: 'live', frame: next })
     }
-    stream.onclose = () => patch({ status: shown ? 'ended' : 'error' })
+    stream.onclose = () => patch({ status: finished || shown ? 'ended' : 'error' })
     return () => {
       stream.onclose = null
       stream.onmessage = null

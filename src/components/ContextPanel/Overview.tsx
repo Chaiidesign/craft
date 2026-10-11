@@ -393,7 +393,7 @@ function PlanMark({ status }: { status: PlanItem['status'] }) {
 const PLAN_LABEL: Record<PlanItem['status'], React.CSSProperties> = {
   pending:     { color: 'var(--neutral-700)' },
   in_progress: { color: 'var(--neutral-900)', fontWeight: 'var(--font-weight-medium)' },
-  completed:   { color: 'var(--neutral-700)' },
+  completed:   { color: 'var(--neutral-500)', textDecoration: 'line-through' },
   failed:      { color: 'var(--neutral-800)' },
 }
 
@@ -417,11 +417,10 @@ function stepText(activity: ActivityItem): { label: string; detail?: string } {
 // towards. Status lives in the header instead (a pill that stays visible when collapsed,
 // plus a hairline loading sweep while working); the body is just the steps.
 
-/** Finished / total: plan steps when there is a plan, else tool steps. Null with none. */
-export function stepCount(steps: ActivityItem[], plan: PlanItem[] | null): { done: number; total: number } | null {
-  if (plan) return { done: plan.filter(item => item.status === 'completed').length, total: plan.length }
-  if (steps.length === 0) return null
-  return { done: steps.filter(step => step.status === 'done').length, total: steps.length }
+/** Finished / total plan steps. Null without a plan: tool calls are not progress. */
+export function stepCount(plan: PlanItem[] | null): { done: number; total: number } | null {
+  if (!plan) return null
+  return { done: plan.filter(item => item.status === 'completed').length, total: plan.length }
 }
 
 /** The header's status: what the turn is doing, how far along, and for how long. */
@@ -559,36 +558,26 @@ function PlanList({ plan, steps }: { plan: PlanItem[]; steps: ActivityItem[] }) 
   )
 }
 
+/** The plan is the progress. Without one, only what is happening right now shows: one
+ * live row while the turn works, and one line about how it ended. */
 function ProgressBody({ state, steps, plan }: { state: TurnState; steps: ActivityItem[]; plan: PlanItem[] | null }) {
   if (plan) return <PlanList plan={plan} steps={steps} />
-  if (steps.length === 0) {
-    if (state === 'working') {
+  if (state === 'idle') return null
+  if (state === 'working') {
+    const live = steps.findLast(isRunning)
+    if (!live) {
       return <ItemRow icon={<Spinner size={14} color="var(--blue-500)" />} label={<Shimmer>Thinking…</Shimmer>} labelStyle={stepLabelStyle('executing')} />
     }
-    if (state === 'idle') return null
+    const { label, detail } = stepText(live)
+    return <ItemRow wrap icon={<StepIcon status={live.status} />} label={<Shimmer>{label}</Shimmer>} detail={detail} labelStyle={stepLabelStyle(live.status)} />
+  }
+  if (steps.length === 0) {
     const { icon, text } = NO_STEPS[state]
     return <ItemRow icon={icon} label={text} labelStyle={{ color: 'var(--neutral-600)' }} />
   }
-
-  return (
-    <>
-      <AnimatedList>
-        {steps.map(step => {
-          const { label, detail } = stepText(step)
-          return (
-            <ItemRow
-              key={step.id}
-              wrap
-              icon={<StepIcon status={step.status} />}
-              label={isRunning(step) ? <Shimmer>{label}</Shimmer> : label}
-              detail={detail}
-              labelStyle={stepLabelStyle(step.status)}
-            />
-          )
-        })}
-      </AnimatedList>
-    </>
-  )
+  const failed = steps.filter(step => step.status === 'error').length
+  const summary = `${steps.length} ${steps.length === 1 ? 'step' : 'steps'}${failed ? `, ${failed} failed` : ''}`
+  return <ItemRow icon={<StepIcon status={failed ? 'error' : 'done'} />} label={summary} labelStyle={{ color: 'var(--neutral-600)' }} />
 }
 
 // ── Overview ──────────────────────────────────────────────────────────────────
@@ -743,7 +732,7 @@ export function OverviewView({ messages, timing }: { messages: UIMessage[]; timi
       <PanelSection
         first
         title="Progress"
-        aside={<TurnStatus state={state} seconds={seconds} count={stepCount(data.steps, data.plan)} />}
+        aside={<TurnStatus state={state} seconds={seconds} count={stepCount(data.plan)} />}
         loading={state === 'working'}
         {...section('progress')}
       >

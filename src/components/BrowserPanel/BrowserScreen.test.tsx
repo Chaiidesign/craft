@@ -78,10 +78,11 @@ describe('BrowserScreen — thumbnail', () => {
     expect(html).toContain('Expand browser to full screen')
   })
 
-  it('ended: offers Resume, not expand', () => {
+  it('ended: says the tab closed, offers neither retry nor expand', () => {
     const html = render(session('ended'))
     expect(html).toContain('Browser session ended')
-    expect(html).toContain('Resume')
+    expect(html).not.toContain('Resume')
+    expect(html).not.toContain('Try again')
     expect(html).not.toContain('Expand browser to full screen')
   })
 

@@ -48,6 +48,12 @@ export function deriveActivityDetail(toolName: string, args: unknown): string | 
   const record = argsRecord(args)
   if (!record) return undefined
 
+  // The skills tool loads named skills: the names are the detail.
+  if (toolName === 'skills' && Array.isArray(record.categories)) {
+    const names = record.categories.filter((name): name is string => typeof name === 'string' && name.length > 0)
+    if (names.length > 0) return names.join(', ')
+  }
+
   const keys = toolNameToType(toolName) === 'web-search'
     ? [...QUERY_KEYS, ...TARGET_KEYS]
     : [...TARGET_KEYS, ...QUERY_KEYS]
