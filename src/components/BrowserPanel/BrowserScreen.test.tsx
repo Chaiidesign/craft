@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import { BrowserScreen } from '@/components/BrowserPanel/BrowserScreen'
+import { BrowserScreen, toUrl } from '@/components/BrowserPanel/BrowserScreen'
 import { browserStepsOf, browserViewOf, type BrowserSession, type BrowserSessionStatus } from '@/components/BrowserPanel/use-browser-session'
 import type { UIMessage } from '@/types/chat'
 
@@ -60,11 +60,21 @@ describe('browserStepsOf', () => {
   })
 })
 
+describe('toUrl', () => {
+  it('opens Google with nothing typed, keeps URLs, adds https to hosts, searches the rest', () => {
+    expect(toUrl('')).toBe('https://www.google.com/')
+    expect(toUrl('http://localhost:3000/x')).toBe('http://localhost:3000/x')
+    expect(toUrl('shopify.com/pricing')).toBe('https://shopify.com/pricing')
+    expect(toUrl('mazda 6 seat covers')).toBe('https://www.google.com/search?q=mazda%206%20seat%20covers')
+    expect(toUrl('seatcovers')).toBe('https://www.google.com/search?q=seatcovers')
+  })
+})
+
 describe('BrowserScreen — thumbnail', () => {
   it('idle: offers to open a page, no expand', () => {
     const html = render(session('idle'))
     expect(html).toContain('No browser running')
-    expect(html).toContain('Page to open')
+    expect(html).toContain('Search or enter a URL')
     expect(html).toContain('>Open<')
     expect(html).not.toContain('Expand browser to full screen')
   })
@@ -125,6 +135,7 @@ describe('BrowserScreen — full screen', () => {
     expect(full).toContain('Close browser')
     expect(full).toContain('You’re driving this browser')
     expect(full).toContain('Your browser. Click, type, and scroll here.')
+    expect(full).toContain('aria-label="Address"')
     expect(full).not.toContain('View only')
     const thumb = render(session('live', { control: true }))
     expect(thumb).not.toContain('Your browser. Click, type, and scroll here.')

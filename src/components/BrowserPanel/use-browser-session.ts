@@ -47,6 +47,7 @@ export type BrowserInput =
   | { mouse: Record<string, unknown> }
   | { key: Record<string, unknown> }
   | { text: string }
+  | { navigate: string }
   | { close: true }
 
 export interface BrowserSession {

@@ -93,16 +93,27 @@ export function StatusPill({ status, overlay }: { status: BrowserSessionStatus; 
 
 // ── Opening a browser of your own ─────────────────────────────────────────────
 
+const HOME_URL = 'https://www.google.com/'
+
+/** What an address bar does with typed text: a URL as is, a bare host over https, anything else searched. */
+export function toUrl(text: string): string {
+  const typed = text.trim()
+  if (!typed) return HOME_URL
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(typed)) return typed
+  if (!/\s/.test(typed) && /\.[a-z]{2,}(?:[/:?#]|$)/i.test(typed)) return `https://${typed}`
+  return `https://www.google.com/search?q=${encodeURIComponent(typed)}`
+}
+
 function OpenForm({ session, large }: { session: BrowserSession; large: boolean }) {
-  const [url, setUrl] = useState('https://')
+  const [text, setText] = useState('')
   return (
     <form
-      onSubmit={event => { event.preventDefault(); void session.open(url.trim()) }}
+      onSubmit={event => { event.preventDefault(); void session.open(toUrl(text)) }}
       style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', maxWidth: large ? 420 : 280 }}
     >
       <div style={{ display: 'flex', gap: 6 }}>
-        <InputField fluid size="small" value={url} onChange={setUrl} placeholder="https://" aria-label="Page to open" />
-        <Button type="submit" size="sm" disabled={session.opening || url.trim().length < 9}>Open</Button>
+        <InputField fluid size="small" value={text} onChange={setText} placeholder="Search or enter a URL" aria-label="Search or enter a URL" />
+        <Button type="submit" size="sm" disabled={session.opening}>Open</Button>
       </div>
       {session.openError && <p style={{ ...CAPTION, color: 'var(--red-400)' }}>{session.openError}</p>}
     </form>
@@ -125,6 +136,15 @@ const VIRTUAL_KEYS: Record<string, number> = {
  * in the frame's own coordinates. */
 function ControlSurface({ send, imageRef }: { send: (input: BrowserInput) => void; imageRef: React.RefObject<HTMLImageElement | null> }) {
   const surfaceRef = useRef<HTMLDivElement>(null)
+  // Pointer events carry no click count, and Chrome only fires a click when it is at least 1.
+  const lastDown = useRef<{ at: number; x: number; y: number; count: number }>({ at: 0, x: 0, y: 0, count: 0 })
+  const clickCountFor = (event: React.PointerEvent) => {
+    const last = lastDown.current
+    const repeat = event.timeStamp - last.at < 400 && Math.abs(event.clientX - last.x) < 6 && Math.abs(event.clientY - last.y) < 6
+    const count = repeat ? last.count + 1 : 1
+    lastDown.current = { at: event.timeStamp, x: event.clientX, y: event.clientY, count }
+    return count
+  }
   const pendingMove = useRef<{ x: number; y: number; modifiers: number; buttons: number } | null>(null)
 
   const pointAt = useCallback((event: { clientX: number; clientY: number }) => {
@@ -179,9 +199,9 @@ function ControlSurface({ send, imageRef }: { send: (input: BrowserInput) => voi
       onPointerDown={event => {
         event.currentTarget.focus()
         event.currentTarget.setPointerCapture(event.pointerId)
-        mouse('mousePressed', event, { button: MOUSE_BUTTONS[event.button] ?? 'none', clickCount: event.detail })
+        mouse('mousePressed', event, { button: MOUSE_BUTTONS[event.button] ?? 'none', clickCount: clickCountFor(event) })
       }}
-      onPointerUp={event => mouse('mouseReleased', event, { button: MOUSE_BUTTONS[event.button] ?? 'none', clickCount: event.detail })}
+      onPointerUp={event => mouse('mouseReleased', event, { button: MOUSE_BUTTONS[event.button] ?? 'none', clickCount: lastDown.current.count || 1 })}
       onPointerMove={event => {
         const point = pointAt(event)
         if (!point) return
@@ -319,8 +339,29 @@ function displayUrl(url: string | undefined): string | undefined {
   return url.replace(/^https?:\/\//, '').replace(/\/$/, '')
 }
 
-function AddressBar({ url }: { url: string | undefined }) {
+function AddressBar({ url, onNavigate }: { url: string | undefined; onNavigate?: (url: string) => void }) {
   const shown = displayUrl(url)
+  const [draft, setDraft] = useState<string | null>(null)
+  if (onNavigate) {
+    return (
+      <form
+        onSubmit={event => { event.preventDefault(); if (draft !== null) onNavigate(toUrl(draft)); setDraft(null) }}
+        style={{ flex: '1 1 auto', minWidth: 0, maxWidth: 560, display: 'flex' }}
+      >
+        <InputField
+          fluid
+          size="small"
+          aria-label="Address"
+          leftIcon={<AiWebBrowsingIcon size={16} />}
+          value={draft ?? shown ?? ''}
+          onChange={setDraft}
+          onFocus={event => event.currentTarget.select()}
+          onBlur={() => setDraft(null)}
+          onKeyDown={event => { if (event.key === 'Escape') { setDraft(null); event.currentTarget.blur() } }}
+        />
+      </form>
+    )
+  }
   return (
     <Tooltip content={url} disabled={!url} maxWidth={280}><div
       style={{
@@ -504,7 +545,7 @@ export function BrowserScreen({ session, expanded, onExpandedChange }: BrowserSc
             style={{ height: HEADER_H, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8, padding: '0 10px 0 14px' }}
           >
             <StatusPill status={session.status} />
-            <AddressBar url={session.pageUrl} />
+            <AddressBar url={session.pageUrl} onNavigate={session.control ? url => session.send({ navigate: url }) : undefined} />
             <div style={{ flex: '1 0 0' }} />
             {session.status === 'live' && !session.control && (
               <Tooltip content="You can watch the agent, but not click or type">
