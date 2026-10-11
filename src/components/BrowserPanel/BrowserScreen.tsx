@@ -16,17 +16,15 @@ import { Tooltip } from '@/components/Tooltip'
 import { useFocusTrap } from '@/hooks/use-focus-trap'
 import type { BrowserSession, BrowserSessionStatus } from './use-browser-session'
 
-// The agent's screen: the latest screencast frame, drawn at the tab's size and scaled to
-// fit. One element plays both roles — a thumbnail in the Context panel and a full-screen
+// The agent's screen: the latest screencast frame, at the tab's own aspect ratio.
+// One element plays both roles — a thumbnail in the Context panel and a full-screen
 // viewer — so going between them never remounts. Expanding lifts the card to `position: fixed` and
 // framer's layout animation flies it from its slot to the centre of the window and back.
 // Nothing above the side panel sets a transform/filter, so the fixed card escapes the
 // panel's overflow clipping and sits in the root stacking context.
 
-/** The tab's native size (Chrome's window in the microVM); frames are drawn at this size and scaled to fit. */
-const SCREEN_W = 1440
-const SCREEN_H = 900
-const ASPECT = SCREEN_W / SCREEN_H
+/** Until the first frame says otherwise: Chrome's 1440×900 window less its toolbar. */
+const DEFAULT_ASPECT = 1431 / 808
 
 const HEADER_H = 52
 const Z_BACKDROP = 50
@@ -92,46 +90,6 @@ export function StatusPill({ status, overlay }: { status: BrowserSessionStatus; 
   )
 }
 
-// ── Scaled page ───────────────────────────────────────────────────────────────
-
-/** Draws children at SCREEN_W×SCREEN_H and scales them to fit (contain) the box. */
-function ScaledPage({ children }: { children: React.ReactNode }) {
-  const boxRef = useRef<HTMLDivElement>(null)
-  const [box, setBox] = useState<{ w: number; h: number } | null>(null)
-
-  useLayoutEffect(() => {
-    const el = boxRef.current
-    if (!el) return
-    const measure = () => setBox({ w: el.clientWidth, h: el.clientHeight })
-    measure()
-    const observer = new ResizeObserver(measure)
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
-
-  // The page mounts at once (so the live view starts loading) but stays hidden until the
-  // box is measured — unscaled, it would flash at full size.
-  const scale = box ? Math.min(box.w / SCREEN_W, box.h / SCREEN_H) : 1
-  return (
-    <div ref={boxRef} style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
-      <div
-        style={{
-          position:        'absolute',
-          width:           SCREEN_W,
-          height:          SCREEN_H,
-          left:            box ? (box.w - SCREEN_W * scale) / 2 : 0,
-          top:             box ? (box.h - SCREEN_H * scale) / 2 : 0,
-          transform:       `scale(${scale})`,
-          transformOrigin: '0 0',
-          visibility:      box ? 'visible' : 'hidden',
-        }}
-      >
-        {children}
-      </div>
-    </div>
-  )
-}
-
 // ── Non-live states ───────────────────────────────────────────────────────────
 
 function StateMessage({ icon, title, body, action, large }: { icon: React.ReactNode; title: string; body?: string; action?: React.ReactNode; large: boolean }) {
@@ -180,23 +138,23 @@ function Shimmer() {
   )
 }
 
-function ScreenBody({ session, large }: { session: BrowserSession; large: boolean }) {
+function ScreenBody({ session, large, onFrameSize }: { session: BrowserSession; large: boolean; onFrameSize: (aspect: number) => void }) {
   const iconSize = large ? 28 : 22
   switch (session.status) {
     case 'live':
-      return (
-        <ScaledPage>
-          {session.frame && (
-            // eslint-disable-next-line @next/next/no-img-element -- a blob URL refreshed ten times a second has no place in next/image
-            <img
-              src={session.frame}
-              alt="Agent's browser, live"
-              draggable={false}
-              style={{ width: '100%', height: '100%', display: 'block', objectFit: 'contain', pointerEvents: 'none', backgroundColor: 'var(--neutral-white)' }}
-            />
-          )}
-        </ScaledPage>
-      )
+      return session.frame ? (
+        // eslint-disable-next-line @next/next/no-img-element -- a blob URL refreshed ten times a second has no place in next/image
+        <img
+          src={session.frame}
+          alt="Agent's browser, live"
+          draggable={false}
+          onLoad={event => {
+            const { naturalWidth, naturalHeight } = event.currentTarget
+            if (naturalWidth && naturalHeight) onFrameSize(naturalWidth / naturalHeight)
+          }}
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block', objectFit: 'contain', pointerEvents: 'none', backgroundColor: 'var(--neutral-white)' }}
+        />
+      ) : null
     case 'connecting':
       return (
         <>
@@ -286,11 +244,11 @@ function useWindowSize(active: boolean) {
   return size
 }
 
-/** The largest 16:10 screen (plus header) that fits the window with a gutter, centred. */
-function fullFrame({ w, h }: { w: number; h: number }) {
+/** The largest screen of this aspect (plus header) that fits the window with a gutter, centred. */
+function fullFrame({ w, h }: { w: number; h: number }, aspect: number) {
   const gutter = w < 640 ? 8 : 24
-  const width = Math.max(0, Math.min(w - gutter * 2, (h - gutter * 2 - HEADER_H) * ASPECT))
-  const height = width / ASPECT + HEADER_H
+  const width = Math.max(0, Math.min(w - gutter * 2, (h - gutter * 2 - HEADER_H) * aspect))
+  const height = width / aspect + HEADER_H
   return { top: (h - height) / 2, left: (w - width) / 2, width, height }
 }
 
@@ -308,6 +266,8 @@ export function BrowserScreen({ session, expanded, onExpandedChange }: BrowserSc
   const cardRef = useRef<HTMLDivElement>(null)
   const expandButtonRef = useRef<HTMLButtonElement>(null)
   const windowSize = useWindowSize(expanded)
+  // The frame's own aspect, read from the first decoded frame, so nothing is letterboxed.
+  const [aspect, setAspect] = useState(DEFAULT_ASPECT)
   // On minimize the card flies back still `position: fixed`, aimed at its slot. Docking it
   // straight away would put a still-large card inside the side panel, whose overflow clips
   // it for the whole flight. It docks once it lands.
@@ -353,12 +313,12 @@ export function BrowserScreen({ session, expanded, onExpandedChange }: BrowserSc
 
   const THUMB_LOOK: React.CSSProperties = { borderRadius: 12, backgroundColor: 'var(--neutral-100)', boxShadow: 'inset 0 0 0 1px var(--border-default)' }
   const cardPlacement: React.CSSProperties =
-    phase === 'full'      ? { position: 'fixed', zIndex: Z_BACKDROP + 1, ...fullFrame(windowSize), borderRadius: 16, backgroundColor: 'var(--neutral-white)', boxShadow: '0px 8px 32px 0px rgba(26,23,20,0.24), 0px 0px 0px 1px rgba(59,54,50,0.12)' }
+    phase === 'full'      ? { position: 'fixed', zIndex: Z_BACKDROP + 1, ...fullFrame(windowSize, aspect), borderRadius: 16, backgroundColor: 'var(--neutral-white)', boxShadow: '0px 8px 32px 0px rgba(26,23,20,0.24), 0px 0px 0px 1px rgba(59,54,50,0.12)' }
     : phase === 'returning' ? { position: 'fixed', zIndex: Z_BACKDROP + 1, ...returnRect, ...THUMB_LOOK }
     : { position: 'absolute', inset: 0, ...THUMB_LOOK }
 
   return (
-    <div ref={slotRef} style={{ position: 'relative', width: '100%', aspectRatio: `${SCREEN_W} / ${SCREEN_H}` }}>
+    <div ref={slotRef} style={{ position: 'relative', width: '100%', aspectRatio: `${aspect}` }}>
       {/* What stays in the panel while the screen is out — so the panel doesn't jump. */}
       {lifted && (
         <div
@@ -452,7 +412,7 @@ export function BrowserScreen({ session, expanded, onExpandedChange }: BrowserSc
             backgroundColor: 'var(--neutral-100)',
           }}
         >
-          <ScreenBody session={session} large={expanded} />
+          <ScreenBody session={session} large={expanded} onFrameSize={setAspect} />
 
           {/* What the agent is doing, over the page, in full screen. No exit animation:
               it would play mid-flight, stretched by the card's layout transform. */}
