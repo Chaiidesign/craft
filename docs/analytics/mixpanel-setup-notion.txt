@@ -41,7 +41,7 @@ Layer 2 — Session replay
 Turn on with all text inputs and message content masked (verify the default). Target 100% of sessions for users in their first two weeks, sampled after.
 Layer 4 — feature_used
 One event name, one required property: which feature. The controlled list:
-model_selector_manual · compare_models · search · share_button · pin_drag · highlight_filter · pin_folder_organize · agent_template_browsed · agent_edited · agent_enhance_instructions · project_instructions_added · project_agent_attached · context_panel_opened · effort_level_changed · permission_level_changed · schedule_created · voice_input · flashcards · document_download · settings_help_opened · regenerate · output_viewed
+model_selector_manual · compare_models · search · share_button · pin_drag · highlight_filter · pin_folder_organize · agent_template_browsed · agent_edited · agent_tested · agent_enhance_instructions · project_instructions_added · project_agent_attached · context_panel_opened · effort_level_changed · permission_level_changed · schedule_created · voice_input · flashcards · document_download · settings_help_opened · regenerate · output_viewed
 regenerate: regenerate + stop-run + reject-automation + re-prompt-within-2-minutes together form the override rate — the earliest warning that answer quality is slipping, months before retention moves.
 output_viewed: clicks on the "View" button of a run's external output — the first proof a human actually consumed what the agent made, not just that it was delivered.
 Rule: tracking a new feature = adding one name to this list (in the doc first), not designing a new event.
@@ -102,6 +102,10 @@ agent_published / agent_shared
 Published or shared
 share type
 Do agents spread beyond their creator?
+agent_save_failed
+Creating or saving an agent failed (browser side)
+stage (create / update), reason (api_error / incomplete)
+Where building agents breaks, before it shows up as churn
 agent_used
 Agent answers (slash-call or direct)
 connector names, surface

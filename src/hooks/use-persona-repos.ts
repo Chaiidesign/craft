@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { PersonaRepoCollection, fetchPersonaRepos } from '@/lib/api/persona-repo'
-import { PERSONAS_LIST_UPDATED_EVENT } from '@/lib/api/persona-cache'
+import { onPersonasInvalidated } from '@/lib/api/persona-cache'
 
 const EMPTY = new PersonaRepoCollection([])
 
@@ -25,10 +25,10 @@ export function usePersonaRepos() {
     }
 
     load()
-    window.addEventListener(PERSONAS_LIST_UPDATED_EVENT, load)
+    const unsubscribe = onPersonasInvalidated(load)
     return () => {
       cancelled = true
-      window.removeEventListener(PERSONAS_LIST_UPDATED_EVENT, load)
+      unsubscribe()
     }
   }, [])
 

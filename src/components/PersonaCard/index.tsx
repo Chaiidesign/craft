@@ -1,24 +1,11 @@
 'use client'
 
 import { Tooltip } from '@/components/Tooltip'
-import React, { useState, useCallback, useEffect, useRef } from 'react'
-import Image from 'next/image'
-import { m, AnimatePresence } from 'framer-motion'
+import React, { useState } from 'react'
+import { m } from 'framer-motion'
 import { Slot } from '@radix-ui/react-slot'
-import {
-  MoreVerticalIcon,
-  PenOneIcon,
-  ShareOneIcon,   // ⚠ substitute — no LinkIcon in @strange-huge/icons yet
-  CopyOneIcon,
-  BookmarkTwoIcon,
-  StopCircleIcon,     // ⚠ substitute — no PauseIcon yet
-  ArrowRightTwoIcon,  // ⚠ substitute — no PlayIcon/ResumeIcon yet
-  AlertTwoIcon,
-  InformationCircleIcon,
-} from '@strange-huge/icons'
-import { Button } from '@/components/Button'
+import { CopyOneIcon, BookmarkTwoIcon } from '@strange-huge/icons'
 import { IconButton } from '@/components/IconButton'
-import { Dropdown, DROPDOWN_SCALE_PRESET } from '@/components/Dropdown'
 import { cn } from '@/lib/utils'
 import { useStoredAvatarChoice } from '@/lib/avatar-choice'
 import {
@@ -34,7 +21,10 @@ import { HeroScene, sceneFor, type AnySceneKind } from './HeroScene'
 import { GazeChannel, type AvatarMood } from './gaze'
 import { AgentOrb } from './AgentOrb'
 import { Badge } from '@/components/Badge'
-import { AgentCardButton } from './AgentCardButton'
+import { AgentCardMenu } from './AgentCardMenu'
+import { CardActionRow } from './CardActionRow'
+import { ModelUnavailableOverlay } from './ModelUnavailableOverlay'
+import { CARD_HEIGHT, CARD_RADIUS, HERO_HEIGHT, AVATAR_SIZE, HERO_INSET } from './card-metrics'
 
 // ── Shadows ───────────────────────────────────────────────────────────────────
 
@@ -43,37 +33,13 @@ const SHADOW_CARD          = 'var(--shadow-agent-card)'
 const SHADOW_CARD_HOVER    = 'var(--shadow-agent-card-hover)'
 const SHADOW_CARD_TEMPLATE ='0px 2px 2.8px 0px var(--blue-100), 0px 0px 0px 1px var(--neutral-100)'
 
-// Fixed height for default/draft cards so every card in a grid lines up
-// regardless of description length or which badges/footer content is
-// present — the footer is pinned to the bottom of this via marginTop:'auto'
-// rather than sitting wherever the content above happens to end.
-const CARD_HEIGHT = 320
 /** Card size, for layouts and skeletons that must match it. */
 export const PERSONA_CARD_HEIGHT = CARD_HEIGHT
 export const PERSONA_CARD_WIDTH = 314
 
-// Card layout, top to bottom: a tinted hero banner holding the avatar (50% of the card), the
-// details — name, "by" line, description (35%) — and the action row (15%). Heights are px so the
-// auto-height template/community variants keep the same banner and action row.
-const CARD_RADIUS = 20
-const HERO_HEIGHT = CARD_HEIGHT * 0.5
-const ACTION_HEIGHT = CARD_HEIGHT * 0.15
-const AVATAR_SIZE = 110
-/** The hero sits this far in from the card's top and sides, like a screen in a bezel. */
-const HERO_INSET = 6
-
 const EMPTY_PERSONA_TAGS: string[] = []
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function getInitials(name: string): string {
-  return name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map(w => w[0] ?? '')
-    .join('')
-    .toUpperCase()
-}
 
 function formatCount(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
@@ -86,106 +52,6 @@ const RISE = {
   initial:    { y: 8, opacity: 0 },
   animate:    { y: 0, opacity: 1 },
   transition: { duration: 0.3, ease: 'easeOut' as const },
-}
-
-// ── AuthorRow ─────────────────────────────────────────────────────────────────
-// Author info row shown on community cards (below description).
-
-function AuthorRow({
-  authorHandle,
-  authorAvatarUrl,
-  useCount,
-}: {
-  authorHandle?:    string
-  authorAvatarUrl?: string
-  useCount?:        number
-}) {
-  if (!authorHandle) return null
-
-  const initials = getInitials(authorHandle.replace(/\d+$/, '') || authorHandle)
-
-  return (
-    <div
-      style={{
-        display:    'flex',
-        alignItems: 'center',
-        gap:        6,
-        marginTop:  8,
-      }}
-    >
-      {/* Mini-avatar */}
-      <div
-        style={{
-          width:           18,
-          height:          18,
-          borderRadius:    '50%',
-          overflow:        'hidden',
-          backgroundColor: 'var(--neutral-200)',
-          flexShrink:      0,
-          display:         'flex',
-          alignItems:      'center',
-          justifyContent:  'center',
-        }}
-      >
-        {authorAvatarUrl ? (
-          <Image
-            src={authorAvatarUrl}
-            alt=""
-            fill
-            sizes="18px"
-            style={{ objectFit: 'cover', display: 'block' }}
-            unoptimized
-          />
-        ) : (
-          <span
-            style={{
-              fontFamily: 'var(--font-body)',
-              fontSize: 12,
-              fontWeight: 500,
-              color:      'var(--neutral-600)',
-              lineHeight: 1,
-              userSelect: 'none',
-            }}
-          >
-            {initials}
-          </span>
-        )}
-      </div>
-
-      {/* Handle */}
-      <span
-        style={{
-          fontFamily: 'var(--font-code)',
-          fontSize:   'var(--font-size-code)',
-          lineHeight: 'var(--line-height-code)',
-          color:      'var(--neutral-600)',
-        }}
-      >
-        @{authorHandle}
-      </span>
-
-      {useCount !== undefined && (
-        <>
-          <span
-            aria-hidden
-            style={{ color: 'var(--neutral-300)', lineHeight: 1, flexShrink: 0 }}
-          >
-            ·
-          </span>
-          <span
-            style={{
-              fontFamily: 'var(--font-body)',
-              fontSize:   'var(--font-size-caption)',
-              lineHeight: 'var(--line-height-caption)',
-              color:      'var(--neutral-400)',
-            }}
-          >
-            {formatCount(useCount)}
-          </span>
-        </>
-      )}
-    </div>
-  )
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -406,8 +272,6 @@ function PersonaCardInner({
     // Where the avatar's eyes look: the hero scene's lead element, or the pointer over the card.
     const [gaze] = useState(() => new GazeChannel())
     const [menuOpen,         setMenuOpen]         = useState(false)
-    const [dropUp,           setDropUp]           = useState(false)
-    const menuTriggerRef = useRef<HTMLDivElement>(null)
 
     // Keyboard focus inside the card counts as being there — it wakes the card like a hover.
     const [keyboardHot, setKeyboardHot] = useState(false)
@@ -447,28 +311,6 @@ function PersonaCardInner({
       isCommunity && onOpen ? { label: 'Open', onClick: onOpen } :
       !paused && !isDraft && !isTemplate && !isCommunity && onUseInChat ? { label: useInChatLabel ?? 'Use in chat', onClick: onUseInChat } :
       null
-
-    // Close dropdown when clicking anywhere outside the card.
-    useEffect(() => {
-      if (!menuOpen) return
-      const close = () => setMenuOpen(false)
-      document.addEventListener('click', close)
-      return () => document.removeEventListener('click', close)
-    }, [menuOpen])
-
-    const handleMenuToggle = useCallback((e: React.MouseEvent) => {
-      e.stopPropagation()
-      setMenuOpen(v => {
-        if (!v) {
-          const el = menuTriggerRef.current
-          if (el) {
-            const rect = el.getBoundingClientRect()
-            setDropUp(window.innerHeight - rect.bottom < 200)
-          }
-        }
-        return !v
-      })
-    }, [])
 
     const Comp = (asChild ? Slot : 'div') as React.ElementType
     const mood: AvatarMood = modelUnavailable ? 'unavailable' : paused ? 'asleep' : isDraft ? 'drowsy' : 'awake'
@@ -732,126 +574,22 @@ function PersonaCardInner({
           )}
 
 
-          {/* ··· menu trigger + dropdown (default variant only).
-              Stays interactive when the model is unavailable — the
-              surrounding content sets pointerEvents:none and the scrim
-              paints over it, so this opts both back in for itself. */}
           {!isTemplate && !isCommunity && !hideMenu && (
-            // eslint-disable-next-line click-events-have-key-events, no-static-element-interactions -- interactive div; keyboard handling delegated to inner elements
-            <div
-              ref={menuTriggerRef}
-              className="agent-card-chip"
-              data-open={menuOpen || undefined}
-              style={{
-                position:      'absolute',
-                top:           12,
-                right:         12,
-                zIndex:        3,
-                ...(modelUnavailable ? { pointerEvents: 'auto' as const } : null),
-              }}
-              onMouseDown={e => e.stopPropagation()}
-              onClick={e => e.stopPropagation()}
-            >
-              <IconButton
-                variant="ghost"
-                size="xs"
-                aria-label="More options"
-                aria-expanded={menuOpen}
-                icon={
-                  <m.span animate={{ rotate: menuOpen ? 90 : 0 }} transition={{ duration: 0.2, ease: 'easeOut' }} style={{ display: 'inline-flex' }}>
-                    <MoreVerticalIcon />
-                  </m.span>
-                }
-                onClick={handleMenuToggle}
-              />
-
-              {/* Dropdown menu */}
-              <AnimatePresence>
-                {menuOpen && (
-                  <>
-                    {/* Click-outside backdrop */}
-                    {/* eslint-disable-next-line no-static-element-interactions -- interactive div; keyboard handling delegated to inner elements */}
-                    <div
-                      style={{
-                        position: 'fixed',
-                        inset:    0,
-                        zIndex:   10,
-                      }}
-                      onMouseDown={() => setMenuOpen(false)}
-                    />
-                    <m.div
-                      {...DROPDOWN_SCALE_PRESET}
-                      initial={{ ...DROPDOWN_SCALE_PRESET.initial, transformOrigin: dropUp ? 'bottom center' : 'top center' }}
-                      animate={{ ...DROPDOWN_SCALE_PRESET.animate, transformOrigin: dropUp ? 'bottom center' : 'top center' }}
-                      style={{
-                        position: 'absolute',
-                        ...(dropUp ? { bottom: 28, top: 'auto' } : { top: 28 }),
-                        right:    0,
-                        zIndex:   20,
-                      }}
-                    >
-                      <Dropdown size="sm" maxHeight={false}>
-                        <Dropdown.Section fluid>
-                          {onMenuDetails && (
-                            <Dropdown.Item
-                              label="Details"
-                              icon={<InformationCircleIcon />}
-                              fluid
-                              onClick={() => { setMenuOpen(false); onMenuDetails() }}
-                            />
-                          )}
-                          {(onMenuEdit ?? onEdit) && (
-                            <Dropdown.Item
-                              label="Edit"
-                              icon={<PenOneIcon />}
-                              fluid
-                              onClick={() => { setMenuOpen(false); (onMenuEdit ?? onEdit)?.() }}
-                            />
-                          )}
-                          {(onMenuShare ?? onLink) && (
-                            <Dropdown.Item
-                              label="Share"
-                              icon={<ShareOneIcon />}
-                              fluid
-                              onClick={() => { setMenuOpen(false); (onMenuShare ?? onLink)?.() }}
-                            />
-                          )}
-                          {onMenuPauseToggle && (
-                            <Dropdown.Item
-                              label={paused ? 'Resume' : 'Pause'}
-                              icon={paused ? <ArrowRightTwoIcon /> : <StopCircleIcon />}
-                              fluid
-                              loading={pausePending}
-                              onClick={() => { setMenuOpen(false); onMenuPauseToggle() }}
-                            />
-                          )}
-                        </Dropdown.Section>
-                        {onMenuDuplicate && (
-                          <Dropdown.Section fluid divider>
-                            <Dropdown.Item
-                              label="Copy & Edit"
-                              icon={<CopyOneIcon />}
-                              fluid
-                              onClick={() => { setMenuOpen(false); onMenuDuplicate() }}
-                            />
-                          </Dropdown.Section>
-                        )}
-                        {onMenuDelete && (
-                          <Dropdown.Section fluid divider>
-                            <Dropdown.Item
-                              label="Delete"
-                              variant="danger"
-                              fluid
-                              onClick={() => { setMenuOpen(false); onMenuDelete() }}
-                            />
-                          </Dropdown.Section>
-                        )}
-                      </Dropdown>
-                    </m.div>
-                  </>
-                )}
-              </AnimatePresence>
-            </div>
+            <AgentCardMenu
+              open={menuOpen}
+              onOpenChange={setMenuOpen}
+              modelUnavailable={modelUnavailable}
+              paused={paused}
+              pausePending={pausePending}
+              onMenuDetails={onMenuDetails}
+              onMenuEdit={onMenuEdit}
+              onEdit={onEdit}
+              onMenuShare={onMenuShare}
+              onLink={onLink}
+              onMenuPauseToggle={onMenuPauseToggle}
+              onMenuDuplicate={onMenuDuplicate}
+              onMenuDelete={onMenuDelete}
+            />
           )}
 
 
@@ -926,51 +664,13 @@ function PersonaCardInner({
 
         </div>{/* /Main content */}
 
-        {/* ── Action row: the one centred button, under a hairline like the reference card's
-            divider. The row is always there so the 40 / 40 / 20 split holds with or without a button. ── */}
-        <div
-          style={{
-            height:         ACTION_HEIGHT,
-            flexShrink:     0,
-            boxSizing:      'border-box' as const,
-            display:        'flex',
-            alignItems:     'center',
-            justifyContent: 'center',
-            // A hairline that fades out at both ends.
-            backgroundImage:    primary && !modelUnavailable ? 'linear-gradient(90deg, transparent, var(--neutral-200), transparent)' : undefined,
-            backgroundSize:     '100% 1px',
-            backgroundPosition: 'top',
-            backgroundRepeat:   'no-repeat',
-            marginInline:   14,
-          }}
-        >
-          {primary && !modelUnavailable && (
-            <span
-              className="agent-card-cta"
-              onPointerEnter={e => { attendTo(e.currentTarget); setCtaHot(true) }}
-              onPointerLeave={() => { attendTo(null); setCtaHot(false) }}
-              onFocus={e => { if ((e.target as HTMLElement).matches(':focus-visible')) { attendTo(e.currentTarget); setCtaHot(true) } }}
-              onBlur={() => { attendTo(null); setCtaHot(false) }}
-            >
-              <AgentCardButton size="sm" loading={primary.loading} disabled={primary.loading} onClick={primary.onClick}>
-                <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-                  {primary.label}
-                  {/* Slides in (and takes its room) only while the button is hot, so the label
-                      stays centred at rest: "go". */}
-                  <m.span
-                    aria-hidden
-                    initial={false}
-                    animate={{ width: ctaHot ? 20 : 0, opacity: ctaHot ? 1 : 0, x: ctaHot ? 0 : -4 }}
-                    transition={{ duration: 0.18, ease: 'easeOut' }}
-                    style={{ display: 'inline-flex', justifyContent: 'flex-end', overflow: 'hidden' }}
-                  >
-                    <ArrowRightTwoIcon size={14} />
-                  </m.span>
-                </span>
-              </AgentCardButton>
-            </span>
-          )}
-        </div>
+        <CardActionRow
+          primary={primary}
+          modelUnavailable={modelUnavailable}
+          ctaHot={ctaHot}
+          setCtaHot={setCtaHot}
+          attendTo={attendTo}
+        />
 
         {/* ── Model unavailable — muted scrim + centered "Change model" over
             the dimmed content (kept faintly visible so the card still reads
@@ -978,59 +678,12 @@ function PersonaCardInner({
             has pointerEvents:none, so this and the ··· menu (which lifts
             itself to zIndex 3) are the only interactive surfaces left. ── */}
         {modelUnavailable && (
-          <>
-            <div
-              aria-hidden
-              style={{
-                position:        'absolute',
-                inset:           0,
-                borderRadius:    CARD_RADIUS,
-                backgroundColor: isDraft ? 'var(--neutral-50)' : 'var(--agent-card-bg)',
-                // Carries the whole dim now that the content div no longer
-                // fades itself (see the pointerEvents note above).
-                opacity:         0.72,
-                zIndex:          1,
-              }}
-            />
-            <div
-              style={{
-                position:       'absolute',
-                inset:          0,
-                display:        'flex',
-                flexDirection:  'column',
-                alignItems:     'center',
-                justifyContent: 'center',
-                gap:            10,
-                padding:        16,
-                textAlign:      'center',
-                zIndex:         2,
-              }}
-            >
-              <AlertTwoIcon animated size={20} color="var(--color-tag-Yellow-text)" />
-              <p
-                style={{
-                  margin:     0,
-                  fontFamily: 'var(--font-body)',
-                  fontSize:   'var(--font-size-caption)',
-                  lineHeight: 'var(--line-height-caption)',
-                  color:      'var(--neutral-500)',
-                }}
-              >
-                {unavailableModelName
-                  ? modelUnavailableReason === 'blocked'
-                    ? `${unavailableModelName} is turned off.`
-                    : `${unavailableModelName} is no longer available.`
-                  : modelUnavailableReason === 'blocked'
-                    ? 'This agent’s model is turned off.'
-                    : 'This agent’s model is no longer available.'}
-              </p>
-              {onChangeModel && (
-                <Button variant="ghost" size="sm" onClick={onChangeModel}>
-                  Change model
-                </Button>
-              )}
-            </div>
-          </>
+          <ModelUnavailableOverlay
+            isDraft={isDraft}
+            reason={modelUnavailableReason}
+            modelName={unavailableModelName}
+            onChangeModel={onChangeModel}
+          />
         )}
 
       </Comp>

@@ -18,7 +18,9 @@ import { useChatHistoryContext } from "@/context/chat-history-context";
 import { useProjects } from "@/context/projects-context";
 import { MoveToProjectModal } from "@/components/MoveToProjectModal";
 import { addChatToProject } from "@/lib/api/projects";
-import { fetchPersonas, fetchPersonaChats, renamePersonaChat, deletePersonaChat, personasForTeamContext, isPersonaOwnedByViewer, isDraftPersona, PERSONAS_LIST_UPDATED_EVENT } from "@/lib/api/personas";
+import { fetchPersonas, fetchPersonaChats, renamePersonaChat, deletePersonaChat, personasForTeamContext, isDraftPersona } from "@/lib/api/personas";
+import { can } from "@/lib/agent-permissions";
+import { onPersonasInvalidated } from "@/lib/api/persona-cache";
 import type { Persona, PersonaChat } from "@/lib/api/personas";
 import { resolveViewerUserId } from "@/lib/api/teams";
 import { usePersonas } from "@/lib/queries/personas";
@@ -52,8 +54,7 @@ import {
   ORG_ANALYTICS_ROUTE,
   ORG_SOUVENIR_SLACK_ROUTE,
   AGENT_CHAT_ROUTE,
-  AGENT_CONFIGURE_BASE_ROUTE,
-  AGENT_CONFIGURE_INSTRUCTIONS_ROUTE,
+  AGENT_EDIT_ROUTE,
   AGENTS_ROUTE,
   AGENTS_TEMPLATES_ROUTE,
   SCHEDULES_ROUTE,
@@ -79,8 +80,6 @@ const SHOW_NOTIFICATION_BELL = false;
 // server by the (app) layout and passed down as `defaultCollapsed`, so the
 // server render and the client's first render agree (no localStorage read
 // during render — that's what caused the 294px-vs-48px hydration mismatch).
-// localStorage is still written for agent/configure/layout.tsx, which reads it
-// to decide whether to toggle the sidebar.
 
 const SIDEBAR_COLLAPSED_COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
 
@@ -993,7 +992,7 @@ function PersonasSectionAll({ teamId }: { teamId?: string | null } = {}) {
   )
 
   const personas = useMemo(
-    () => rawPersonas.filter(p => !isDraftPersona(p) && isPersonaOwnedByViewer(p, personaOwnerMap, viewerUserId, currentUserRole === 'admin')),
+    () => rawPersonas.filter(p => !isDraftPersona(p) && can({ userId: viewerUserId, isAdmin: currentUserRole === 'admin', ownerMap: personaOwnerMap }, 'list', p)),
     [rawPersonas, personaOwnerMap, viewerUserId, currentUserRole],
   )
 
@@ -1067,7 +1066,7 @@ function PersonasSectionAll({ teamId }: { teamId?: string | null } = {}) {
   }, [])
 
   // Re-fetch on publish/delete/update is now handled inside usePersonas() itself
-  // (it invalidates the shared query on the same PERSONAS_LIST_UPDATED_EVENT).
+  // (bustPersonasCache() invalidates the shared query).
 
   const handleExpand = useCallback((personaId: string, expanded: boolean) => {
     setExpandedIds(prev => {
@@ -1166,7 +1165,7 @@ function PersonasSectionAll({ teamId }: { teamId?: string | null } = {}) {
                   active={isActive}
                   expanded={isDraft ? false : isExpanded}
                   onClick={() => isDraft
-                    ? push(AGENT_CONFIGURE_INSTRUCTIONS_ROUTE(persona.id, { name: persona.name }))
+                    ? push(AGENT_EDIT_ROUTE(persona.id))
                     : handleExpand(persona.id, !isExpanded)}
                   onExpandedChange={(v) => { if (!isDraft) handleExpand(persona.id, v) }}
                   showExpandArrow={!isDraft}
@@ -1330,7 +1329,7 @@ function PersonasSectionIndividual() {
   }, [])
 
   // Re-fetch on publish/delete/update is now handled inside usePersonas() itself
-  // (it invalidates the shared query on the same PERSONAS_LIST_UPDATED_EVENT).
+  // (bustPersonasCache() invalidates the shared query).
 
   const handleExpand = useCallback((personaId: string, expanded: boolean) => {
     setExpandedIds(prev => {
@@ -1398,7 +1397,7 @@ function PersonasSectionIndividual() {
           active={isActive}
           expanded={isDraft ? false : isExpanded}
           onClick={() => isDraft
-            ? push(AGENT_CONFIGURE_INSTRUCTIONS_ROUTE(persona.id, { name: persona.name }))
+            ? push(AGENT_EDIT_ROUTE(persona.id))
             : handleExpand(persona.id, !isExpanded)}
           onExpandedChange={(v) => { if (!isDraft) handleExpand(persona.id, v) }}
           showExpandArrow={!isDraft}
@@ -1587,8 +1586,7 @@ function RecentAgentChatsSection() {
 
   // Silent re-fetch on persona publish/delete/update
   useEffect(() => {
-    window.addEventListener(PERSONAS_LIST_UPDATED_EVENT, fetchAll)
-    return () => window.removeEventListener(PERSONAS_LIST_UPDATED_EVENT, fetchAll)
+    return onPersonasInvalidated(() => { void fetchAll() })
   }, [fetchAll])
 
   // Incremental updates for new chats and renames
@@ -2226,7 +2224,7 @@ function FlatDestinations({ onNewChat, newChatSelected, collapsed = false }: Fla
       <FlatSidebarRow collapsed={collapsed} variant="default" icon={<QuillWriteTwoIcon size={20} animated />} label="New" selected={newChatSelected} onClick={onNewChat} />
       <FlatSidebarRow
         collapsed={collapsed} variant="default" icon={<UserAiIcon size={20} />} label="Agents"
-        selected={pathname.startsWith(AGENTS_ROUTE) || pathname.startsWith('/agent/')}
+        selected={pathname.startsWith(AGENTS_ROUTE)}
         href={AGENTS_ROUTE} onClick={() => push(AGENTS_ROUTE)}
       />
       <FlatSidebarRow
@@ -2302,11 +2300,10 @@ function LeftSidebarImpl({
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
-  const isPersonaPage = pathname?.startsWith("/agents") || pathname?.startsWith("/agent");
+  const isPersonaPage = pathname?.startsWith("/agents");
   // All 5 Agent Configure tabs (Instructions/Profile/Knowledge/Connectors/
   // Sharing) are a deliberately full-width editing surface — the sidebar
   // stays collapsed and its toggle disabled so it can't be re-expanded.
-  const isAgentConfigurePage = pathname?.startsWith(AGENT_CONFIGURE_BASE_ROUTE) ?? false;
   const isSlackPage = pathname?.startsWith(ORG_SOUVENIR_SLACK_ROUTE) ?? false;
   const isMobile = useMobile();
   // Trailing slash matters: bare "/project" also prefix-matches "/projects"
@@ -2548,7 +2545,7 @@ function LeftSidebarImpl({
           searchActive={searchOpen}
           onCollapse={handleCollapse}
           defaultCollapsed={collapsedRef.current}
-          forceCollapsed={isAgentConfigurePage || (isSlackPage && isMobile)}
+          forceCollapsed={isSlackPage && isMobile}
           destinationsItems={(collapsed) => <FlatDestinations onNewChat={handleNewChat} newChatSelected={isNewChatPage} collapsed={collapsed} />}
           projectItems={orgId ? (
             <FlatTeamsSidebarContent role={currentUserRole} />

@@ -1,6 +1,7 @@
 ﻿'use client'
 // published persona confirmation page
 import React, { useState, useEffect, Suspense } from 'react'
+import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeftOneIcon, LinkSixIcon, CancelOneIcon, BubbleChatAddIcon, ShareOneIcon } from '@strange-huge/icons'
@@ -18,9 +19,12 @@ import {
   type PersonaShare,
 } from '@/lib/api/persona-shares'
 import { canonicalShareUrl } from '@/lib/share-url'
-import { AGENTS_ROUTE, CHAT_ROUTE, AGENT_CONFIGURE_SHARING_ROUTE } from '@/lib/routes'
+import { AGENTS_ROUTE, CHAT_ROUTE } from '@/lib/routes'
 import { emitSidebarNewChat } from '@/hooks/use-sidebar-events'
 import type { SelectedPersonaInfo } from '@/lib/chat-personas'
+import { PENDING_PERSONA_KEY } from '@/lib/storage-keys'
+
+const AgentShareModal = dynamic(() => import('@/components/AgentShareModal').then(m => m.AgentShareModal), { ssr: false })
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -213,7 +217,6 @@ function PersonaPublishedContent() {
   const searchParams = useSearchParams()
   const nameParam     = searchParams.get('name') || ''
   const repoId        = searchParams.get('repoId')     ?? ''
-  const versionId     = searchParams.get('versionId')  ?? ''
   const isRepublished = searchParams.get('republished') === 'true'
 
   const { user } = useAuth()
@@ -225,6 +228,7 @@ function PersonaPublishedContent() {
   const [tokenLimit,     setTokenLimit]     = useState<string>('')
   const [isGenerating,   setIsGenerating]   = useState(false)
   const [isRevoking,     setIsRevoking]     = useState(false)
+  const [shareModalOpen, setShareModalOpen] = useState(false)
   const [personaImageUrl, setPersonaImageUrl] = useState<string | null>(null)
   // Kept in full (not just name/imageUrl) so "Use this Agent" can build a
   // complete SelectedPersonaInfo without a second fetch.
@@ -242,19 +246,20 @@ function PersonaPublishedContent() {
       .catch(() => {})
   }, [repoId])
 
-  // Load existing link share on mount — shares are repo-scoped, not frozen to
-  // a version, so this matches on persona_repo_id (see SharingTab.tsx).
-  useEffect(() => {
+  // Load the existing link share — shares are repo-scoped, not frozen to a
+  // version, so this matches on persona_repo_id. Re-run after the share modal changes anything.
+  const loadLinkShare = React.useCallback(() => {
     if (!repoId) return
     listShares()
       .then(all => {
         const existing = all.find(
           s => s.persona_repo_id === repoId && s.share_type === 'link' && s.is_active,
         )
-        if (existing) setLinkShare(existing)
+        setLinkShare(existing ?? null)
       })
       .catch(() => {})
   }, [repoId])
+  useEffect(() => { loadLinkShare() }, [loadLinkShare])
 
   async function handleGenerateSuperLink() {
     const limit = parseInt(tokenLimit, 10)
@@ -316,7 +321,7 @@ function PersonaPublishedContent() {
       paused:          personaRepo.isPaused,
       shared:          false,
     }
-    sessionStorage.setItem('new-chat-pending-persona', JSON.stringify(info))
+    sessionStorage.setItem(PENDING_PERSONA_KEY, JSON.stringify(info))
     // /chat may already be mounted from an earlier visit — a plain push() to
     // the same route won't remount it, so the pending-persona sessionStorage
     // read (a mount-time-only lazy initializer) never fires and the chip
@@ -628,13 +633,13 @@ function PersonaPublishedContent() {
                   </Button>
                 )}
 
-                {/* Visible when no super link yet — same condition as before. */}
-                {!linkShare && repoId && versionId && (
+                {/* Visible when no super link yet. */}
+                {!linkShare && repoId && (
                   <Button
                     variant="secondary"
                     size="sm"
                     leftIcon={<ShareOneIcon size={18} />}
-                    onClick={() => push(AGENT_CONFIGURE_SHARING_ROUTE(repoId, { versionId }))}
+                    onClick={() => setShareModalOpen(true)}
                   >
                     Configure Sharing
                   </Button>
@@ -644,6 +649,15 @@ function PersonaPublishedContent() {
           </div>
         </div>
       </div>
+      {shareModalOpen && repoId && (
+        <AgentShareModal
+          open
+          repoId={repoId}
+          agentName={personaName}
+          onClose={() => setShareModalOpen(false)}
+          onChanged={loadLinkShare}
+        />
+      )}
     </div>
   )
 }

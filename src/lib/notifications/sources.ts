@@ -4,7 +4,8 @@
 // flashing everything away on a transient error.
 
 import { getAutomation, listAutomations, type Automation } from '@/lib/api/automations'
-import { fetchPersonas, isPersonaOwnedByViewer, type Persona } from '@/lib/api/personas'
+import { fetchPersonas, type Persona } from '@/lib/api/personas'
+import { can } from '@/lib/agent-permissions'
 import { fetchModelsWithCache } from '@/lib/ai-models'
 import { buildModelBlockedMap, buildModelNameMap, findUnavailableAgentModels, type UnavailableAgentModel } from '@/lib/agent-model-health'
 import { parseServerDate } from '@/lib/utils/format-utils'
@@ -84,7 +85,7 @@ export async function loadAgentModelSnapshot(viewerIsAdmin: boolean): Promise<Ag
     // An empty catalog means the fetch failed (fetchModelsWithCache swallows
     // errors) — every agent would read as "retired". Treat as unknown.
     if (!models.length) return null
-    const isVisible = (p: Persona) => p.visibility !== 'team' || isPersonaOwnedByViewer(p, {}, null, viewerIsAdmin)
+    const isVisible = (p: Persona) => can({ userId: null, isAdmin: viewerIsAdmin }, 'list', p)
     return {
       rows:       findUnavailableAgentModels(personas, buildModelBlockedMap(models), isVisible),
       modelNames: buildModelNameMap(models),

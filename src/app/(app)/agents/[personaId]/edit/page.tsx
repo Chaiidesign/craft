@@ -17,7 +17,8 @@ import { usePersonaRepoById } from '@/hooks/use-persona-repos'
 import { useAuth } from '@/context/auth-context'
 import { useOrg } from '@/context/org-context'
 import { fetchModelsWithCache } from '@/lib/ai-models'
-import { copyPersonaRepoDeduped, isPersonaOwnedByViewer } from '@/lib/api/personas'
+import { copyPersonaRepoDeduped } from '@/lib/api/personas'
+import { can } from '@/lib/agent-permissions'
 import { resolveViewerUserId } from '@/lib/api/teams'
 import type { AIModel } from '@/types/ai-model'
 import {
@@ -102,7 +103,7 @@ function EditAgentContent() {
   const viewerUserId = resolveViewerUserId(members, user?.email)
   const persona = repo ? repo.toPersona() : null
   const isOwner = persona
-    ? persona.sourceShareId === null && isPersonaOwnedByViewer(persona, {}, viewerUserId, currentUserRole === 'admin')
+    ? can({ userId: viewerUserId, isAdmin: currentUserRole === 'admin' }, 'edit', persona)
     : false
   const isTeamShared = persona?.visibility === 'team'
 

@@ -21,7 +21,7 @@ import { toast } from 'sonner'
 import { useAuth } from '@/context/auth-context'
 import { useOrg } from '@/context/org-context'
 import { useGuardedRouter } from '@/context/nav-guard-context'
-import { PERSONAS_LIST_UPDATED_EVENT } from '@/lib/api/persona-cache'
+import { onPersonasInvalidated } from '@/lib/api/persona-cache'
 import {
   agentModelNotifications,
   bundleNotifications,
@@ -227,8 +227,7 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
   useEffect(() => {
     if (!userKey) return
     const onPersonasChanged = () => { void loadAgents(pollIdRef.current) }
-    window.addEventListener(PERSONAS_LIST_UPDATED_EVENT, onPersonasChanged)
-    return () => window.removeEventListener(PERSONAS_LIST_UPDATED_EVENT, onPersonasChanged)
+    return onPersonasInvalidated(onPersonasChanged)
   }, [userKey, loadAgents])
   useEffect(() => {
     if (userKey && devVersion > 0) void loadAgents(pollIdRef.current)

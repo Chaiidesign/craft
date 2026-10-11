@@ -100,11 +100,6 @@ export const PROJECT_BASE_ROUTE = "/project";
 export const AGENT_BASE_ROUTE = "/agent";
 export const TEAMS_BASE_ROUTE = "/teams";
 
-export const AGENT_CONFIGURE_BASE_ROUTE = "/agent/configure";
-export const AGENT_CONFIGURE_INSTRUCTIONS_BASE_ROUTE = "/agent/configure/instructions";
-export const AGENT_CONFIGURE_SHARING_BASE_ROUTE = "/agent/configure/sharing";
-export const AGENT_CONFIGURE_TAB_ROUTE = (tab: string) => `${AGENT_CONFIGURE_BASE_ROUTE}/${tab}`;
-
 export const PROJECT_ROUTE = (projectId: string) => `/project/${projectId}`;
 export const PROJECT_CHAT_ROUTE = (projectId: string, chatId: string) =>
   `/project/${projectId}/chat/${chatId}`;
@@ -115,25 +110,6 @@ export const CHAT_SHARE_ROUTE = (shareId: string) => `/chat-shares/${shareId}`;
 
 export const ONBOARDING_TEAM_WELCOME_ROUTE = (inviteId: string) => `${ONBOARDING_TEAM_BASE_ROUTE}/${inviteId}`;
 export const ONBOARDING_TEAM_PROFILE_ROUTE = (inviteId: string) => `/onboarding/team/${inviteId}/profile`;
-
-type AgentConfigureQueryOpts = { name?: string | null; versionId?: string | null };
-
-const withAgentConfigureQuery = (
-  base: string,
-  repoId: string,
-  opts?: AgentConfigureQueryOpts,
-) => {
-  let route = `${base}?repoId=${repoId}`;
-  if (opts?.name) route += `&name=${encodeURIComponent(opts.name)}`;
-  if (opts?.versionId) route += `&versionId=${opts.versionId}`;
-  return route;
-};
-
-export const AGENT_CONFIGURE_INSTRUCTIONS_ROUTE = (repoId: string, opts?: AgentConfigureQueryOpts) =>
-  withAgentConfigureQuery(AGENT_CONFIGURE_INSTRUCTIONS_BASE_ROUTE, repoId, opts);
-
-export const AGENT_CONFIGURE_SHARING_ROUTE = (repoId: string, opts?: AgentConfigureQueryOpts) =>
-  withAgentConfigureQuery(AGENT_CONFIGURE_SHARING_BASE_ROUTE, repoId, opts);
 
 export const AUTH_LOGOUT_ROUTE = (returnTo: string) =>
   `/auth/logout?returnTo=${encodeURIComponent(returnTo)}`;

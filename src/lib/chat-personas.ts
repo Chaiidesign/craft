@@ -3,10 +3,10 @@ import {
   isPersonaOwnedByViewer,
   isDraftPersona,
   copyPersonaRepoDeduped,
-  PERSONAS_LIST_UPDATED_EVENT,
   type Persona,
   type PersonaRepoResponse,
 } from '@/lib/api/personas'
+import { onPersonasInvalidated } from '@/lib/api/persona-cache'
 
 export interface SelectedPersonaInfo {
   id:              string
@@ -126,7 +126,7 @@ const _selectableInFlight = new Map<string, Promise<SelectedPersonaInfo[]>>()
 const SELECTABLE_CACHE_TTL = 30_000
 
 if (typeof window !== 'undefined') {
-  window.addEventListener(PERSONAS_LIST_UPDATED_EVENT, () => {
+  onPersonasInvalidated(() => {
     _selectableCache.clear()
     _selectableInFlight.clear()
   })

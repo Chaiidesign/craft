@@ -90,10 +90,9 @@ function TopBarImpl({ showCitationsToggle: _showCitationsToggle, citationsOpen: 
   const personaChatMatch      = actualPathname.match(/^\/agents\/([^/]+)\/chat/);
   const isPersonaChatPage     = !!personaChatMatch;
   const personaId             = personaChatMatch?.[1] ?? null;
-  const isPersonaConfigurePage = actualPathname.startsWith('/agent/configure');
   // Plain /chat?id=… page only — project/persona chats use their own
   // ownership model, not the /chats library's can_edit/visibility fields.
-  const isPlainChatPage = !isProjectChatPage && !isProjectDetailPage && !isChatsPage && !isPersonaChatPage && !isPersonaConfigurePage;
+  const isPlainChatPage = !isProjectChatPage && !isProjectDetailPage && !isChatsPage && !isPersonaChatPage;
   const activeChatIdFromUrl = isPlainChatPage ? (searchParams.get('id') ?? undefined) : undefined;
   const activeChatFromUrl = activeChatIdFromUrl ? chatHistoryChats.find(c => c.id === activeChatIdFromUrl) : undefined;
   const isArchivedChat = activeChatFromUrl?.visibility === 'archived';
@@ -345,7 +344,7 @@ function TopBarImpl({ showCitationsToggle: _showCitationsToggle, citationsOpen: 
               selector itself no longer shows here — ChatInput's own ModelMenu
               (in the composer) covers the same 3 models everywhere this
               TopBar's button used to. ── */}
-          {!isProjectDetailPage && !isChatsPage && !isPersonaConfigurePage && isArchivedChat && backToArchivedButton}
+          {!isProjectDetailPage && !isChatsPage && isArchivedChat && backToArchivedButton}
         </>
       )}
     </div>

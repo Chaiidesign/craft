@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { TestTubeIcon } from '@strange-huge/icons'
 import { Button } from '@/components/Button'
 import { testVersionStream } from '@/lib/api/personas'
+import { trackFeature } from '@/lib/analytics/events'
 import { BOX_STYLE, HINT_STYLE, INPUT_STYLE, LABEL_STYLE } from './styles'
 
 export interface TryItBoxProps {
@@ -36,6 +37,7 @@ export function TryItBox({ repoId, versionId, pausedReason }: TryItBoxProps) {
     setOutput('')
     setError(null)
     setStreaming(true)
+    trackFeature('agent_tested')
     const run = ++runRef.current
     try {
       const abort = await testVersionStream(repoId, versionId, message, {

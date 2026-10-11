@@ -110,6 +110,7 @@ export async function createAgent(
       image,
     })
   } catch (error) {
+    trackBrowserEvent('agent_save_failed', { stage: 'create', reason: 'api_error' })
     throw new AgentSaveError(error instanceof Error ? error.message : 'Failed to create the agent.', 'create')
   }
 
@@ -127,6 +128,7 @@ export async function createAgent(
     }
   }
   if (!versionId) {
+    trackBrowserEvent('agent_save_failed', { stage: 'create', reason: 'incomplete' })
     bustPersonasCache()
     throw new AgentSaveError('The agent was created but couldn’t be finished. Find it in your agents list and open it to finish.', 'create')
   }
@@ -196,6 +198,7 @@ export async function saveAgentChanges(input: SaveAgentInput): Promise<SavedAgen
     })
     imageUrl = updated.image_url ?? imageUrl
   } catch (error) {
+    trackBrowserEvent('agent_save_failed', { stage: 'update', reason: 'api_error' })
     throw new AgentSaveError(error instanceof Error ? error.message : 'Failed to save the agent.', 'update')
   }
 

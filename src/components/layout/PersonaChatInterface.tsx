@@ -39,6 +39,7 @@ import { AnimatePresence } from "framer-motion";
 import { CreditStatusBanner } from "@/components/CreditStatusBanner";
 import { InlineCreditNotice } from "@/components/InlineCreditNotice";
 import { useWorkspaceCreditNotice } from "@/hooks/use-workspace-credit-notice";
+import { personaModelCacheKey } from '@/lib/storage-keys'
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 
@@ -321,7 +322,7 @@ export function PersonaChatInterface({
     let cachedModelName: string | undefined;
     try {
       const raw = typeof window !== "undefined"
-        ? sessionStorage.getItem(`persona_model_cache_${personaId}`)
+        ? sessionStorage.getItem(personaModelCacheKey(personaId))
         : null;
       if (raw) {
         const cached = JSON.parse(raw) as { modelName?: string; companyName?: string };

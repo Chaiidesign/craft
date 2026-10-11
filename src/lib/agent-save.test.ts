@@ -122,7 +122,9 @@ describe('createAgent', () => {
     api.createPersonaRepo.mockRejectedValue(new Error('boom'))
     await expect(createAgent(DRAFT)).rejects.toMatchObject({ reason: 'create', message: 'boom' })
     expect(api.publishPersonaVersion).not.toHaveBeenCalled()
-    expect(track.trackBrowserEvent).not.toHaveBeenCalled()
+    expect(track.trackBrowserEvent).toHaveBeenCalledTimes(1)
+    expect(track.trackBrowserEvent).toHaveBeenCalledWith('agent_save_failed', { stage: 'create', reason: 'api_error' })
+    expect(track.trackBrowserEvent).not.toHaveBeenCalledWith('agent_created', expect.anything())
   })
 
   it('reports an unpublished agent instead of throwing when publish fails', async () => {
@@ -156,6 +158,7 @@ describe('createAgent', () => {
     await expect(createAgent(DRAFT)).rejects.toMatchObject({ reason: 'create', message: expect.stringContaining('was created') })
     expect(api.bustPersonasCache).toHaveBeenCalled()
     expect(api.publishPersonaVersion).not.toHaveBeenCalled()
+    expect(track.trackBrowserEvent).toHaveBeenCalledWith('agent_save_failed', { stage: 'create', reason: 'incomplete' })
   })
 
   it('does the same when reading the agent back fails', async () => {
@@ -219,6 +222,7 @@ describe('saveAgentChanges', () => {
     api.updateVersion.mockRejectedValue(new Error('403'))
     await expect(saveAgentChanges(input({ name: 'Renamed' }, false))).rejects.toMatchObject({ reason: 'update', message: '403' })
     expect(api.publishPersonaVersion).not.toHaveBeenCalled()
+    expect(track.trackBrowserEvent).toHaveBeenCalledWith('agent_save_failed', { stage: 'update', reason: 'api_error' })
   })
 
   it('rejects an incomplete draft', async () => {

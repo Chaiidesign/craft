@@ -12,9 +12,10 @@ import {
 } from "@/lib/config";
 import {
   PERSONAS_CACHE_TTL,
+  PERSONA_REPOS_QUERY_KEY,
   bustPersonasCache,
-  onPersonasInvalidated,
 } from "./persona-cache";
+import { getQueryClient } from "@/lib/query-client";
 import {
   personaRepoSchema,
   personaVersionListItemSchema,
@@ -297,28 +298,19 @@ export class PersonaRepoCollection {
 
 // ── The shared collection ─────────────────────────────────────────────────────
 
-let _cache: { data: PersonaRepoCollection; time: number } | null = null
-let _inFlight: Promise<PersonaRepoCollection> | null = null
-
-onPersonasInvalidated(() => {
-  _cache = null
-  _inFlight = null
-})
-
-/** GET /persona — one request, one cache, shared by every consumer. */
+/** GET /persona — one request, one cache (React Query), shared by every consumer. */
 export function fetchPersonaRepos(): Promise<PersonaRepoCollection> {
-  if (_cache && Date.now() - _cache.time < PERSONAS_CACHE_TTL) return Promise.resolve(_cache.data)
-  if (_inFlight) return _inFlight
-  _inFlight = apiFetchJson<unknown>(PERSONAS_ENDPOINT)
-    .then(raw => {
-      const collection = new PersonaRepoCollection(
+  return getQueryClient().fetchQuery({
+    queryKey: PERSONA_REPOS_QUERY_KEY,
+    staleTime: PERSONAS_CACHE_TTL,
+    retry: false,
+    queryFn: async () => {
+      const raw = await apiFetchJson<unknown>(PERSONAS_ENDPOINT)
+      return new PersonaRepoCollection(
         personaRepoSchema.array().parse(raw).map(wire => new PersonaRepo(wire)),
       )
-      _cache = { data: collection, time: Date.now() }
-      return collection
-    })
-    .finally(() => { _inFlight = null })
-  return _inFlight
+    },
+  })
 }
 
 /** GET /persona/{repo_id} */

@@ -60,6 +60,7 @@ import type { UIMessage } from "@/types/chat";
 import { buildAgentCardMessages } from "@/lib/agent-card-messages";
 import { StarterList, StarterListSkeleton } from "@/components/StarterSuggestions";
 import { useRecommendationsState } from "@/hooks/use-recommendations";
+import { PENDING_PERSONA_KEY } from '@/lib/storage-keys'
 
 
 // ── Per-chat settings helpers ─────────────────────────────────────────────────
@@ -150,7 +151,7 @@ function ChatPageInner() {
   const [selectedFolders,  setSelectedFolders]  = useState<PinFolder[]>([]);
   const [selectedPersona,  setSelectedPersona]  = useState<SelectedPersonaInfo | null>(null);
   const cameFromPendingPersonaRef = usePendingPersonaHandoff(
-    'new-chat-pending-persona',
+    PENDING_PERSONA_KEY,
     !chatIdFromUrl,
     setSelectedPersona,
     { toastMessage: {
