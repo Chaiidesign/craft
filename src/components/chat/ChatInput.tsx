@@ -11,7 +11,6 @@ import {
 } from "@strange-huge/icons";
 import { IconButton } from "@/components/IconButton";
 import { Tooltip } from "@/components/Tooltip";
-import { orbitEasing } from "@/lib/orbit-easing";
 import { ModelIcon } from "@/components/ModelIcon";
 import { Button } from "@/components/Button";
 import { Dropdown, type DropdownPlacement } from "@/components/Dropdown";
@@ -236,22 +235,6 @@ export function ChatInput(
     const chipsScrollRef = useRef<HTMLDivElement>(null);
     const [chipsScroll, setChipsScroll] = useState({ scrollLeft: 0, scrollWidth: 0, clientWidth: 0 });
     const [isThumbDragging, setIsThumbDragging] = useState(false);
-    // Generating-indicator ring: keep its sweep speed constant around the box as it resizes.
-    const orbitRef = useRef<HTMLSpanElement>(null);
-    useEffect(() => {
-      const el = orbitRef.current;
-      // An unsupported linear() would invalidate the whole animation (and CSS is absent in tests); without it the sweep
-      // just runs at constant angle (uneven on wide boxes) instead of stopping.
-      if (!el || typeof CSS === "undefined" || !CSS.supports?.("animation-timing-function", "linear(0, 1)")) return;
-      const apply = () => {
-        const { width, height } = el.getBoundingClientRect();
-        if (width > 0 && height > 0) el.style.setProperty("--kaya-orbit-ease", orbitEasing(width, height));
-      };
-      apply();
-      const observer = new ResizeObserver(apply);
-      observer.observe(el);
-      return () => observer.disconnect();
-    }, []);
 
     // When a message was last sent from the focused box (performance.now()),
     // and whether that focus should come back after the reply — see below.
@@ -728,14 +711,6 @@ export function ChatInput(
         onDragLeave={handlePinDragLeave}
         onDrop={handlePinDrop}
       >
-        {/* ── Generating indicator: gradient sweep circling the input border ── */}
-        <span
-          ref={orbitRef}
-          aria-hidden
-          className="kaya-input-orbit"
-          data-active={isStreaming ? "" : undefined}
-        />
-
         {/* ── Recording state announcer (screen readers only) ── */}
         <span
           role="status"
