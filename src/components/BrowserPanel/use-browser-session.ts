@@ -150,26 +150,35 @@ export function useBrowserSession(): BrowserSession {
       if (!buffer || buffer.updating || queue.length === 0) return
       buffer.appendBuffer(queue.shift() as ArrayBuffer)
       video ??= document.querySelector(`video[src="${shown}"]`)
-      const ranges = video?.buffered
-      if (video && ranges && ranges.length && ranges.end(ranges.length - 1) - video.currentTime > 0.6) {
+      if (!video) return
+      // React sets `muted` as a property after mount, too late for the autoplay decision.
+      video.muted = true
+      if (video.paused) void video.play().catch(() => {})
+      const ranges = video.buffered
+      if (ranges.length && ranges.end(ranges.length - 1) - video.currentTime > 0.6) {
         video.currentTime = ranges.end(ranges.length - 1) - 0.1
       }
     }
     if (media) {
       shown = URL.createObjectURL(media)
       media.addEventListener('sourceopen', () => {
-        buffer = media.addSourceBuffer('video/mp4; codecs="avc1.42E01E"')
+        // Constrained Baseline at level 4.0: what the machine's encoder emits for 1440×900.
+        buffer = media.addSourceBuffer('video/mp4; codecs="avc1.42C028"')
         buffer.mode = 'sequence'
         buffer.addEventListener('updateend', feed)
         feed()
       })
     }
+    let playing = false
     stream.onmessage = event => {
       if (media) {
         if (typeof event.data === 'string') return
         queue.push(event.data as ArrayBuffer)
         feed()
-        patch({ status: 'live', frame: shown })
+        if (!playing) {
+          playing = true
+          patch({ status: 'live', frame: shown })
+        }
         return
       }
       if (typeof event.data === 'string') {

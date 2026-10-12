@@ -289,6 +289,8 @@ function ScreenBody({ session, large, onFrameSize, imageRef, videoRef }: { sessi
             onLoadedMetadata={event => {
               const { videoWidth, videoHeight } = event.currentTarget
               if (videoWidth && videoHeight) onFrameSize(videoWidth / videoHeight)
+              event.currentTarget.muted = true
+              void event.currentTarget.play().catch(() => {})
             }}
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block', objectFit: 'contain', pointerEvents: 'none', backgroundColor: 'var(--neutral-white)' }}
           />
