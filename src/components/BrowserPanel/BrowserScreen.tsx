@@ -343,7 +343,7 @@ function ScreenBody({ session, large, onFrameSize, imageRef, videoRef }: { sessi
           large={large}
           icon={<AiWebBrowsingIcon size={iconSize} />}
           title="No browser running"
-          body="Open a site to use it yourself, or watch the agent when it opens one. Each site gets its own browser: sign in on the site itself and the agent finds you signed in."
+          body="Your own Chrome, kept between chats. Sign in to a site here once and the agent is signed in too."
           action={<OpenForm session={session} large={large} />}
         />
       )
@@ -564,7 +564,7 @@ export function BrowserScreen({ session, expanded, onExpandedChange }: BrowserSc
             style={{ height: HEADER_H, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8, padding: '0 10px 0 14px' }}
           >
             <StatusPill status={session.status} />
-            <AddressBar url={session.pageUrl} onNavigate={session.control ? url => { void session.go(url) } : undefined} />
+            <AddressBar url={session.pageUrl} onNavigate={session.control ? url => session.send({ navigate: url }) : undefined} />
             <div style={{ flex: '1 0 0' }} />
             {session.status === 'live' && !session.control && (
               <Tooltip content="You can watch the agent, but not click or type">
