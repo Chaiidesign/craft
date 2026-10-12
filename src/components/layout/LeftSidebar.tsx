@@ -2488,8 +2488,9 @@ function LeftSidebarImpl({
 
   // The credits line in the account menu: the org's Plan speaks for an org,
   // the personal balance for an individual. The two never mix.
+  // A member cannot see a Teams pool; Enterprise is "Unlimited" for everyone.
   const accountCredits: CreditsDisplay | undefined = orgId
-    ? (orgHasPlan ? plan?.credits : undefined)
+    ? (orgHasPlan && plan && (orgRole === 'admin' || plan.isEnterprise) ? plan.credits : undefined)
     : (planWarning || user?.creditsTotal == null
         ? undefined
         : { value: formatCredits(user.creditsTotal), caption: 'total credits' });

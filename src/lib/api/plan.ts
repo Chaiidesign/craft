@@ -228,9 +228,10 @@ export class Plan {
     return this.planType !== null;
   }
 
-  /** Something to spend: Enterprise always, Teams while the pool holds credit. */
+  /** Something to spend: Enterprise always, Teams while the pool holds credit.
+   *  A member cannot see the pool, so a selected plan that is not paused counts. */
   get isFunded(): boolean {
-    return this.isEnterprise || this.totalCredits > 0;
+    return this.isEnterprise || this.totalCredits > 0 || (this.hasSelectedPlan && this.poolStatus !== "paused");
   }
 
   get teamsTier(): TeamsTier | null {

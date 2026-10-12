@@ -204,7 +204,7 @@ export function SettingsSidebar() {
   const planStatusVariant: 'neutral' | 'blue' = (isTeamUser && orgHasPlan && !plan?.hasSelectedPlan) ? 'blue' : 'neutral'
 
   const accountCredits: CreditsDisplay | undefined = orgId
-    ? (orgHasPlan ? plan?.credits : undefined)
+    ? (orgHasPlan && plan && (orgRole === 'admin' || plan.isEnterprise) ? plan.credits : undefined)
     : (planWarning || user?.creditsTotal == null
         ? undefined
         : { value: formatCredits(user.creditsTotal), caption: 'total credits' })
