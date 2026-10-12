@@ -5,11 +5,12 @@ import { openBrowser } from '@/lib/api/browser'
 import { useChatContext } from '@/lib/chat-context-store'
 import type { ActivityStatus, BrowserView, UIMessage } from '@/types/chat'
 
-// The live browser in the Context panel. Two things can put a tab there: the agent, which
-// announces the tab it is driving with a `browser_view` event, and the person, who opens
-// one themselves and then drives it. Both are a screencast websocket: JPEG frames arrive as
-// binary messages, the page URL and `{ ended }` as text; a tab the person opened also takes
-// their mouse, keyboard, and pasted text back over the socket. The socket closes with the tab.
+// The live browser in the Context panel. Two things can put it there: the agent, which
+// announces the tab it is driving with a `browser_view` event, and the person, who opens the
+// browser themselves and then drives it. Watching is a screencast of one tab: JPEG frames as
+// binary messages, the page URL and `{ ended }` as text. Driving is the whole browser as
+// video: H.264 fragments as binary messages, played through a MediaSource, with the person's
+// mouse, keyboard, and pasted text going back over the same socket into the display.
 
 // The tab the person opened outlives the panel: closing the Context panel must not close it.
 let openedView: BrowserView | null = null
@@ -52,7 +53,7 @@ export type BrowserInput =
 
 export interface BrowserSession {
   status:   BrowserSessionStatus
-  /** Object URL of the latest frame. */
+  /** Object URL of the latest frame while watching, or of the video stream while driving. */
   frame:    string | null
   /** True for a tab the person opened, or one the agent handed over: their input drives it. */
   control:  boolean
@@ -135,11 +136,42 @@ export function useBrowserSession(): BrowserSession {
         : { key, status: 'connecting', frame: null, pageUrl: view.pageUrl || undefined, ...change }
     ))
     const stream = new WebSocket(view.url)
-    stream.binaryType = 'blob'
+    const driving = view === opened || view.control === true
+    stream.binaryType = driving ? 'arraybuffer' : 'blob'
     streamRef.current = stream
     let shown: string | null = null
     let finished = false
+    // Driving: the fragments go into a MediaSource the <video> plays, kept near the live edge.
+    const media = driving ? new MediaSource() : null
+    const queue: ArrayBuffer[] = []
+    let buffer: SourceBuffer | null = null
+    let video: HTMLVideoElement | null = null
+    const feed = () => {
+      if (!buffer || buffer.updating || queue.length === 0) return
+      buffer.appendBuffer(queue.shift() as ArrayBuffer)
+      video ??= document.querySelector(`video[src="${shown}"]`)
+      const ranges = video?.buffered
+      if (video && ranges && ranges.length && ranges.end(ranges.length - 1) - video.currentTime > 0.6) {
+        video.currentTime = ranges.end(ranges.length - 1) - 0.1
+      }
+    }
+    if (media) {
+      shown = URL.createObjectURL(media)
+      media.addEventListener('sourceopen', () => {
+        buffer = media.addSourceBuffer('video/mp4; codecs="avc1.42E01E"')
+        buffer.mode = 'sequence'
+        buffer.addEventListener('updateend', feed)
+        feed()
+      })
+    }
     stream.onmessage = event => {
+      if (media) {
+        if (typeof event.data === 'string') return
+        queue.push(event.data as ArrayBuffer)
+        feed()
+        patch({ status: 'live', frame: shown })
+        return
+      }
       if (typeof event.data === 'string') {
         const note = JSON.parse(event.data)
         if (note.ended) {
@@ -165,7 +197,7 @@ export function useBrowserSession(): BrowserSession {
       if (streamRef.current === stream) streamRef.current = null
       if (shown) URL.revokeObjectURL(shown)
     }
-  }, [view, key])
+  }, [view, key, opened])
 
   const running = steps.findLast(isRunningStep)
   const send = useCallback((input: BrowserInput) => {

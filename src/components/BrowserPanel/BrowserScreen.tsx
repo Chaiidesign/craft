@@ -132,9 +132,9 @@ const VIRTUAL_KEYS: Record<string, number> = {
   PageUp: 33, PageDown: 34, End: 35, Home: 36, ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40, Delete: 46,
 }
 
-/** Catches the pointer, wheel, keys, and pastes over the frame and sends them to the tab
- * in the frame's own coordinates. */
-function ControlSurface({ send, imageRef }: { send: (input: BrowserInput) => void; imageRef: React.RefObject<HTMLImageElement | null> }) {
+/** Catches the pointer, wheel, keys, and pastes over the picture and sends them to the
+ * browser in the picture's own coordinates. */
+function ControlSurface({ send, screenRef }: { send: (input: BrowserInput) => void; screenRef: React.RefObject<HTMLVideoElement | null> }) {
   const surfaceRef = useRef<HTMLDivElement>(null)
   // Pointer events carry no click count, and Chrome only fires a click when it is at least 1.
   const lastDown = useRef<{ at: number; x: number; y: number; count: number }>({ at: 0, x: 0, y: 0, count: 0 })
@@ -148,17 +148,17 @@ function ControlSurface({ send, imageRef }: { send: (input: BrowserInput) => voi
   const pendingMove = useRef<{ x: number; y: number; modifiers: number; buttons: number } | null>(null)
 
   const pointAt = useCallback((event: { clientX: number; clientY: number }) => {
-    const image = imageRef.current
-    if (!image || !image.naturalWidth || !image.naturalHeight) return null
-    const rect = image.getBoundingClientRect()
-    const scale = Math.min(rect.width / image.naturalWidth, rect.height / image.naturalHeight)
-    const left = rect.left + (rect.width - image.naturalWidth * scale) / 2
-    const top = rect.top + (rect.height - image.naturalHeight * scale) / 2
+    const screen = screenRef.current
+    if (!screen || !screen.videoWidth || !screen.videoHeight) return null
+    const rect = screen.getBoundingClientRect()
+    const scale = Math.min(rect.width / screen.videoWidth, rect.height / screen.videoHeight)
+    const left = rect.left + (rect.width - screen.videoWidth * scale) / 2
+    const top = rect.top + (rect.height - screen.videoHeight * scale) / 2
     return {
-      x: Math.round(Math.min(image.naturalWidth, Math.max(0, (event.clientX - left) / scale))),
-      y: Math.round(Math.min(image.naturalHeight, Math.max(0, (event.clientY - top) / scale))),
+      x: Math.round(Math.min(screen.videoWidth, Math.max(0, (event.clientX - left) / scale))),
+      y: Math.round(Math.min(screen.videoHeight, Math.max(0, (event.clientY - top) / scale))),
     }
-  }, [imageRef])
+  }, [screenRef])
 
   const mouse = (type: string, event: React.PointerEvent, extra: Record<string, unknown> = {}) => {
     const point = pointAt(event)
@@ -274,10 +274,26 @@ function Shimmer() {
   )
 }
 
-function ScreenBody({ session, large, onFrameSize, imageRef }: { session: BrowserSession; large: boolean; onFrameSize: (aspect: number) => void; imageRef: React.RefObject<HTMLImageElement | null> }) {
+function ScreenBody({ session, large, onFrameSize, imageRef, videoRef }: { session: BrowserSession; large: boolean; onFrameSize: (aspect: number) => void; imageRef: React.RefObject<HTMLImageElement | null>; videoRef: React.RefObject<HTMLVideoElement | null> }) {
   const iconSize = large ? 28 : 22
   switch (session.status) {
     case 'live':
+      if (session.control) {
+        return session.frame ? (
+          <video
+            ref={videoRef}
+            src={session.frame}
+            autoPlay
+            muted
+            playsInline
+            onLoadedMetadata={event => {
+              const { videoWidth, videoHeight } = event.currentTarget
+              if (videoWidth && videoHeight) onFrameSize(videoWidth / videoHeight)
+            }}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block', objectFit: 'contain', pointerEvents: 'none', backgroundColor: 'var(--neutral-white)' }}
+          />
+        ) : null
+      }
       return session.frame ? (
         // eslint-disable-next-line @next/next/no-img-element -- a blob URL refreshed ten times a second has no place in next/image
         <img
@@ -425,6 +441,7 @@ export function BrowserScreen({ session, expanded, onExpandedChange }: BrowserSc
   const expandButtonRef = useRef<HTMLButtonElement>(null)
   const windowSize = useWindowSize(expanded)
   const imageRef = useRef<HTMLImageElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
   // The frame's own aspect, read from the first decoded frame, so nothing is letterboxed.
   const [aspect, setAspect] = useState(DEFAULT_ASPECT)
   // On minimize the card flies back still `position: fixed`, aimed at its slot. Docking it
@@ -576,8 +593,8 @@ export function BrowserScreen({ session, expanded, onExpandedChange }: BrowserSc
             backgroundColor: 'var(--neutral-100)',
           }}
         >
-          <ScreenBody session={session} large={expanded} onFrameSize={setAspect} imageRef={imageRef} />
-          {driving && <ControlSurface send={session.send} imageRef={imageRef} />}
+          <ScreenBody session={session} large={expanded} onFrameSize={setAspect} imageRef={imageRef} videoRef={videoRef} />
+          {driving && <ControlSurface send={session.send} screenRef={videoRef} />}
           {driving && (
             <span style={{ ...CAPTION, position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', padding: '4px 10px', borderRadius: 999, color: 'var(--neutral-white)', backgroundColor: 'var(--blue-500)', pointerEvents: 'none', whiteSpace: 'nowrap' }}>
               You’re driving this browser
