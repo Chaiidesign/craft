@@ -15,7 +15,7 @@ import type { ActivityStatus, BrowserView, UIMessage } from '@/types/chat'
 // The tab the person opened outlives the panel: closing the Context panel must not close it.
 let openedView: BrowserView | null = null
 const openedListeners = new Set<() => void>()
-function setOpenedView(view: BrowserView | null) {
+export function setOpenedView(view: BrowserView | null) {
   openedView = view
   for (const listener of openedListeners) listener()
 }

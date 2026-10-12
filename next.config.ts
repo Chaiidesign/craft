@@ -151,6 +151,8 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
+              // The driven browser plays as a MediaSource, which is a blob: URL.
+              "media-src 'self' blob:",
               `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://www.googletagmanager.com`,
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https:",
