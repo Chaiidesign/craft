@@ -60,6 +60,9 @@ export interface BrowserSession {
   send:     (input: BrowserInput) => void
   /** Open a tab in the person's own Chrome at this URL. */
   open:     (url: string) => Promise<void>
+  /** Take the controlled tab to a URL: within its site by navigating, to another site by
+   * opening that site's own browser, so a sign-in lands where the agent will look for it. */
+  go:       (url: string) => Promise<void>
   /** The open request is in flight. */
   opening:  boolean
   /** Why the last open failed, until the next attempt. */
@@ -101,6 +104,11 @@ interface SocketState {
   status:  'connecting' | 'live' | 'ended' | 'error'
   frame:   string | null
   pageUrl: string | undefined
+}
+
+/** Each site has a Chrome of its own, so this decides navigate versus open. */
+export function sameSite(a: string | undefined, b: string): boolean {
+  try { return a !== undefined && new URL(a).origin === new URL(b).origin } catch { return false }
 }
 
 export function useBrowserSession(): BrowserSession {
@@ -164,22 +172,27 @@ export function useBrowserSession(): BrowserSession {
     const stream = streamRef.current
     if (control && stream && stream.readyState === WebSocket.OPEN) stream.send(JSON.stringify(input))
   }, [control])
+  const open = useCallback(async (url: string) => {
+    setOpening(true)
+    setOpenError(null)
+    try {
+      setOpenedView(await openBrowser(url))
+    } catch (failure) {
+      setOpenError(failure instanceof Error ? failure.message : 'Could not open the browser')
+    } finally {
+      setOpening(false)
+    }
+  }, [])
 
   return {
     status:        opening ? 'connecting' : !view ? 'idle' : current ? current.status : 'connecting',
     frame:         current?.frame ?? null,
     control,
     send,
-    open:          async url => {
-      setOpening(true)
-      setOpenError(null)
-      try {
-        setOpenedView(await openBrowser(url))
-      } catch (failure) {
-        setOpenError(failure instanceof Error ? failure.message : 'Could not open the browser')
-      } finally {
-        setOpening(false)
-      }
+    open,
+    go:            async url => {
+      if (sameSite(current ? current.pageUrl : view?.pageUrl, url)) send({ navigate: url })
+      else await open(url)
     },
     opening,
     openError,

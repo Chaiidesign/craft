@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { BrowserScreen, toUrl } from '@/components/BrowserPanel/BrowserScreen'
-import { browserStepsOf, browserViewOf, type BrowserSession, type BrowserSessionStatus } from '@/components/BrowserPanel/use-browser-session'
+import { browserStepsOf, browserViewOf, sameSite, type BrowserSession, type BrowserSessionStatus } from '@/components/BrowserPanel/use-browser-session'
 import type { UIMessage } from '@/types/chat'
 
 const FRAME = 'blob:http://localhost:3000/3f2a'
@@ -13,6 +13,7 @@ function session(status: BrowserSessionStatus, extra: Partial<BrowserSession> = 
     control: false,
     send: () => {},
     open: async () => {},
+    go: async () => {},
     opening: false,
     openError: null,
     steps: [],
@@ -67,6 +68,16 @@ describe('toUrl', () => {
     expect(toUrl('shopify.com/pricing')).toBe('https://shopify.com/pricing')
     expect(toUrl('mazda 6 seat covers')).toBe('https://www.google.com/search?q=mazda%206%20seat%20covers')
     expect(toUrl('seatcovers')).toBe('https://www.google.com/search?q=seatcovers')
+  })
+})
+
+describe('sameSite', () => {
+  it('is the same Chrome only within one origin; another site is another browser', () => {
+    expect(sameSite('https://www.linkedin.com/feed/', 'https://www.linkedin.com/jobs/')).toBe(true)
+    expect(sameSite('https://www.google.com/', 'https://www.linkedin.com/')).toBe(false)
+    expect(sameSite('https://a.example', 'http://a.example')).toBe(false)
+    expect(sameSite(undefined, 'https://a.example')).toBe(false)
+    expect(sameSite('not a url', 'https://a.example')).toBe(false)
   })
 })
 
