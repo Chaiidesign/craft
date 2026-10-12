@@ -16,6 +16,7 @@ import { Divider } from '@/components/Divider'
 import { SidebarMenuItem } from '@/components/SidebarMenuItem'
 import { ThemeModeSwitcher } from '@/components/ThemeModeSwitcher'
 import { useTheme } from '@/context/theme-context'
+import type { CreditsDisplay } from '@/lib/api/plan'
 import { useModKeyLabel } from '@/lib/platform'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -29,19 +30,18 @@ export interface AccountMenuProps {
   /** True when the viewer has no active plan — the plan card shows a "No plan selected"
    *  chip instead of the credits. */
   planWarning?: boolean
-  /** Plan name shown as the plan card's chip, e.g. "Free Plan", "Core", "Pro". The chip
-   *  colour is derived from it. */
+  /** Plan name shown as the plan card's chip, e.g. "Free Plan", "Core", "Enterprise". The
+   *  chip colour is derived from it. */
   planType?: string
-  /** Credits remaining, shown in the plan card. Ignored when `planWarning` is true. */
-  credits?: number
+  /** The credits line under the chip, e.g. "43,478 total credits" or "Unlimited". Ignored
+   *  when `planWarning` is true. */
+  credits?: CreditsDisplay
   /** @deprecated Ignored. The plan chip colour now comes from `planType`. */
   planStatusVariant?: 'neutral' | 'blue'
   /** Avatar image URL. Falls back to initials if absent. */
   avatarSrc?: string
   /** Signed-in email, shown at the top of the menu. Falls back to `name`. */
   email?: string
-  /** Total credits for the period; with `credits` it draws the remaining-credits bar. */
-  creditsTotal?: number
   /** Controlled open state. */
   open?: boolean
   onOpenChange?: (open: boolean) => void
@@ -159,14 +159,14 @@ const PLAN_TONE_TOKENS: Record<PlanTone, { bg: string; text: string; shadow: str
   neutral: { bg: 'var(--color-tag-Neutral-bg)', text: 'var(--color-tag-Neutral-text)', shadow: 'var(--color-tag-Neutral-shadow), var(--color-tag-Neutral-inner-shadow)' },
 }
 
-/** One colour per plan so it reads at a glance: Free Plan blue, Free Trial purple, Core green, Pro brown. */
+/** One colour per plan so it reads at a glance: Free Plan blue, Free Trial purple, Core green, Enterprise brown. */
 function planTone(label: string, planWarning: boolean): PlanTone {
   if (planWarning) return 'yellow'
   const key = label.toLowerCase()
   if (key.includes('trial')) return 'purple'
   if (key.includes('free')) return 'blue'
   if (key.includes('core')) return 'green'
-  if (key.includes('pro')) return 'brown'
+  if (key.includes('enterprise') || key.includes('pro')) return 'brown'
   return 'neutral'
 }
 
@@ -202,35 +202,31 @@ function withPlanSuffix(label: string): string {
   return /(plan|trial)/i.test(label) ? label : `${label} Plan`
 }
 
-const formatCredits = (n: number) => Math.max(0, Math.round(n)).toLocaleString()
-
 const PlanCard = ({
   planWarning,
   planType,
   credits,
-  creditsTotal,
 }: {
   planWarning?: boolean
   planType?: string
-  /** Remaining credits. Only used as a fallback when the total is unknown. */
-  credits?: number
-  creditsTotal?: number
+  credits?: CreditsDisplay
 }) => {
   const { enabled: themingEnabled } = useTheme()
-  // The plan's total credits; falls back to the balance when no total is known.
-  const shownCredits = planWarning ? undefined : (creditsTotal ?? credits)
+  const shownCredits = planWarning ? undefined : credits
   if (!planWarning && !planType && shownCredits === undefined && !themingEnabled) return null
 
   const planLabel = planWarning ? 'No plan selected' : withPlanSuffix(planType ?? 'Plan')
 
-  const creditsBlock = shownCredits !== undefined ? (
+  const creditsBlock = shownCredits ? (
     <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 5 }}>
       <span style={{ fontFamily: 'var(--font-title)', fontWeight: 'var(--font-weight-medium)', fontSize: 20, lineHeight: '24px', color: 'var(--neutral-900)', whiteSpace: 'nowrap' }}>
-        {formatCredits(shownCredits)}
+        {shownCredits.value}
       </span>
-      <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--font-size-caption)', lineHeight: 'var(--line-height-caption)', color: 'var(--neutral-500)', whiteSpace: 'nowrap' }}>
-        total credits
-      </span>
+      {shownCredits.caption && (
+        <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--font-size-caption)', lineHeight: 'var(--line-height-caption)', color: 'var(--neutral-500)', whiteSpace: 'nowrap' }}>
+          {shownCredits.caption}
+        </span>
+      )}
     </span>
   ) : null
 
@@ -268,7 +264,6 @@ export function AccountMenu({
   credits,
   avatarSrc,
   email,
-  creditsTotal,
   open: controlledOpen,
   onOpenChange,
   placement = 'top-start',
@@ -346,7 +341,6 @@ export function AccountMenu({
               planWarning={planWarning}
               planType={planType}
               credits={credits}
-              creditsTotal={creditsTotal}
             />
 
             <Dropdown.Item

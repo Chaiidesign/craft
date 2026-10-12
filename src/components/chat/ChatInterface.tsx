@@ -1160,8 +1160,8 @@ export function ChatInterface({
   // Why a queued message can't go out yet beyond waiting its turn.
   const queuePausedReason = creditStatus.blocked
     ? "paused, out of credits"
-    : plan?.poolStatus === "locked"
-      ? "paused, workspace locked"
+    : plan?.poolStatus === "paused"
+      ? "paused, workspace out of credits"
       : personaConfigLoading
         ? "waiting for the agent to load"
         : null;
@@ -1798,12 +1798,12 @@ export function ChatInterface({
             sendQueues={sendQueues}
             onRecallQueued={queuedMessages.length > 0 && !queueHeldBy ? handleRecallQueued : undefined}
             focusRequest={composerFocusRequest}
-            disabled={readOnly || archived || plan?.poolStatus === 'locked' || creditStatus.blocked || personaConfigLoading}
+            disabled={readOnly || archived || plan?.poolStatus === 'paused' || creditStatus.blocked || personaConfigLoading}
             placeholder={
               readOnly
                 ? 'Create your own copy to continue this chat.'
-                : plan?.poolStatus === 'locked'
-                ? 'Workspace locked. Contact your admin.'
+                : plan?.poolStatus === 'paused'
+                ? 'Workspace out of credits. Contact your admin.'
                 : creditStatus.blocked
                   ? 'Credits exhausted. Buy a top-up to continue.'
                   : personaConfigLoading

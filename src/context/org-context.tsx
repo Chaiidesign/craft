@@ -2,13 +2,12 @@
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { useAuth } from '@/context/auth-context'
-import { getOrg, getOrgPlan, listMembers, listOrganizations } from '@/lib/api/organization'
-import { TeamsTier } from '@/lib/api/billing'
+import { getOrg, listMembers, listOrganizations } from '@/lib/api/organization'
+import { Plan } from '@/lib/api/plan'
 import { resolveRole, type Member } from '@/lib/roles'
 import type {
   WorkspaceOrg,
   OrgMember,
-  OrgPlan,
   OrgRole,
 } from '@/types/teams'
 
@@ -17,7 +16,8 @@ interface OrgContextValue {
   org: WorkspaceOrg
   members: OrgMember[]
   membersLoading: boolean
-  plan: OrgPlan | null
+  /** The org's billing state. Every plan, cycle, and credit figure renders from here. */
+  plan: Plan | null
   /** Raw API role: 'admin' | 'member'. Use this for billing/org-management gates —
    *  any admin has full billing authority, there's no separate owner tier. */
   orgRole: OrgRole
@@ -70,16 +70,6 @@ const DEFAULT_ORG: WorkspaceOrg = {
   id: '',
   name: '',
   plan: 'teams',
-  monthlyPrice: 0,
-  billingCycle: 'monthly',
-  creditPool: {
-    total:      0,
-    used:       0,
-    remaining:  0,
-    percentUsed: 0,
-  },
-  tokenStatus: 'normal',
-  hitlThreshold: 'tier_3_plus',
 }
 
 export function OrgProvider({ children }: { children: React.ReactNode }) {
@@ -139,7 +129,7 @@ export function OrgProvider({ children }: { children: React.ReactNode }) {
   const [orgRole,          setOrgRole]          = useState<OrgRole>('member')
   const [orgRoleResolved,  setOrgRoleResolved]  = useState(false)
   const [currentUserRole,  setCurrentUserRole]  = useState<'admin' | 'member'>('member')
-  const [plan,             setPlan]             = useState<OrgPlan | null>(null)
+  const [plan,             setPlan]             = useState<Plan | null>(null)
   const [orgPlanSettled,   setOrgPlanSettled]   = useState(false)
   const [members,          setMembers]          = useState<OrgMember[]>([])
   const [membersLoading,   setMembersLoading]   = useState(false)
@@ -228,15 +218,15 @@ export function OrgProvider({ children }: { children: React.ReactNode }) {
     if (!orgId) return
     setOrgPlanSettled(false)
     setMembersLoading(true)
-    const planP = getOrgPlan(orgId).then(p => {
+    const planP = Plan.fetch(orgId).then(p => {
       setPlan(p)
-      setOrgPlanType(p.planType)
+      if (p.planType) setOrgPlanType(p.planType)
     }).catch(console.error).finally(() => setOrgPlanSettled(true))
     const membersP = listMembers(orgId)
       .then(setMembers)
       .catch(async () => {
         // Fallback: reuse the members bundled in the plan response.
-        const p = await getOrgPlan(orgId).catch(() => null)
+        const p = await Plan.fetch(orgId).catch(() => null)
         if (p) setMembers(p.members)
       })
     Promise.all([planP, membersP]).finally(() => setMembersLoading(false))
@@ -254,23 +244,11 @@ export function OrgProvider({ children }: { children: React.ReactNode }) {
     [orgRole, user?.email],
   )
 
-  const creditPool = plan
-    ? {
-        total:      plan.totalCredits,
-        used:       plan.used,
-        remaining:  plan.remaining,
-        percentUsed: plan.percentUsed,
-      }
-    : DEFAULT_ORG.creditPool
-
   const org: WorkspaceOrg = {
     ...DEFAULT_ORG,
-    id:         orgId ?? '',
-    name:       orgName,
-    plan:       orgPlanType,
-    monthlyPrice: TeamsTier.fromPlanId(plan?.planId)?.price ?? 0,
-    billingCycle: plan?.billingInterval === 'annual' ? 'annual' : 'monthly',
-    creditPool,
+    id:   orgId ?? '',
+    name: orgName,
+    plan: orgPlanType,
   }
 
   return (

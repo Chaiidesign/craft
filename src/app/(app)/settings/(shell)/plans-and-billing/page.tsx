@@ -20,7 +20,7 @@ import {
   resumeSubscription,
 } from '@/lib/api/stripe'
 import { setupEnterprisePayment } from '@/lib/api/billing'
-import { setOrgPoolCap } from '@/lib/api/organization'
+import { Plan } from '@/lib/api/plan'
 import {
   ORG_CHANGE_PLAN_ROUTE,
   ORG_ANALYTICS_ROUTE,
@@ -99,7 +99,6 @@ const SHADOW_CARD    = '0px 2px 2.8px 0px rgba(82,75,71,0.12)'                  
 const SHADOW_TILE     = '0px 2px 2.8px 0px rgba(82,75,71,0.12), 0px 0px 0px 1px var(--neutral-100)' // white inner tile
 const SHADOW_MODAL   = '0px 19px 32px 0px rgba(18,12,8,0.15), 0px 2px 2.8px 0px rgba(130,122,116,0.1)'
 const SHADOW_INPUT   = '0px 1px 1.5px 0px rgba(82,75,71,0.12), 0px 0px 0px 1px var(--neutral-100)'
-const ENTERPRISE_INTERMAX = 2_147_483_647
 
 // Same "big number" / secondary-text convention as the Monthly Limits /
 // Active members cards on /settings/analytics — applied here to the Plan /
@@ -528,7 +527,7 @@ function OrgBillingView() {
   const router = useRouter()
   const { org, orgId, orgRole, plan, refreshMembers } = useOrg()
 
-  const isEnterprise = org.plan === 'enterprise'
+  const isEnterprise = plan?.isEnterprise ?? org.plan === 'enterprise'
 
   const [billing,        setBilling]        = useState<Billing | null>(null)
   const [invoices,       setInvoices]       = useState<Invoice[]>([])
@@ -541,24 +540,14 @@ function OrgBillingView() {
   const [openingPortal,     setOpeningPortal]     = useState(false)
 
   const isAdmin = orgRole === 'admin'
-  const effectivePlan = plan
 
-  // The org plan exposes dollar charges and the prepaid Teams balance.
-  const projectedInvoice = effectivePlan?.projectedInvoiceUsd ?? 0
-  const poolCapUsd = effectivePlan?.poolCapUsd ?? null
-  const overageUsd = effectivePlan?.overageUsd ?? 0
-  const hasUnlimitedEnterpriseCap = poolCapUsd == null || poolCapUsd >= ENTERPRISE_INTERMAX
-  const overageCapUsd = hasUnlimitedEnterpriseCap ? null : poolCapUsd
-  const overageUsedPct = overageCapUsd != null
-    ? (overageCapUsd > 0 ? Math.min(100, (overageUsd / overageCapUsd) * 100) : 100)
-    : 0
-  const totalCredits = effectivePlan?.totalCredits ?? 0
-  const usedCredits = effectivePlan?.used ?? 0
-  const hasPlan = isEnterprise || Boolean(effectivePlan?.hasSelectedPlan)
-  const teamsTier = TeamsTier.fromPlanId(effectivePlan?.planId)
-  const tierMonthly  = teamsTier
-    ? (org.billingCycle === 'annual' ? teamsTier.price * 0.75 : teamsTier.price)
-    : null
+  // Every figure on this page comes off the Plan; nothing is recomputed here.
+  const overageCapUsd = plan?.budgetUsd ?? null
+  const overageUsd = plan?.overageUsd ?? 0
+  const overageUsedPct = plan?.budgetUsedPct ?? 0
+  const totalCredits = plan?.totalCredits ?? 0
+  const usedCredits = plan?.used ?? 0
+  const hasPlan = isEnterprise || Boolean(plan?.hasSelectedPlan)
 
   // Fetch billing data. Payment/Invoices below are admin-only (the backend's
   // visiblePlan() zeroes billing/usage fields for any non-admin — see ST2/ST3
@@ -583,7 +572,7 @@ function OrgBillingView() {
   }, [orgId, isAdmin])
 
   const pm = billing?.paymentMethod
-  const cardBrand = (pm?.brand ?? 'visa') as CardBrand
+  const cardBrand = (pm?.brand ?? 'unknown') as CardBrand
 
   // Invoice history shows only real, issued invoices now — the upcoming
   // invoice (never downloadable; Invoice.projected() gives it no viewUrl) is
@@ -666,12 +655,11 @@ function OrgBillingView() {
     toast.info('Contact an organization admin to change the spend limit.')
   }
 
-  // Persist the overage limit. `null` ⇒ unlimited (sent as the INTERMAX sentinel).
   const handleSaveCap = async (valueUsd: number | null) => {
     if (!orgId) return
     setSavingCap(true)
     try {
-      await setOrgPoolCap(orgId, valueUsd == null ? ENTERPRISE_INTERMAX : valueUsd)
+      await Plan.setBudget(orgId, valueUsd)
       refreshMembers() // re-fetch the shared plan so usage stays live instead of freezing this snapshot
       setCapModalOpen(false)
       toast.success('Spend limit updated.')
@@ -682,11 +670,7 @@ function OrgBillingView() {
     }
   }
 
-  const cycle = billingCycle(billing?.currentPeriodEnd ?? null)
-  const fmtShort = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  const nextBilling = fmtDate(billing?.currentPeriodEnd) !== '—'
-    ? fmtDate(billing?.currentPeriodEnd)
-    : fmtShort(cycle.end)
+  const nextBilling = plan?.cycleEndLabel ?? '—'
 
   if (billingLoading) {
     return (
@@ -696,7 +680,7 @@ function OrgBillingView() {
     )
   }
 
-  const cancelAtPeriodEnd = billing?.cancelAtPeriodEnd ?? false
+  const cancelAtPeriodEnd = plan?.cancelAtPeriodEnd ?? false
 
   return (
     <div
@@ -754,10 +738,12 @@ function OrgBillingView() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div style={{ flex: '1 0 0', minWidth: 0 }}>
                         <p style={statCardBigLineStyle}>
-                          Enterprise · pay for usage
+                          {plan?.title ?? 'Enterprise · pay for usage'}
                         </p>
                         <p style={{ ...statCardCaptionStyle, margin: '6px 0 0' }}>
-                          Next billing date: {nextBilling}
+                          {plan?.paymentDueLabel
+                            ? `Payment for the last cycle is due ${plan.paymentDueLabel}`
+                            : `Next billing date: ${nextBilling}`}
                         </p>
                       </div>
                     </div>
@@ -769,14 +755,14 @@ function OrgBillingView() {
                     <div>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                         <p style={{ ...statCardBigLineStyle, whiteSpace: 'nowrap' }}>
-                          {fmtUsd(projectedInvoice)}
+                          {plan?.chargesThisCycleLabel ?? fmtUsd(0)}
                         </p>
                         <p style={statCardCaptionStyle}>
                           before applicable tax
                         </p>
                       </div>
                       <p style={{ ...statCardCaptionStyle, margin: '6px 0 0' }}>
-                        {`Cycle ends ${nextBilling}`}
+                        {`Cycle ${plan?.cycleLabel ?? '—'}`}
                       </p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
@@ -839,7 +825,7 @@ function OrgBillingView() {
                   <>
                     <div>
                       <p style={statCardBigLineStyle}>
-                        Core Plan{tierMonthly != null ? ` · $${tierMonthly}/mo` : ''}
+                        {plan?.title ?? 'Core Plan'}
                       </p>
                       <p style={{ ...statCardCaptionStyle, margin: '6px 0 0' }}>
                         {cancelAtPeriodEnd ? `Access ends ${nextBilling}` : `Next billing date: ${nextBilling}`}
@@ -922,10 +908,10 @@ function OrgBillingView() {
               <CardBrandLogo brand={cardBrand} />
               <div style={{ flex: '1 0 0', minWidth: 0 }}>
                 <p style={{ fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: 16, lineHeight: '22px', color: 'var(--neutral-900)', margin: 0 }}>
-                  {billingLoading ? 'Loading…' : pm ? `Card ending in ${pm.last4 ?? '••••'}` : 'No payment method on file'}
+                  {billingLoading ? 'Loading…' : pm?.label ?? 'No payment method on file'}
                 </p>
                 <p style={{ fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 14, lineHeight: '22px', color: 'var(--neutral-500)', margin: 0 }}>
-                  {pm?.expiry ?? 'Add a card to continue.'}
+                  {pm?.expiry ?? (pm ? 'Charged automatically after each cycle.' : 'Add a card to continue.')}
                 </p>
               </div>
               {isEnterprise && !billing?.paymentSetupComplete ? (
@@ -944,9 +930,11 @@ function OrgBillingView() {
         {isAdmin && (
           <SectionCard
             title="Invoice history"
-            subtitle={billing?.upcomingInvoice
-              ? `Next invoice: ${fmtUsd(billing.upcomingInvoice.amountDue)} due ${fmtDate(billing.upcomingInvoice.nextPaymentDate)}`
-              : undefined}
+            subtitle={isEnterprise && plan
+              ? `Next invoice: ${plan.chargesThisCycleLabel} so far, charged when the cycle ends ${plan.cycleEndLabel}`
+              : billing?.upcomingInvoice
+                ? `Next invoice: ${fmtUsd(billing.upcomingInvoice.amountDue)} due ${fmtDate(billing.upcomingInvoice.nextPaymentDate)}`
+                : undefined}
             action={
               <Tooltip content="No downloadable invoices yet" side="top" disabled={hasDownloadableInvoice}>
                 <span style={{ display: 'inline-flex' }}>
@@ -1073,12 +1061,12 @@ function PersonalBillingView() {
   }, [reload])
 
   const liveReady = isHydrated && !!user && billingLoaded && usage !== null
-  const nextBillingRaw = billing?.upcomingInvoice?.nextPaymentDate ?? user?.nextBillingDate ?? user?.currentPeriodEnd
+  const nextBillingRaw = billing?.upcomingInvoice?.nextPaymentDate ?? user?.nextBillingDate ?? billing?.plan?.cycleEnd?.toISOString() ?? null
   const nextBillingLive = isFutureIso(nextBillingRaw) ? fmtDate(nextBillingRaw) : '—'
 
   const liveSnap: PersonalBillingSnapshot | null = liveReady && usage
     ? {
-        planType:         billing?.planId ?? null,
+        planType:         billing?.plan?.planId ?? null,
         creditsTotal:     usage.totalCredits,
         creditsRemaining: usage.remainingCredits,
         creditsUsed:      usage.ownSpendCredits,
@@ -1086,8 +1074,8 @@ function PersonalBillingView() {
         slackCredits:     usage.byCategory.slackCredits,
         automationCredits: usage.byCategory.automationCredits,
         nextBilling:      nextBillingLive,
-        periodEnd:        billing?.currentPeriodEnd ?? user?.currentPeriodEnd ?? null,
-        cancelAtPeriodEnd: billing?.cancelAtPeriodEnd ?? false,
+        periodEnd:        billing?.plan?.cycleEnd?.toISOString() ?? user?.currentPeriodEnd ?? null,
+        cancelAtPeriodEnd: billing?.plan?.cancelAtPeriodEnd ?? false,
       }
     : null
 
@@ -1386,21 +1374,6 @@ function PermToggle({ checked, onChange }: { checked: boolean; onChange: () => v
 }
 
 // ── Invoice table ─────────────────────────────────────────────────────────────
-
-function billingCycle(periodEnd: string | null): { start: Date; end: Date } {
-  if (periodEnd) {
-    const close = new Date(periodEnd)
-    if (!Number.isNaN(close.getTime())) {
-      const end = new Date(close.getTime() - 86_400_000)
-      return { start: new Date(end.getFullYear(), end.getMonth(), 1), end }
-    }
-  }
-  const now = new Date()
-  return {
-    start: new Date(now.getFullYear(), now.getMonth(), 1),
-    end: new Date(now.getFullYear(), now.getMonth() + 1, 0),
-  }
-}
 
 function InvoiceTable({ invoices, loading }: { invoices: Invoice[]; loading: boolean }) {
   const cellHead: React.CSSProperties = { flex: '1 0 0', minWidth: 0, fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 14, lineHeight: '22px', color: 'var(--neutral-900)' }

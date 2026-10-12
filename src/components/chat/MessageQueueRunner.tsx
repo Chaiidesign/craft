@@ -34,8 +34,8 @@ export function MessageQueueRunner() {
   const [hasQueued, setHasQueued] = useState(false);
   const creditStatus = useCreditStatus();
   const { plan } = useOrg();
-  // Out of credits or locked: messages stay queued; the chat's own view shows why.
-  const blocked = creditStatus.blocked || plan?.poolStatus === "locked";
+  // Out of credits, personally or as a workspace: messages stay queued; the chat's own view shows why.
+  const blocked = creditStatus.blocked || plan?.poolStatus === "paused";
 
   useEffect(() => {
     // Taking a message notifies the queue, which calls straight back in here.

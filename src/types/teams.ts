@@ -8,9 +8,7 @@ export type OrgRole = 'admin' | 'member'
  *  Slack bot member that never signed up). */
 export type MemberOrgRole = 'admin' | 'member' | 'service' | 'owner'
 export type InviteStatus = 'not_invited' | 'invite_sent' | 'signed_up'
-export type TokenStatus = 'normal' | 'warning_80' | 'warning_95' | 'grace' | 'locked'
 export type ConnectorAuthority = 'workspace_only' | 'member_required' | 'both_possible'
-export type HITLThreshold = 'auto' | 'tier_3_plus' | 'everything'
 export type ApprovalStatus = 'pending' | 'accepted' | 'denied'
 
 export interface WorkspaceOrg {
@@ -18,20 +16,8 @@ export interface WorkspaceOrg {
   name: string
   domain?: string
   avatarUrl?: string
+  /** Resolved from the Plan once loaded, else from the org record. */
   plan: 'teams' | 'enterprise'
-  monthlyPrice: number
-  billingCycle: 'monthly' | 'annual'
-  creditPool: CreditPool
-  tokenStatus: TokenStatus
-  hitlThreshold: HITLThreshold
-}
-
-export interface CreditPool {
-  total: number
-  used: number
-  remaining: number
-  percentUsed: number
-  graceDaysRemaining?: number
 }
 
 export interface OrgMember {
@@ -195,46 +181,6 @@ export interface MemberBurn {
   name: string | null
   email: string | null
   creditsUsed: number
-}
-
-export interface OrgPlan {
-  planId?: string | null
-  billingInterval?: string | null
-  organizationId: string
-  planType: 'teams' | 'enterprise'
-  /**
-   * True only when the org has an actually-selected/subscribed plan (a real
-   * Teams subscription or a signed Enterprise contract) — distinct from
-   * merely having a starting credit balance. The backend's `plan_type` stays
-   * null until a real subscription exists (services/organizations/service.py
-   * get_plan()); the one-time $25 founder-org-create credit grant funds the
-   * pool but is NOT a plan selection, so this is false right after workspace
-   * onboarding even though `totalCredits`/`remaining` are already > 0.
-   * `planType` above can't be used for this distinction — it's normalized to
-   * always fall back to 'teams' when the backend sends null (kept as-is;
-   * many existing consumers depend on that binary 'teams'|'enterprise'
-   * shape), so this is a separate, additive field just for this purpose.
-   */
-  hasSelectedPlan: boolean
-  billingModel: 'prepaid' | 'postpaid'
-  planCredits: number
-  topupCredits: number
-  totalCredits: number
-  used: number
-  remaining: number
-  percentUsed: number
-  poolStatus: string
-  poolCapUsd: number | null
-  members: OrgMember[]
-  providerUsageUsd: number
-  overageUsd: number
-  projectedInvoiceUsd: number
-  inputTokens: number
-  outputTokens: number
-  cacheReadTokens: number
-  cacheWriteTokens: number
-  totalTokens: number
-  usageEventCount: number
 }
 
 export interface OrgPlanUsage {

@@ -32,6 +32,8 @@ import type { UseChatHistoryResult } from "@/hooks/use-chat-history";
 import type { Project, ProjectChat } from "@/context/projects-context";
 import { useSearch } from "@/context/search-context";
 import { useOrg } from "@/context/org-context";
+import type { CreditsDisplay } from "@/lib/api/plan";
+import { formatCredits } from "@/lib/format-credits";
 import { getOrgSlackStatus } from "@/lib/api/slack";
 import { RoleBadge } from "@/components/RoleBadge";
 import type { WorkspaceRole } from "@/components/RoleBadge";
@@ -2458,18 +2460,7 @@ function LeftSidebarImpl({
     billingSnap?.isTeamAccount
   )
 
-  // A truthy `plan` object just means the plan API call returned something —
-  // orgs get one populated with zeroes before a real subscription/pool exists.
-  // Mirrors plans-and-billing/page.tsx's `hasPlan = isEnterprise || totalCredits > 0`.
-  const orgHasPlan = orgId ? (org?.plan === 'enterprise' || (plan?.totalCredits ?? 0) > 0) : false
-
-  // Distinct from orgHasPlan above: true only once a plan is actually
-  // SELECTED (a real Teams subscription or signed Enterprise contract), not
-  // just because the org has a starting credit balance — the one-time $25
-  // founder org-create grant funds the pool immediately on workspace
-  // creation, before any plan is ever chosen. See OrgPlan.hasSelectedPlan's
-  // own doc comment (types/teams.ts) for the backend signal this reads.
-  const orgHasSelectedPlan = orgId ? !!plan?.hasSelectedPlan : false
+  const orgHasPlan = orgId ? (plan?.isFunded ?? false) : false
 
   // Workspace identity line — just the org name, independent of plan/billing
   // status, which now surfaces only via the status tag below. Individuals
@@ -2480,13 +2471,9 @@ function LeftSidebarImpl({
 
   const planWarning = isTeamUser ? !orgHasPlan : (!user?.planType && !user?.isTrial)
 
-  // Plan-type label for the status tag ("Core | 250 credits left" /
-  // "Pro | 250 credits left") — distinct from planLabel above, which is now
-  // just the org's own name. Team orgs get "Free Plan" (blue tag, see
-  // planStatusVariant below) until a real plan is selected, then "Core"
-  // (org.plan 'teams') or "Pro" (org.plan 'enterprise').
+  // The status tag: the org's plan chip from the Plan, else the individual's plan.
   const planTypeLabel = isTeamUser
-    ? (orgHasSelectedPlan ? (org?.plan === 'enterprise' ? 'Pro' : 'Core') : 'Free Plan')
+    ? (plan?.chipLabel ?? 'Free Plan')
     : user?.planType
       ? user.planType.charAt(0).toUpperCase() + user.planType.slice(1)
       : user?.isTrial
@@ -2497,20 +2484,15 @@ function LeftSidebarImpl({
   // yet); default color once a real plan is selected, and always for
   // individuals. Irrelevant when planWarning is set (that state has its own
   // look) — AccountMenu itself ignores this prop in that case too.
-  const planStatusVariant: 'neutral' | 'blue' = (isTeamUser && orgHasPlan && !orgHasSelectedPlan) ? 'blue' : 'neutral'
+  const planStatusVariant: 'neutral' | 'blue' = (isTeamUser && orgHasPlan && !plan?.hasSelectedPlan) ? 'blue' : 'neutral'
 
-  // Credits shown in the account menu, by environment (kept isolated):
-  //   • Organization ? the SHARED org pool remaining (org-context / getOrgPlan)
-  //   • Individual / trial ? the personal balance (auth-context ? lib/credits.ts)
-  // Org and personal balances never mix; we pick the source by environment.
-  // Org and personal balances are already normalized to display credits.
-  const accountCredits = orgId
-    ? (orgHasPlan ? org?.creditPool?.remaining : undefined)
-    : (planWarning ? undefined : (user?.creditsRemaining ?? undefined));
-  // Total for the same pool, so the menu can show how much of it is left.
-  const accountCreditsTotal = orgId
-    ? (orgHasPlan ? org?.creditPool?.total : undefined)
-    : (planWarning ? undefined : (user?.creditsTotal ?? undefined));
+  // The credits line in the account menu: the org's Plan speaks for an org,
+  // the personal balance for an individual. The two never mix.
+  const accountCredits: CreditsDisplay | undefined = orgId
+    ? (orgHasPlan ? plan?.credits : undefined)
+    : (planWarning || user?.creditsTotal == null
+        ? undefined
+        : { value: formatCredits(user.creditsTotal), caption: 'total credits' });
 
   const sectionProps: SectionProps = {
     activeChatId: resolvedActiveChatId,
@@ -2601,9 +2583,8 @@ function LeftSidebarImpl({
                 planWarning={planWarning}
                 planType={planTypeLabel}
                 credits={accountCredits}
-                creditsTotal={accountCreditsTotal}
                 showUpgradePlan={!orgId || orgRole === 'admin'}
-                viewPlanOnly={planTypeLabel === 'Pro'}
+                viewPlanOnly={plan?.isEnterprise ?? false}
                 email={user?.email ?? undefined}
                 planStatusVariant={planStatusVariant}
                 avatarSrc={user?.profilePicture ?? undefined}
@@ -2734,10 +2715,9 @@ function LeftSidebarImpl({
             planWarning={planWarning}
             planType={planTypeLabel}
             credits={accountCredits}
-                creditsTotal={accountCreditsTotal}
-                showUpgradePlan={!orgId || orgRole === 'admin'}
-                viewPlanOnly={planTypeLabel === 'Pro'}
-                email={user?.email ?? undefined}
+            showUpgradePlan={!orgId || orgRole === 'admin'}
+            viewPlanOnly={plan?.isEnterprise ?? false}
+            email={user?.email ?? undefined}
             planStatusVariant={planStatusVariant}
             avatarSrc={user?.profilePicture ?? undefined}
             collapsed={collapsed}

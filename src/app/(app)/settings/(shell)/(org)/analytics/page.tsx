@@ -10,32 +10,7 @@ import { UsageBarChart } from '@/components/UsageBarChart'
 import { Button } from '@/components/Button'
 import { IconButton } from '@/components/IconButton'
 import { useOrg } from '@/context/org-context'
-import { Billing } from '@/lib/api/stripe'
 import { ORG_MEMBERS_ROUTE } from '@/lib/routes'
-
-// Same derivation plans-and-billing/page.tsx uses for its own "Resets {date}"
-// captions — Stripe's `current_period_end` is the day billing rolls over, so
-// the cycle runs from the 1st of the PRIOR day's month through that end date.
-// Falls back to the current calendar month when billing hasn't loaded yet
-// (Billing.fetch() is admin-only and can 403/null for non-Stripe orgs) so
-// this always has a best-effort answer rather than nothing at all.
-function cycleRange(periodEnd: string | null | undefined, now: Date): { start: Date; end: Date } {
-  if (periodEnd) {
-    const close = new Date(periodEnd)
-    if (!Number.isNaN(close.getTime())) {
-      const end = new Date(close.getTime() - 86_400_000)
-      return { start: new Date(end.getFullYear(), end.getMonth(), 1), end }
-    }
-  }
-  return {
-    start: new Date(now.getFullYear(), now.getMonth(), 1),
-    end: new Date(now.getFullYear(), now.getMonth() + 1, 0),
-  }
-}
-
-function fmtCycleDate(d: Date): string {
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-}
 
 type DateRange = '7d' | '1m' | '3m' | '6m'
 
@@ -89,25 +64,14 @@ function rangeConfig(range: DateRange): { buckets: number; windowDays: number } 
 }
 
 /** Build a date-range-aware, usage-scaled feature series (see FEATURE_SPLIT note). */
-function buildFeatureSeries(range: DateRange, totalUsed: number, now: Date): {
+function buildFeatureSeries(range: DateRange, totalUsed: number, now: Date, elapsedDays: number): {
   days: ChartDay[]
   totals: Record<ChartMetric, number>
   windowUsed: number
 } {
   const { buckets, windowDays } = rangeConfig(range)
-  // `totalUsed` is already the org's CYCLE-TO-DATE total (usage since the
-  // cycle started, through today) — not a full-cycle projection that still
-  // needs discounting. The backend only ever gives us this ONE cycle's total,
-  // with no real per-day or prior-cycle history, so a window longer than the
-  // cycle-to-date (1/3/6 months will almost always be, since a billing cycle
-  // is at most ~31 days) simply can't include more than that total — it's
-  // capped at it rather than fabricating usage from a period we have no data
-  // for. The correct denominator for "how much of totalUsed falls inside a
-  // SHORTER window" (only ever relevant for "Last 7 days") is how many days
-  // have actually elapsed in the cycle so far — `now.getDate()`, consistent
-  // with this page (and plans-and-billing's `billingCycle` helper) already
-  // treating the cycle as calendar-month-aligned.
-  const elapsedDays = Math.max(1, now.getDate())
+  // `totalUsed` is the cycle-to-date total, so a window longer than the cycle
+  // so far is capped at it; a shorter window takes its share of elapsed days.
   const windowUsed  = Math.round(totalUsed * Math.min(1, windowDays / elapsedDays))
   const bucketSpan = windowDays / buckets
 
@@ -467,29 +431,17 @@ export default function OrgUsageAnalyticsPage() {
   const router = useRouter()
   const { org, orgId, members, membersLoading, plan, orgReady } = useOrg()
   const [dateRange,  setDateRange]  = useState<DateRange>('7d')
-  const [billing,    setBilling]    = useState<Billing | null>(null)
-
-  // Admin-only endpoint (this whole page already is, per the (org) layout
-  // guard) — 403/null for a non-Stripe org just means the calendar-month
-  // fallback in `cycleRange` keeps showing instead.
-  useEffect(() => {
-    if (!orgId) return
-    Billing.fetch().then(setBilling).catch(() => {})
-  }, [orgId])
-
-  const cycle = cycleRange(billing?.currentPeriodEnd, new Date())
 
   const totalCredits = plan?.totalCredits ?? 0
   const totalUsed    = plan?.used        ?? 0
-  // Enterprise has no monthly price or credit pool: usage is billed after
-  // each cycle. org.monthlyPrice only describes the Teams ladder.
-  const isEnterprise  = plan?.planType === 'enterprise'
-  const monthlyPrice  = org.monthlyPrice
+  const isEnterprise = plan?.isEnterprise ?? false
+  const monthlyPrice = plan?.monthlyPrice ?? 0
+  const daysIntoCycle = plan?.daysIntoCycle ?? 1
 
   // Feature-usage series — derived from real `used` credits + selected range.
   const featureSeries = React.useMemo(
-    () => buildFeatureSeries(dateRange, totalUsed, new Date()),
-    [dateRange, totalUsed],
+    () => buildFeatureSeries(dateRange, totalUsed, new Date(), daysIntoCycle),
+    [dateRange, totalUsed, daysIntoCycle],
   )
 
   if (!orgReady || membersLoading) {
@@ -600,9 +552,9 @@ export default function OrgUsageAnalyticsPage() {
               Stripe `current_period_end` plans-and-billing already shows as
               "Next billing"/"Resets". */}
           <p style={{ fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: 13, lineHeight: '20px', color: 'var(--neutral-500)', margin: 0, textAlign: 'right', whiteSpace: 'nowrap', flexShrink: 0 }}>
-            Current cycle: {fmtCycleDate(cycle.start)} – {fmtCycleDate(cycle.end)}
+            Current cycle: {plan?.cycleLabel ?? '—'}
             <br />
-            Resets {fmtCycleDate(cycle.end)}
+            {isEnterprise ? 'Billed' : 'Resets'} {plan?.cycleEndLabel ?? '—'}
           </p>
         </div>
 
@@ -655,19 +607,21 @@ export default function OrgUsageAnalyticsPage() {
                 </Tooltip>
               </div>
               <p style={statCardBigLineStyle}>
-                {isEnterprise ? 'Pay for usage' : `$${Math.round(monthlyPrice)}/mo · ${totalCredits.toLocaleString()} credits`}
+                {isEnterprise ? (plan?.budgetLabel ?? 'Unlimited') : `$${Math.round(monthlyPrice)}/mo · ${totalCredits.toLocaleString()} credits`}
               </p>
               {/* The bar fills to % USED (standard "progress toward your limit"
                   reading) — leading with "remaining" here read as contradicting
                   a mostly-empty bar, since it's the complementary number. Used%
                   now sits first, right next to the fill it actually matches. */}
-              <ProgressBar value={poolPercentUsed} height={4} />
+              <ProgressBar value={isEnterprise ? Math.round(plan?.budgetUsedPct ?? 0) : poolPercentUsed} height={4} />
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={statCardFooterTextStyle}>
-                  {poolPercentUsed}% used · {100 - poolPercentUsed}% remaining
+                  {isEnterprise
+                    ? (plan?.budgetUsd == null ? 'No spending limit' : `${Math.round(plan.budgetUsedPct)}% of budget used`)
+                    : `${poolPercentUsed}% used · ${100 - poolPercentUsed}% remaining`}
                 </span>
                 <span style={statCardFooterTextStyle}>
-                  {totalUsed.toLocaleString()}/{totalCredits.toLocaleString()}
+                  {isEnterprise ? `${totalUsed.toLocaleString()} credits used` : `${totalUsed.toLocaleString()}/${totalCredits.toLocaleString()}`}
                 </span>
               </div>
             </div>

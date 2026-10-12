@@ -34,6 +34,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/Tabs'
 import { OrgBadge } from '@/components/OrgBadge'
 import { Badge } from '@/components/Badge'
 import { AccountMenu } from '@/components/AccountMenu'
+import type { CreditsDisplay } from '@/lib/api/plan'
 import { RoleBadge } from '@/components/RoleBadge'
 import type { WorkspaceRole, RoleBadgeMode } from '@/components/RoleBadge'
 import { Tooltip } from '@/components/Tooltip'
@@ -343,7 +344,7 @@ export interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Click handler for the "Update plan" pill (Starter only). */
   onUpgradeClick?: () => void
   /** Credits remaining — shown in the account drop-up (identity badge), all roles. */
-  credits?: number
+  credits?: CreditsDisplay
 }
 
 // ── Section show/hide animation ───────────────────────────────────────────────

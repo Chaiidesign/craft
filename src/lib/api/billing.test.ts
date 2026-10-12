@@ -49,9 +49,7 @@ describe("Usage", () => {
 describe("billingInfoSchema", () => {
   it("matches the backend BillingInfo wire and ignores invented entity fields", () => {
     const parsed = billingInfoSchema.parse({
-      plan_id: "250",
-      plan_type: "teams",
-      cancel_at_period_end: false,
+      plan: { organization_id: "org-1", plan_type: "teams", plan_id: "250" },
       credits: {
         remaining: 200,
         used: 0,
@@ -59,7 +57,7 @@ describe("billingInfoSchema", () => {
         by_category: { chat: 0, slack: 0, automation: 0, subtask: 0 },
       },
     });
-    expect(parsed.plan_id).toBe("250");
+    expect(parsed.plan?.plan_id).toBe("250");
     expect(parsed.credits.by_category.slack).toBe(0);
     expect("entity" in parsed).toBe(false);
   });
@@ -68,14 +66,13 @@ describe("billingInfoSchema", () => {
 describe("Billing", () => {
   it("constructs camelCase fields from the validated wire", () => {
     const billing = Billing.parse({
-      plan_id: "100",
-      plan_type: "teams",
-      payment_method: { brand: "visa", last4: "4242", exp_month: 12, exp_year: 2028 },
+      plan: { organization_id: "org-1", plan_type: "teams", plan_id: "100" },
+      payment_method: { type: "card", brand: "visa", last4: "4242", exp_month: 12, exp_year: 2028 },
       invoices: [{ amount_paid: 100, currency: "usd", status: "paid", created: "2026-09-01T00:00:00Z" }],
       credits: { remaining: 80, used: 0, total_credits: 80 },
     });
     expect(billing).toBeInstanceOf(Billing);
-    expect(billing.planId).toBe("100");
+    expect(billing.plan?.planId).toBe("100");
     expect(billing.paymentMethod?.last4).toBe("4242");
     expect(billing.paymentMethod?.label).toBe("Card ending in 4242");
     expect(billing.invoices[0]?.isPaid).toBe(true);

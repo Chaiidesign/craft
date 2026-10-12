@@ -20,23 +20,14 @@ import {
   type UpcomingInvoiceWire,
   type UsageResponseWire,
 } from "./billing-schemas";
-export type CheckoutPlan = "50" | "100" | "125" | "250" | "500" | "1000" | "2000";
-
-export const CREDITS_PER_USD = 1000;
-const USAGE_RATIO = 1 / 1.15;
-const TEAMS_PLAN_IDS = ["50", "100", "125", "250", "500", "1000", "2000"] as const;
+import { Plan, TeamsTier, dollarsToCredits } from "./plan";
+export { CREDITS_PER_USD, TeamsTier, dollarsToCredits, type CheckoutPlan } from "./plan";
 
 // Enterprise orgs are funded with this explicit "never runs out" sentinel
 // (back-end/services/users/enterprise_pricing.py's ENTERPRISE_INTERMAX) as
-// their pool's dollar balance. Access follows the contract, payment readiness,
-// and spending budget. Any consumer of a raw dollar/credit figure that could carry this
-// value must check for it and render "Unlimited" instead of the literal
-// number (~2.15 trillion once converted to credits).
+// their pool's dollar balance. `/stripe/usage` still reports it as `credits`,
+// so that one consumer must render "Unlimited" instead of the number.
 export const ENTERPRISE_INTERMAX = 2_147_483_647;
-
-export function dollarsToCredits(usd: number): number {
-  return Math.max(0, Math.round(usd * CREDITS_PER_USD));
-}
 
 export class CategorySpend {
   readonly chat: number;
@@ -66,31 +57,6 @@ export class CategorySpend {
 
   get total(): number {
     return this.chat + this.slack + this.automation + this.subtask;
-  }
-}
-
-export class TeamsTier {
-  readonly planId: CheckoutPlan;
-  readonly price: number;
-  readonly usageUsd: number;
-  readonly credits: number;
-
-  constructor(planId: CheckoutPlan, interval: "monthly" | "annual" = "monthly") {
-    this.planId = planId;
-    this.price = Number(planId);
-    this.usageUsd = Math.floor(this.price * (interval === "annual" ? 0.75 : 1) * USAGE_RATIO * 1_000_000) / 1_000_000;
-    this.credits = dollarsToCredits(this.usageUsd);
-  }
-
-  static readonly all = TEAMS_PLAN_IDS.map((planId) => new TeamsTier(planId));
-
-  static fromCredits(credits: number): TeamsTier | null {
-    return TeamsTier.all.find((tier) => tier.credits === credits) ?? null;
-  }
-
-  static fromPlanId(planId: string | null | undefined): TeamsTier | null {
-    if (!planId) return null;
-    return TeamsTier.all.find((tier) => tier.planId === planId) ?? null;
   }
 }
 
@@ -170,6 +136,7 @@ export class Usage {
 }
 
 export class PaymentMethod {
+  readonly type: string | null;
   readonly brand: string | null;
   readonly last4: string | null;
   readonly expMonth: number | null;
@@ -177,6 +144,7 @@ export class PaymentMethod {
   readonly funding: string | null;
 
   constructor(wire: PaymentMethodWire) {
+    this.type = wire.type;
     this.brand = wire.brand;
     this.last4 = wire.last4;
     this.expMonth = wire.exp_month;
@@ -184,8 +152,11 @@ export class PaymentMethod {
     this.funding = wire.funding;
   }
 
+  /** "Card ending in 4242", "Link", or the saved method's type when it is neither. */
   get label(): string {
-    return this.last4 ? `Card ending in ${this.last4}` : "No payment method on file";
+    if (this.last4) return `Card ending in ${this.last4}`;
+    if (this.type === "link") return "Link";
+    return this.type ? this.type.charAt(0).toUpperCase() + this.type.slice(1) : "Saved payment method";
   }
 
   get expiry(): string | null {
@@ -307,55 +278,26 @@ export class CreditSummary {
   }
 }
 
+/** The org's plan plus what only Stripe knows: saved method, invoices, the next Teams charge. */
 export class Billing {
-  readonly planId: string | null;
-  readonly planType: string | null;
-  readonly subscriptionStatus: string | null;
-  readonly currentPeriodEnd: string | null;
-  readonly cancelAtPeriodEnd: boolean;
+  readonly plan: Plan | null;
   readonly paymentMethod: PaymentMethod | null;
   readonly invoices: Invoice[];
   readonly upcomingInvoice: UpcomingInvoice | null;
   readonly credits: CreditSummary;
-  readonly markupMultiplier: number;
   readonly paymentSetupComplete: boolean;
-  readonly paymentDueAt: string | null;
   readonly collectionEnabled: boolean;
-  readonly providerUsageUsd: number;
-  readonly overageUsd: number;
-  readonly projectedInvoiceUsd: number;
-  readonly inputTokens: number;
-  readonly outputTokens: number;
-  readonly cacheReadTokens: number;
-  readonly cacheWriteTokens: number;
-  readonly totalTokens: number;
-  readonly usageEventCount: number;
 
   constructor(wire: BillingInfoWire) {
-    this.planId = wire.plan_id;
-    this.planType = wire.plan_type;
-    this.subscriptionStatus = wire.subscription_status;
-    this.currentPeriodEnd = wire.current_period_end;
-    this.cancelAtPeriodEnd = wire.cancel_at_period_end;
+    this.plan = wire.plan ? new Plan(wire.plan) : null;
     this.paymentMethod = wire.payment_method ? new PaymentMethod(wire.payment_method) : null;
     this.invoices = wire.invoices.map((invoice) => new Invoice(invoice));
     this.upcomingInvoice = wire.upcoming_invoice
       ? new UpcomingInvoice(wire.upcoming_invoice)
       : null;
     this.credits = new CreditSummary(wire.credits);
-    this.markupMultiplier = wire.markup_multiplier;
     this.paymentSetupComplete = wire.payment_setup_complete;
-    this.paymentDueAt = wire.payment_due_at;
     this.collectionEnabled = wire.collection_enabled;
-    this.providerUsageUsd = wire.provider_usage_usd;
-    this.overageUsd = wire.overage_usd;
-    this.projectedInvoiceUsd = wire.projected_invoice_usd;
-    this.inputTokens = wire.input_tokens;
-    this.outputTokens = wire.output_tokens;
-    this.cacheReadTokens = wire.cache_read_tokens;
-    this.cacheWriteTokens = wire.cache_write_tokens;
-    this.totalTokens = wire.total_tokens;
-    this.usageEventCount = wire.usage_event_count;
   }
 
   static parse(raw: unknown): Billing {
@@ -374,7 +316,7 @@ export class Billing {
   }
 
   get teamsTier(): TeamsTier | null {
-    return TeamsTier.fromPlanId(this.planId);
+    return this.plan?.teamsTier ?? null;
   }
 }
 

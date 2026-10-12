@@ -19,6 +19,8 @@ import { Tooltip } from '@/components/Tooltip'
 import { ThemeModeSwitcher } from '@/components/ThemeModeSwitcher'
 import { useAuth } from '@/context/auth-context'
 import { useOrg } from '@/context/org-context'
+import type { CreditsDisplay } from '@/lib/api/plan'
+import { formatCredits } from '@/lib/format-credits'
 import { useGuardedRouter, useNavGuard } from '@/context/nav-guard-context'
 import { AUTH_LOGIN_ROUTE, SETTINGS_ACCOUNT_ROUTE, SETTINGS_USAGE_ROUTE, SETTINGS_HELP_ROUTE, CHAT_ROUTE, ORG_GENERAL_ROUTE, ORG_MEMBERS_ROUTE, ORG_PLANS_ROUTE, ORG_ANALYTICS_ROUTE } from '@/lib/routes'
 
@@ -176,18 +178,7 @@ export function SettingsSidebar() {
     billingSnap?.isTeamAccount
   )
 
-  // A truthy `plan` object just means the plan API call returned something —
-  // orgs get one populated with zeroes before a real subscription/pool exists.
-  // Mirrors plans-and-billing/page.tsx's `hasPlan = isEnterprise || totalCredits > 0`.
-  const orgHasPlan = orgId ? (org?.plan === 'enterprise' || (plan?.totalCredits ?? 0) > 0) : false
-
-  // Distinct from orgHasPlan above: true only once a plan is actually
-  // SELECTED (a real Teams subscription or signed Enterprise contract), not
-  // just because the org has a starting credit balance — the one-time $25
-  // founder org-create grant funds the pool immediately on workspace
-  // creation, before any plan is ever chosen. See OrgPlan.hasSelectedPlan's
-  // own doc comment (types/teams.ts) for the backend signal this reads.
-  const orgHasSelectedPlan = orgId ? !!plan?.hasSelectedPlan : false
+  const orgHasPlan = orgId ? (plan?.isFunded ?? false) : false
 
   // Workspace identity line — just the org name, independent of plan/billing
   // status, which now surfaces only via the status tag below. Individuals
@@ -198,13 +189,9 @@ export function SettingsSidebar() {
 
   const planWarning = isTeamUser ? !orgHasPlan : (!user?.planType && !user?.isTrial)
 
-  // Plan-type label for the status tag ("Core | 250 credits left" /
-  // "Pro | 250 credits left") — distinct from planLabel above, which is now
-  // just the org's own name. Team orgs get "Free Plan" (blue tag, see
-  // planStatusVariant below) until a real plan is selected, then "Core"
-  // (org.plan 'teams') or "Pro" (org.plan 'enterprise').
+  // The status tag: the org's plan chip from the Plan, else the individual's plan.
   const planTypeLabel = isTeamUser
-    ? (orgHasSelectedPlan ? (org?.plan === 'enterprise' ? 'Pro' : 'Core') : 'Free Plan')
+    ? (plan?.chipLabel ?? 'Free Plan')
     : user?.planType
       ? user.planType.charAt(0).toUpperCase() + user.planType.slice(1)
       : user?.isTrial
@@ -214,12 +201,13 @@ export function SettingsSidebar() {
   // Blue tag for "Free Plan" (running on starting credits, no plan selected
   // yet); default color once a real plan is selected, and always for
   // individuals.
-  const planStatusVariant: 'neutral' | 'blue' = (isTeamUser && orgHasPlan && !orgHasSelectedPlan) ? 'blue' : 'neutral'
+  const planStatusVariant: 'neutral' | 'blue' = (isTeamUser && orgHasPlan && !plan?.hasSelectedPlan) ? 'blue' : 'neutral'
 
-  // Org and personal balances are already normalized to display credits.
-  const accountCredits = orgId
-    ? (orgHasPlan ? org?.creditPool?.remaining : undefined)
-    : (planWarning ? undefined : (user?.creditsRemaining ?? undefined))
+  const accountCredits: CreditsDisplay | undefined = orgId
+    ? (orgHasPlan ? plan?.credits : undefined)
+    : (planWarning || user?.creditsTotal == null
+        ? undefined
+        : { value: formatCredits(user.creditsTotal), caption: 'total credits' })
 
   // Role badge with tooltip — mirrors LeftSidebar's displayRole hierarchy.
   // Gated on `orgReady`, not just `orgId`: `orgId` resolves before the role

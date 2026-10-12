@@ -18,16 +18,6 @@ export type UserPlanType = "starter" | "pro" | "power";
 export type { CheckoutPlan };
 export type BillingPlan = "monthly" | "annual";
 
-export interface PlanInfo {
-  plan_id: string | null;
-  plan_type: string | null;
-  usage_credits: number;
-  subscription_status: string | null;
-  current_period_end: string | null;
-  cancel_at_period_end: boolean;
-  billing_interval: string | null;
-}
-
 export interface UserPaymentMethod {
   id: string;
   brand: string;
@@ -562,20 +552,20 @@ export async function createCheckoutSession(
 }
 
 /** POST /stripe/plan — change an existing Teams subscription in place. */
-export async function updatePlan(planId: CheckoutPlan, billingInterval: "monthly" | "annual" = "monthly"): Promise<PlanInfo> {
+export async function updatePlan(planId: CheckoutPlan, billingInterval: "monthly" | "annual" = "monthly"): Promise<SubscriptionActionResponse> {
   const response = await apiFetch(STRIPE_PLAN_ENDPOINT, {
     method: "POST",
     body: JSON.stringify({ planId, billingInterval }),
   });
   const data = (await response.json().catch(() => ({}))) as
-    | PlanInfo
+    | SubscriptionActionResponse
     | { detail?: string; error?: string };
   if (!response.ok) {
     const detail = "detail" in data ? data.detail : undefined;
     const error = "error" in data ? data.error : undefined;
     throw new Error(detail || error || "Failed to update plan.");
   }
-  return data as PlanInfo;
+  return data as SubscriptionActionResponse;
 }
 
 /**

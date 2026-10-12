@@ -4,11 +4,10 @@ import React from 'react'
 import { ArrowRightOneIcon, CancelOneIcon, AlertTwoIcon, AlertCircleIcon } from '@strange-huge/icons'
 import { motion } from 'framer-motion'
 
-export type CreditNoticeStatus = 'warning_95' | 'grace' | 'locked'
+export type CreditNoticeStatus = 'warning_95' | 'paused'
 
 export interface InlineCreditNoticeProps {
   status:               CreditNoticeStatus
-  graceDaysRemaining?:  number
   isAdmin?:             boolean
   onAdminAction?:       () => void
   onDismiss?:           () => void
@@ -33,7 +32,7 @@ const elevation = (border: string) =>
 
 interface NoticeConfig {
   level:     Level
-  message:   (days?: number) => string
+  message:   string
   adminCta:  string
   memberCta: string
 }
@@ -41,34 +40,27 @@ interface NoticeConfig {
 const NOTICE_CONFIG: Record<CreditNoticeStatus, NoticeConfig> = {
   warning_95: {
     level:     'warning',
-    message:   () => 'Running low on credits',
+    message:   'Running low on credits',
     adminCta:  'View usage',
     memberCta: 'Contact admin',
   },
-  grace: {
+  paused: {
     level:     'error',
-    message:   (days) => `Access limited · ${days ?? 0} day${days === 1 ? '' : 's'} to add credits`,
+    message:   'Workspace out of credits · no new activity until credits are added',
     adminCta:  'Add credits',
-    memberCta: 'Contact admin',
-  },
-  locked: {
-    level:     'error',
-    message:   () => 'Workspace locked · no new activity until credits are added',
-    adminCta:  'Unlock',
     memberCta: 'Contact your admin',
   },
 }
 
 export function InlineCreditNotice({
   status,
-  graceDaysRemaining,
   isAdmin = false,
   onAdminAction,
   onDismiss,
 }: InlineCreditNoticeProps) {
   const cfg = NOTICE_CONFIG[status]
   const tokens = LEVEL_TOKENS[cfg.level]
-  const dismissible = status !== 'locked'
+  const dismissible = status !== 'paused'
   const Icon = tokens.Icon
 
   return (
@@ -103,7 +95,7 @@ export function InlineCreditNotice({
         color:      tokens.text,
         margin:     0,
       }}>
-        {cfg.message(graceDaysRemaining)}
+        {cfg.message}
       </p>
 
       {/* CTA */}

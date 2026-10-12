@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { planSchema } from "./plan";
 
 /** Mirrors services/users/schemas.py CategoryUsage / UsageBreakdown. */
 export const categorySpendSchema = z.object({
@@ -46,6 +47,7 @@ export const usageResponseSchema = z.object({
 });
 
 const paymentMethodSchema = z.object({
+  type: z.string().nullable().default(null),
   brand: z.string().nullable().default(null),
   last4: z.string().nullable().default(null),
   exp_month: z.number().nullable().default(null),
@@ -92,28 +94,13 @@ const upcomingInvoiceSchema = z.object({
 
 /** Mirrors services/stripe/schemas.py BillingInfo. */
 export const billingInfoSchema = z.object({
-  plan_id: z.string().nullable().default(null),
-  plan_type: z.string().nullable().default(null),
-  subscription_status: z.string().nullable().default(null),
-  current_period_end: z.string().nullable().default(null),
-  cancel_at_period_end: z.boolean().default(false),
+  plan: planSchema.nullable().default(null),
   payment_method: paymentMethodSchema.nullable().default(null),
   invoices: z.unknown().optional().transform((value) => parseInvoices(value)),
   upcoming_invoice: upcomingInvoiceSchema.nullable().default(null),
   credits: creditSummarySchema.prefault({}),
-  markup_multiplier: z.number().default(1.15),
   payment_setup_complete: z.boolean().default(false),
-  payment_due_at: z.string().nullable().default(null),
   collection_enabled: z.boolean().default(false),
-  provider_usage_usd: z.number().default(0),
-  overage_usd: z.number().default(0),
-  projected_invoice_usd: z.number().default(0),
-  input_tokens: z.number().default(0),
-  output_tokens: z.number().default(0),
-  cache_read_tokens: z.number().default(0),
-  cache_write_tokens: z.number().default(0),
-  total_tokens: z.number().default(0),
-  usage_event_count: z.number().default(0),
 });
 
 export type CategorySpendWire = z.infer<typeof categorySpendSchema>;

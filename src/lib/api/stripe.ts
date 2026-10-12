@@ -18,7 +18,6 @@ export {
   type BillingPaymentMethod as PaymentMethodInfo,
   type BillingPlan,
   type CheckoutPlan,
-  type PlanInfo,
   type SubscriptionActionResponse,
   type UserPlanType as PlanType,
 } from "./user";

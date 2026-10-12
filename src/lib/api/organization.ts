@@ -6,8 +6,6 @@ import {
   ORGANIZATIONS_ENDPOINT,
   ORG_ENDPOINT,
   ORG_SETTINGS_ENDPOINT,
-  ORG_PLAN_ENDPOINT,
-  ORG_PLAN_POOL_CAP_ENDPOINT,
   ORG_PLAN_USAGE_ENDPOINT,
   ORG_AUDIT_ENDPOINT,
   ORG_MEMBERS_ENDPOINT,
@@ -16,7 +14,8 @@ import {
   ORG_INVITE_ENDPOINT,
   ORG_LEAVE_ENDPOINT,
 } from '@/lib/config'
-import type { OrgRole, OrgSettings, OrgMember, OrgPlan, OrgPlanUsage, AuditLogEntry } from '@/types/teams'
+import type { OrgRole, OrgSettings, OrgMember, OrgPlanUsage, AuditLogEntry } from '@/types/teams'
+import { dollarsToCredits, normalizeMember, planMemberSchema } from './plan'
 
 // ── Backend shapes ────────────────────────────────────────────────────────────
 // Unlike MemberBurn/AuditEntry/InvitePreview elsewhere in this file (still
@@ -55,68 +54,6 @@ interface OrganizationSettingsResponse {
   defaultPersonaVisibility: string | null
 }
 
-// ── Plan endpoint schema ──────────────────────────────────────────────────────
-// Mirrors services/organizations/schemas.py's PlanResponse/MemberResponse — but
-// NOT their snake_case field names. Both models declare a `serialization_alias`
-// on every multi-word field (e.g. `user_id: str = Field(serialization_alias=
-// "userId")`), and FastAPI's `response_model_by_alias` defaults to `True`, so
-// the actual wire format for `members[]` is camelCase even though `PlanResponse`
-// itself has no aliases and stays snake_case at the top level (its own fields
-// were never given one). Verified against a live ZodError: `members[0].user_id`
-// came back `undefined` and `members[0].invite_status` failed its enum check —
-// both are actually named `userId`/`inviteStatus` on the wire. `plan_type` is
-// also genuinely nullable server-side (`str | None = None`), not just absent.
-// The response is validated at the boundary so the UI renders deterministically
-// from the endpoint's real shape — no guessed defaults, no fabricated fields.
-// Server-side every field is always present (Pydantic bakes the defaults in), so
-// the only `.default()`s here are the ones the backend itself declares.
-
-const memberResponseSchema = z.object({
-  userId:           z.string(),
-  name:             z.string().nullable().default(null),
-  email:            z.string().nullable().default(null),
-  // 'owner' is a real value on the /members and plan-bundled-members responses
-  // (see the listMembers doc comment below) — it was missing here, which made
-  // any org with an owner-tier member throw a hard ZodError out of getOrgPlan.
-  role:             z.enum(['admin', 'member', 'service', 'owner']),
-  usageTotal:       z.number().nullable().transform(v => v ?? 0),
-  inviteStatus:     z.enum(['active', 'pending']),
-  inviteId:         z.string().nullable().default(null),
-  isPendingInvite:  z.boolean().default(false),
-})
-
-const planResponseSchema = z.object({
-  organization_id:  z.string(),
-  plan_type:        z.string().nullable(),    // backend: str | None ("teams" | "enterprise" | null)
-  plan_id: z.string().nullable().default(null),
-  billing_interval: z.string().nullable().default(null),
-  billing_model:    z.string(),               // backend: str ("prepaid" | "postpaid")
-  plan_credits:     z.number(),
-  topup_credits:    z.number(),
-  total_credits:    z.number(),
-  used:             z.number(),
-  remaining:        z.number(),
-  percent_used:     z.number(),
-  pool_status:      z.enum(['healthy', 'warning_95', 'paused']),
-  pool_cap:         z.number().nullable().default(null),
-  members:          z.array(memberResponseSchema).default([]),
-  provider_usage_usd:           z.number().default(0),
-  overage_usd:                  z.number().default(0),
-  projected_invoice_usd:        z.number().default(0),
-  input_tokens:     z.number().int().default(0),
-  output_tokens:    z.number().int().default(0),
-  // Backend's real field names (services/organizations/schemas.py PlanResponse)
-  // — the old reasoning_tokens/cached_tokens names here don't exist on the
-  // wire at all, so those stats always silently read 0 via zod's .default(0).
-  cache_read_tokens:  z.number().int().default(0),
-  cache_write_tokens: z.number().int().default(0),
-  total_tokens:     z.number().int().default(0),
-  usage_event_count: z.number().int().default(0),
-})
-
-type MemberResponse = z.infer<typeof memberResponseSchema>
-type PlanResponse = z.infer<typeof planResponseSchema>
-
 interface MemberBurnResponse {
   user_id: string
   name: string | null
@@ -154,71 +91,6 @@ function normalizeSettings(s: OrganizationSettingsResponse): OrgSettings {
   }
 }
 
-const toDisplayCredits = (value: number | null | undefined): number =>
-  Math.round((value ?? 0) * 1000)
-
-function normalizeMember(m: MemberResponse): OrgMember {
-  // Backend's MemberResponse no longer carries team_id/credit_cap/credit_used
-  // (Team and per-member caps are gone) — 'editor' and a real allocation/cap
-  // were only ever reachable through those fields, so they're hardcoded to
-  // their empty state below rather than parsed from data that doesn't exist.
-  // Owner folds into 'admin' for the UI role control — same fold the backend
-  // applies to the viewer's own role (services/organizations/roles.py), just
-  // not (yet) applied to other members' raw role on this list.
-  const role = (m.role === 'admin' || m.role === 'owner') ? 'admin' : 'member'
-  const inviteStatus = m.inviteStatus === 'pending' ? 'invite_sent' : 'signed_up'
-  return {
-    id:              m.userId,
-    name:            m.name ?? '',
-    email:           m.email ?? '',
-    role,
-    orgRole:         m.role,
-    inviteStatus,
-    teamMemberships: [],
-    creditUsed:      inviteStatus === 'invite_sent'
-      ? 0
-      : toDisplayCredits(m.usageTotal),
-    inviteId:        m.inviteId ?? null,
-  }
-}
-
-function normalizePlan(p: PlanResponse): OrgPlan {
-  // Postpaid plans (enterprise) have no credit pool: usage is billed after the
-  // cycle, so only `used` (provider_usage_usd) carries a value. The prepaid
-  // fields (plan_credits, total_credits, used, remaining) are always 0 for postpaid.
-  const isPostpaid = p.billing_model === 'postpaid'
-  return {
-    organizationId: p.organization_id,
-    planType:       p.plan_type === 'enterprise' ? 'enterprise' : 'teams',
-    // Unlike planType above (which always falls back to 'teams'), this
-    // preserves the real null — true only when the backend actually returned
-    // a plan_type at all (a real subscription/contract), not the founder
-    // org-create credit grant alone. See the field's own doc comment.
-    hasSelectedPlan: p.plan_type != null,
-    planId: p.plan_id,
-    billingInterval: p.billing_interval,
-    billingModel:   isPostpaid ? 'postpaid' : 'prepaid',
-    planCredits:    toDisplayCredits(p.plan_credits),
-    topupCredits:   toDisplayCredits(p.topup_credits),
-    totalCredits:   toDisplayCredits(p.total_credits),
-    used:           toDisplayCredits(isPostpaid ? p.provider_usage_usd : p.used),
-    remaining:      toDisplayCredits(p.remaining),
-    percentUsed:    p.percent_used,
-    poolStatus:     p.pool_status,
-    poolCapUsd:     p.pool_cap,
-    members:        p.members.map(normalizeMember),
-    providerUsageUsd: p.provider_usage_usd,
-    overageUsd: p.overage_usd,
-    projectedInvoiceUsd: p.projected_invoice_usd,
-    inputTokens: p.input_tokens,
-    outputTokens: p.output_tokens,
-    cacheReadTokens: p.cache_read_tokens,
-    cacheWriteTokens: p.cache_write_tokens,
-    totalTokens: p.total_tokens,
-    usageEventCount: p.usage_event_count,
-  }
-}
-
 function normalizePlanUsage(u: PlanUsageResponse): OrgPlanUsage {
   return {
     organizationId: u.organization_id,
@@ -226,7 +98,7 @@ function normalizePlanUsage(u: PlanUsageResponse): OrgPlanUsage {
       userId:      m.user_id,
       name:        m.name,
       email:       m.email,
-      creditsUsed: toDisplayCredits(m.credits_used),
+      creditsUsed: dollarsToCredits(m.credits_used),
     })),
   }
 }
@@ -377,19 +249,6 @@ export async function updateOrgSettings(
   return normalizeSettings(data)
 }
 
-export async function getOrgPlan(orgId: string): Promise<OrgPlan> {
-  const raw = await apiFetchJson<unknown>(ORG_PLAN_ENDPOINT(orgId))
-  return normalizePlan(planResponseSchema.parse(raw))
-}
-
-export async function setOrgPoolCap(orgId: string, poolCapUsd: number): Promise<OrgPlan> {
-  const raw = await apiFetchJson<unknown>(ORG_PLAN_POOL_CAP_ENDPOINT(orgId), {
-    method: 'PATCH',
-    body:   JSON.stringify({ poolCap: poolCapUsd }),
-  })
-  return normalizePlan(planResponseSchema.parse(raw))
-}
-
 /**
  * GET /organizations/{id}/members — the authoritative member list with real
  * roles (owner | admin | member). Use this (not the plan's bundled members) to
@@ -403,7 +262,7 @@ export async function listMembers(orgId: string): Promise<OrgMember[]> {
   // producing members with undefined ids/emails and an always-wrong invite
   // status instead of throwing — the same drift getOrgPlan's ZodError caught.
   const raw = await apiFetchJson<unknown>(ORG_MEMBERS_ENDPOINT(orgId))
-  const data = z.array(memberResponseSchema).parse(raw)
+  const data = z.array(planMemberSchema).parse(raw)
   return data.map(normalizeMember)
 }
 

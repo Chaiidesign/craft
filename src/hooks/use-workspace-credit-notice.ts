@@ -6,11 +6,11 @@ import { useOrg } from "@/context/org-context";
 import { ORG_PLANS_ROUTE } from "@/lib/routes";
 import type { CreditNoticeStatus } from "@/components/InlineCreditNotice";
 
-const CREDIT_NOTICE_STATUSES = new Set<string>(["warning_95", "grace", "locked"]);
+const CREDIT_NOTICE_STATUSES = new Set<string>(["warning_95", "paused"]);
 
 /**
- * Derives the org/team shared-credit-pool notice state (warning_95/grace/
- * locked) for the <InlineCreditNotice> banner shown above every chat input,
+ * Derives the org shared-credit-pool notice state (warning_95/paused, the
+ * statuses the backend's Plan reports) for the <InlineCreditNotice> banner shown above every chat input,
  * plus the admin-CTA navigation and per-status dismissal it needs. Shared so
  * every chat surface reads the same pool status the same way.
  */
