@@ -5,12 +5,11 @@ import { openBrowser } from '@/lib/api/browser'
 import { useChatContext } from '@/lib/chat-context-store'
 import type { ActivityStatus, BrowserView, UIMessage } from '@/types/chat'
 
-// The live browser in the Context panel. Two things can put it there: the agent, which
-// announces the tab it is driving with a `browser_view` event, and the person, who opens the
-// browser themselves and then drives it. Watching is a screencast of one tab: JPEG frames as
-// binary messages, the page URL and `{ ended }` as text. Driving is the whole browser as
-// video: H.264 fragments as binary messages, played through a MediaSource, with the person's
-// mouse, keyboard, and pasted text going back over the same socket into the display.
+// The live browser in the Context panel: the person's whole Chrome as video, H.264 fragments
+// as binary messages played through a MediaSource. Two things put it there: the agent, which
+// announces the browser with a `browser_view` event when it opens a page, and the person, who
+// opens the browser themselves. With control, the person's mouse, keyboard, and pasted text go
+// back over the same socket into the display; without it the socket only carries video.
 
 // The tab the person opened outlives the panel: closing the Context panel must not close it.
 let openedView: BrowserView | null = null
@@ -31,7 +30,7 @@ export type BrowserSessionStatus =
   | 'connecting'
   /** Frames arriving. */
   | 'live'
-  /** The agent's tab closed with its turn, or the view expired. */
+  /** The browser paused, or the view expired. */
   | 'ended'
   /** The socket closed before a frame arrived. */
   | 'error'
@@ -48,12 +47,10 @@ export type BrowserInput =
   | { mouse: Record<string, unknown> }
   | { key: Record<string, unknown> }
   | { text: string }
-  | { navigate: string }
-  | { close: true }
 
 export interface BrowserSession {
   status:   BrowserSessionStatus
-  /** Object URL of the latest frame while watching, or of the video stream while driving. */
+  /** Object URL of the video stream. */
   frame:    string | null
   /** True for a tab the person opened, or one the agent handed over: their input drives it. */
   control:  boolean
@@ -73,6 +70,8 @@ export interface BrowserSession {
   steps:    BrowserStep[]
   /** Open the socket again after a failed connection. */
   reconnect: () => void
+  /** Stop driving the browser the person opened; it stays open on the machine. */
+  close:     () => void
 }
 
 const RUNNING: ReadonlySet<ActivityStatus> = new Set(['start', 'executing', 'reading'])
@@ -128,16 +127,15 @@ export function useBrowserSession(): BrowserSession {
         : { key, status: 'connecting', frame: null, pageUrl: view.pageUrl || undefined, ...change }
     ))
     const stream = new WebSocket(view.url)
-    const driving = view === opened || view.control === true
-    stream.binaryType = driving ? 'arraybuffer' : 'blob'
+    stream.binaryType = 'arraybuffer'
     streamRef.current = stream
-    let shown: string | null = null
-    let finished = false
-    // Driving: the fragments go into a MediaSource the <video> plays, kept near the live edge.
-    const media = driving ? new MediaSource() : null
+    // The fragments go into a MediaSource the <video> plays, kept near the live edge.
+    const media = new MediaSource()
+    const shown = URL.createObjectURL(media)
     const queue: ArrayBuffer[] = []
     let buffer: SourceBuffer | null = null
     let video: HTMLVideoElement | null = null
+    let playing = false
     const feed = () => {
       if (!buffer || buffer.updating || queue.length === 0) return
       buffer.appendBuffer(queue.shift() as ArrayBuffer)
@@ -151,54 +149,35 @@ export function useBrowserSession(): BrowserSession {
         video.currentTime = ranges.end(ranges.length - 1) - 0.1
       }
     }
-    if (media) {
-      shown = URL.createObjectURL(media)
-      media.addEventListener('sourceopen', () => {
-        // Constrained Baseline at level 4.0: what the machine's encoder emits for 1440×900.
-        buffer = media.addSourceBuffer('video/mp4; codecs="avc1.42C028"')
-        buffer.mode = 'sequence'
-        buffer.addEventListener('updateend', feed)
-        feed()
-      })
-    }
-    let playing = false
+    media.addEventListener('sourceopen', () => {
+      // Constrained Baseline at level 4.0: what the machine's encoder emits for 1440×900.
+      buffer = media.addSourceBuffer('video/mp4; codecs="avc1.42C028"')
+      buffer.mode = 'sequence'
+      buffer.addEventListener('updateend', feed)
+      feed()
+    })
     stream.onmessage = event => {
-      if (media) {
-        if (typeof event.data === 'string') return
-        queue.push(event.data as ArrayBuffer)
-        feed()
-        if (!playing) {
-          playing = true
-          patch({ status: 'live', frame: shown })
-        }
-        return
+      if (typeof event.data === 'string') return
+      queue.push(event.data as ArrayBuffer)
+      feed()
+      if (!playing) {
+        playing = true
+        patch({ status: 'live', frame: shown })
       }
-      if (typeof event.data === 'string') {
-        const note = JSON.parse(event.data)
-        if (note.ended) {
-          finished = true
-          // A tab the person closed, or that timed out, leaves the panel free again.
-          if (openedView === view) setOpenedView(null)
-          patch({ status: 'ended' })
-          return
-        }
-        patch({ pageUrl: note.url })
-        return
-      }
-      const next = URL.createObjectURL(event.data as Blob)
-      if (shown) URL.revokeObjectURL(shown)
-      shown = next
-      patch({ status: 'live', frame: next })
     }
-    stream.onclose = () => patch({ status: finished || shown ? 'ended' : 'error' })
+    stream.onclose = () => {
+      // The browser the person opened is theirs until it goes; then the panel is free again.
+      if (playing && openedView === view) setOpenedView(null)
+      patch({ status: playing ? 'ended' : 'error' })
+    }
     return () => {
       stream.onclose = null
       stream.onmessage = null
       stream.close()
       if (streamRef.current === stream) streamRef.current = null
-      if (shown) URL.revokeObjectURL(shown)
+      URL.revokeObjectURL(shown)
     }
-  }, [view, key, opened])
+  }, [view, key])
 
   const running = steps.findLast(isRunningStep)
   const send = useCallback((input: BrowserInput) => {
@@ -229,5 +208,6 @@ export function useBrowserSession(): BrowserSession {
     pageUrl:       !view ? undefined : current ? current.pageUrl : view.pageUrl || undefined,
     steps,
     reconnect:     () => setAttempt(count => count + 1),
+    close:         () => setOpenedView(null),
   }
 }

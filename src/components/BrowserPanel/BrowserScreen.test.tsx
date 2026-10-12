@@ -13,6 +13,7 @@ function session(status: BrowserSessionStatus, extra: Partial<BrowserSession> = 
     control: false,
     send: () => {},
     open: async () => {},
+    close: () => {},
     opening: false,
     openError: null,
     steps: [],
@@ -90,11 +91,10 @@ describe('BrowserScreen — thumbnail', () => {
     expect(html).toContain('Expand browser to full screen')
   })
 
-  it('live: draws the latest frame, inert', () => {
+  it('live: plays the browser as video, inert', () => {
     const html = render(session('live'))
     expect(html).toContain(`src="${FRAME}"`)
-    expect(html).toMatch(/<img[^>]*pointer-events:none/)
-    expect(html).toMatch(/<img[^>]*draggable="false"/)
+    expect(html).toMatch(/<video[^>]*pointer-events:none/)
     expect(html).toContain('Live')
     expect(html).toContain('Expand browser to full screen')
   })
@@ -115,11 +115,10 @@ describe('BrowserScreen — thumbnail', () => {
 })
 
 describe('BrowserScreen — full screen', () => {
-  it('is a modal dialog with a minimize control and the page address', () => {
+  it('is a modal dialog with a minimize control', () => {
     const html = render(session('live', { pageUrl: 'https://skyfare.example/flights?from=SFO' }), true)
     expect(html).toMatch(/role="dialog"[^>]*aria-modal="true"|aria-modal="true"[^>]*role="dialog"/)
     expect(html).toContain('Minimize browser')
-    expect(html).toContain('skyfare.example/flights?from=SFO')
     expect(html).toContain('Showing in full screen')
     expect(html).not.toContain('Expand browser to full screen')
   })
@@ -135,7 +134,6 @@ describe('BrowserScreen — full screen', () => {
     expect(full).toContain('Close browser')
     expect(full).not.toContain('You’re driving this browser')
     expect(full).toContain('Your browser. Click, type, and scroll here.')
-    expect(full).toContain('aria-label="Address"')
     expect(full).not.toContain('View only')
     const thumb = render(session('live', { control: true }))
     expect(thumb).not.toContain('Your browser. Click, type, and scroll here.')
@@ -145,7 +143,4 @@ describe('BrowserScreen — full screen', () => {
     expect(render(session('live', { currentAction: 'Clicking “Search flights”' }), true)).toContain('Clicking “Search flights”')
   })
 
-  it('shows “No page open” before the backend reports a URL', () => {
-    expect(render(session('connecting'), true)).toContain('No page open')
-  })
 })

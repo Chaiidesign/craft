@@ -274,38 +274,22 @@ function Shimmer() {
   )
 }
 
-function ScreenBody({ session, large, onFrameSize, imageRef, videoRef }: { session: BrowserSession; large: boolean; onFrameSize: (aspect: number) => void; imageRef: React.RefObject<HTMLImageElement | null>; videoRef: React.RefObject<HTMLVideoElement | null> }) {
+function ScreenBody({ session, large, onFrameSize, videoRef }: { session: BrowserSession; large: boolean; onFrameSize: (aspect: number) => void; videoRef: React.RefObject<HTMLVideoElement | null> }) {
   const iconSize = large ? 28 : 22
   switch (session.status) {
     case 'live':
-      if (session.control) {
-        return session.frame ? (
-          <video
-            ref={videoRef}
-            src={session.frame}
-            autoPlay
-            muted
-            playsInline
-            onLoadedMetadata={event => {
-              const { videoWidth, videoHeight } = event.currentTarget
-              if (videoWidth && videoHeight) onFrameSize(videoWidth / videoHeight)
-              event.currentTarget.muted = true
-              void event.currentTarget.play().catch(() => {})
-            }}
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block', objectFit: 'contain', pointerEvents: 'none', backgroundColor: 'var(--neutral-white)' }}
-          />
-        ) : null
-      }
       return session.frame ? (
-        // eslint-disable-next-line @next/next/no-img-element -- a blob URL refreshed ten times a second has no place in next/image
-        <img
-          ref={imageRef}
+        <video
+          ref={videoRef}
           src={session.frame}
-          alt="Agent's browser, live"
-          draggable={false}
-          onLoad={event => {
-            const { naturalWidth, naturalHeight } = event.currentTarget
-            if (naturalWidth && naturalHeight) onFrameSize(naturalWidth / naturalHeight)
+          autoPlay
+          muted
+          playsInline
+          onLoadedMetadata={event => {
+            const { videoWidth, videoHeight } = event.currentTarget
+            if (videoWidth && videoHeight) onFrameSize(videoWidth / videoHeight)
+            event.currentTarget.muted = true
+            void event.currentTarget.play().catch(() => {})
           }}
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block', objectFit: 'contain', pointerEvents: 'none', backgroundColor: 'var(--neutral-white)' }}
         />
@@ -323,7 +307,7 @@ function ScreenBody({ session, large, onFrameSize, imageRef, videoRef }: { sessi
           large={large}
           icon={<AiWebBrowsingIcon size={iconSize} />}
           title="Browser session ended"
-          body="The agent closed its tab when the turn finished. The next browser turn shows here."
+          body="The browser went to sleep. Open it again, or wait for the agent's next browser turn."
         />
       )
     case 'error':
@@ -351,59 +335,6 @@ function ScreenBody({ session, large, onFrameSize, imageRef, videoRef }: { sessi
 }
 
 // ── Full-screen header ────────────────────────────────────────────────────────
-
-function displayUrl(url: string | undefined): string | undefined {
-  if (!url) return undefined
-  return url.replace(/^https?:\/\//, '').replace(/\/$/, '')
-}
-
-function AddressBar({ url, onNavigate }: { url: string | undefined; onNavigate?: (url: string) => void }) {
-  const shown = displayUrl(url)
-  const [draft, setDraft] = useState<string | null>(null)
-  if (onNavigate) {
-    return (
-      <form
-        onSubmit={event => { event.preventDefault(); if (draft !== null) onNavigate(toUrl(draft)); setDraft(null) }}
-        style={{ flex: '1 1 auto', minWidth: 0, maxWidth: 560, display: 'flex' }}
-      >
-        <InputField
-          fluid
-          size="small"
-          aria-label="Address"
-          leftIcon={<AiWebBrowsingIcon size={16} />}
-          value={draft ?? shown ?? ''}
-          onChange={setDraft}
-          onFocus={event => event.currentTarget.select()}
-          onBlur={() => setDraft(null)}
-          onKeyDown={event => { if (event.key === 'Escape') { setDraft(null); event.currentTarget.blur() } }}
-        />
-      </form>
-    )
-  }
-  return (
-    <Tooltip content={url} disabled={!url} maxWidth={280}><div
-      style={{
-        flex:            '1 1 auto',
-        minWidth:        0,
-        maxWidth:        560,
-        height:          32,
-        display:         'flex',
-        alignItems:      'center',
-        gap:             8,
-        padding:         '0 12px',
-        borderRadius:    10,
-        backgroundColor: 'var(--neutral-100)',
-        boxShadow:       'inset 0 0 0 1px var(--neutral-200)',
-        color:           shown ? 'var(--neutral-700)' : 'var(--neutral-500)',
-      }}
-    >
-      <AiWebBrowsingIcon size={16} style={{ flexShrink: 0, color: 'var(--neutral-500)' }} />
-      <span style={{ ...BODY, color: 'inherit', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-        {shown ?? 'No page open'}
-      </span>
-    </div></Tooltip>
-  )
-}
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -442,7 +373,6 @@ export function BrowserScreen({ session, expanded, onExpandedChange }: BrowserSc
   const cardRef = useRef<HTMLDivElement>(null)
   const expandButtonRef = useRef<HTMLButtonElement>(null)
   const windowSize = useWindowSize(expanded)
-  const imageRef = useRef<HTMLImageElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   // The frame's own aspect, read from the first decoded frame, so nothing is letterboxed.
   const [aspect, setAspect] = useState(DEFAULT_ASPECT)
@@ -564,7 +494,6 @@ export function BrowserScreen({ session, expanded, onExpandedChange }: BrowserSc
             style={{ height: HEADER_H, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8, padding: '0 10px 0 14px' }}
           >
             <StatusPill status={session.status} />
-            <AddressBar url={session.pageUrl} onNavigate={session.control ? url => session.send({ navigate: url }) : undefined} />
             <div style={{ flex: '1 0 0' }} />
             {session.status === 'live' && !session.control && (
               <Tooltip content="You can watch the agent, but not click or type">
@@ -575,7 +504,7 @@ export function BrowserScreen({ session, expanded, onExpandedChange }: BrowserSc
               </Tooltip>
             )}
             {session.control && session.status === 'live' && (
-              <Button variant="secondary" size="sm" onClick={() => session.send({ close: true })}>Close browser</Button>
+              <Button variant="secondary" size="sm" onClick={session.close}>Close browser</Button>
             )}
             <Tooltip content="Minimize (Esc)">
               <IconButton variant="ghost" size="sm" icon={<ArrowShrinkTwoIcon size={20} />} aria-label="Minimize browser" onClick={collapse} />
@@ -595,7 +524,7 @@ export function BrowserScreen({ session, expanded, onExpandedChange }: BrowserSc
             backgroundColor: 'var(--neutral-100)',
           }}
         >
-          <ScreenBody session={session} large={expanded} onFrameSize={setAspect} imageRef={imageRef} videoRef={videoRef} />
+          <ScreenBody session={session} large={expanded} onFrameSize={setAspect} videoRef={videoRef} />
           {driving && <ControlSurface send={session.send} screenRef={videoRef} />}
 
           {/* What the agent is doing, over the page, in full screen. No exit animation:

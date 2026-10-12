@@ -64,7 +64,7 @@ function BrowserTab({ session }: { session: BrowserSession }) {
 
   const busy = session.status === 'live' || session.status === 'connecting'
   const host = hostOf(session.pageUrl)
-  const meta = [host, session.status === 'live' && !session.control ? 'View only' : null].filter(Boolean).join(' · ')
+  const meta = [host, session.status === 'live' && !session.control ? 'Watching' : null].filter(Boolean).join(' · ')
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
