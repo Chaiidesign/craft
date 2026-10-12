@@ -597,11 +597,6 @@ export function BrowserScreen({ session, expanded, onExpandedChange }: BrowserSc
         >
           <ScreenBody session={session} large={expanded} onFrameSize={setAspect} imageRef={imageRef} videoRef={videoRef} />
           {driving && <ControlSurface send={session.send} screenRef={videoRef} />}
-          {driving && (
-            <span style={{ ...CAPTION, position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', padding: '4px 10px', borderRadius: 999, color: 'var(--neutral-white)', backgroundColor: 'var(--blue-500)', pointerEvents: 'none', whiteSpace: 'nowrap' }}>
-              You’re driving this browser
-            </span>
-          )}
 
           {/* What the agent is doing, over the page, in full screen. No exit animation:
               it would play mid-flight, stretched by the card's layout transform. */}

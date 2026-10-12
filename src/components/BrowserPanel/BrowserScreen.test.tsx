@@ -144,7 +144,7 @@ describe('BrowserScreen — full screen', () => {
   it('a tab of your own: takes input and can be closed, in full screen only', () => {
     const full = render(session('live', { control: true }), true)
     expect(full).toContain('Close browser')
-    expect(full).toContain('You’re driving this browser')
+    expect(full).not.toContain('You’re driving this browser')
     expect(full).toContain('Your browser. Click, type, and scroll here.')
     expect(full).toContain('aria-label="Address"')
     expect(full).not.toContain('View only')
