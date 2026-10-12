@@ -1,7 +1,7 @@
 import type { PlanItem } from '@/types/chat'
 
-// A turn's plan, from the `plan_updated` stream event: every step up front, each
-// moving pending → in_progress → completed (or failed). See lib/api/sse-schemas.ts.
+// A turn's to-do list, from the `plan_updated` stream event: the whole list each
+// time it changes, each item pending → in_progress → completed (or failed).
 
 const STATUSES: ReadonlySet<string> = new Set(['pending', 'in_progress', 'completed', 'failed'])
 
@@ -12,8 +12,7 @@ export function toPlan(items: unknown): PlanItem[] | null {
     if (!item || typeof item !== 'object') return []
     const row = item as Record<string, unknown>
     if (typeof row.id !== 'string' || typeof row.title !== 'string' || !STATUSES.has(row.status as string)) return []
-    const detail = typeof row.detail === 'string' && row.detail.trim() ? row.detail : undefined
-    return [{ id: row.id, title: row.title, status: row.status as PlanItem['status'], detail }]
+    return [{ id: row.id, title: row.title, status: row.status as PlanItem['status'] }]
   })
   return plan.length > 0 ? plan : null
 }

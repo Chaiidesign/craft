@@ -254,12 +254,11 @@ export interface BrowserView {
   control?: boolean
 }
 
-/** One step of a turn's plan, from the `plan_updated` stream event. */
+/** One to-do of a turn, from the `plan_updated` stream event. */
 export interface PlanItem {
-  id:      string
-  title:   string
-  status:  'pending' | 'in_progress' | 'completed' | 'failed'
-  detail?: string
+  id:     string
+  title:  string
+  status: 'pending' | 'in_progress' | 'completed' | 'failed'
 }
 
 /** An image generated during the response. */

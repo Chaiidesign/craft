@@ -137,14 +137,14 @@ describe('OverviewView', () => {
 
   it('renders all six sections, in order', () => {
     const html = render([user('u'), reply('a')])
-    const order = ['Progress', 'Agents', 'Connectors', 'Sources', 'Documents', 'Skills'].map(title => html.indexOf(`>${title}</h3>`))
+    const order = ['To-dos', 'Agents', 'Connectors', 'Sources', 'Documents', 'Skills'].map(title => html.indexOf(`>${title}</h3>`))
     expect(order.every(index => index >= 0)).toBe(true)
     expect([...order].sort((a, b) => a - b)).toEqual(order)
   })
 
-  it('opens progress and populated sections; keeps empty ones closed', () => {
+  it('opens to-dos and populated sections; keeps empty ones closed', () => {
     const html = render([user('u'), reply('a', { activities: [step('g', 'agent', 'Analyst')], webCitations: [{ title: 'T', url: 'https://x.example.com' }] })])
-    expect(expanded(html, 'Progress')).toBe('true')
+    expect(expanded(html, 'To-dos')).toBe('true')
     expect(expanded(html, 'Agents')).toBe('true')
     expect(expanded(html, 'Sources')).toBe('true')
     expect(expanded(html, 'Connectors')).toBe('false')
@@ -164,17 +164,12 @@ describe('OverviewView', () => {
     expect(html).not.toMatch(/line-through[^>]*>Failed</)
   })
 
-  it('while working without a plan, shows only the running step, animated', () => {
+  it('shows nothing but the status pill while working without a to-do list', () => {
     const html = render([user('u'), reply('a', { isLoading: true, activities: [step('1', 'tool-call', 'One'), step('2', 'tool-call', 'Two', 'executing')] })], { startedAt: T0 })
     expect(html).toContain('Working')
     expect(html).not.toContain('>One<')
-    expect(html).not.toMatch(/>\d+ of \d+ steps</)
-    // The running label is drawn as clipped gradient text (the shimmer).
-    expect(html).toMatch(/background-clip:text[^>]*>Two</)
-  })
-
-  it('says “Thinking…” before the first step', () => {
-    expect(render([user('u'), reply('a', { isLoading: true })], { startedAt: T0 })).toContain('Thinking…')
+    expect(html).not.toContain('Two')
+    expect(html).not.toContain('Thinking')
   })
 
   it('shows the finished turn’s execution time once, in the header', () => {
@@ -213,20 +208,15 @@ describe('OverviewView', () => {
     expect(html).toContain('Failed</span>')
   })
 
-  it('gives a turn with no steps one row that says why', () => {
-    expect(render([user('u'), reply('a')])).toContain('Answered directly — no tools needed')
-    expect(render([user('u'), reply('a', { stoppedByUser: true })])).toContain('Stopped before any steps ran')
-    expect(render([user('u'), reply('a', { isError: true })])).toContain('Something went wrong before any steps ran')
-  })
-
-  it('sums a finished turn without a plan to one line, and folds long lists behind “Show more”', () => {
+  it('never turns a finished turn’s tool calls into to-dos, and folds long lists behind “Show more”', () => {
     const steps = Array.from({ length: 11 }, (_, i) => step(`s${i}`, 'tool-call', `Step ${i}`))
     const html = render([user('u'), reply('a', {
       activities: [...steps, step('bad', 'tool-call', 'Broke', 'error')],
       webCitations: Array.from({ length: 9 }, (_, i) => ({ title: `Source ${i}`, url: `https://s${i}.example.com` })),
     })])
     expect(html).not.toContain('>Step 0<')
-    expect(html).toContain('12 steps, 1 failed')
+    expect(html).not.toMatch(/\d+ steps/)
+    expect(html).not.toContain('Answered directly')
     expect(html).toContain('Show 3 more sources')
   })
 
@@ -278,7 +268,7 @@ describe('agent and connector faces', () => {
   })
 })
 
-describe('plan card and step count', () => {
+describe('to-do list and count', () => {
   const plan = [
     { id: 'p1', title: 'Load skills', status: 'completed' as const },
     { id: 'p2', title: 'Research the market', status: 'in_progress' as const },
@@ -290,7 +280,7 @@ describe('plan card and step count', () => {
   it('shows the whole plan up front, waiting steps included', () => {
     const html = render([user('u'), reply('a', { isLoading: true, plan })], { startedAt: T0 })
     for (const item of plan) expect(html).toContain(item.title)
-    expect(html).toContain('aria-label="Plan"')
+    expect(html).toContain('aria-label="To-dos"')
     expect(html).toMatch(/aria-current="step"[^]*Research the market/)
   })
 

@@ -5,7 +5,6 @@ import { AnimatePresence, m, useReducedMotion } from 'framer-motion'
 import {
   AlertCircleIcon,
   ArrowDownOneIcon,
-  BubbleChatIcon,
   DownloadOneIcon,
   FileTwoIcon,
   ImageTwoIcon,
@@ -411,13 +410,13 @@ function stepText(activity: ActivityItem): { label: string; detail?: string } {
   return { label, detail: detail && detail.trim().toLowerCase() !== label.trim().toLowerCase() ? detail : undefined }
 }
 
-// ── Progress ──────────────────────────────────────────────────────────────────
+// ── To-dos ────────────────────────────────────────────────────────────────────
 
-// Without a plan, a step exists only once it starts, so there is no total to fill a bar
-// towards. Status lives in the header instead (a pill that stays visible when collapsed,
-// plus a hairline loading sweep while working); the body is just the steps.
+// The to-do list the model writes is the only progress shown. Status lives in the header
+// (a pill that stays visible when collapsed, plus a hairline loading sweep while working);
+// without a list the body is empty — tool calls are not progress.
 
-/** Finished / total plan steps. Null without a plan: tool calls are not progress. */
+/** Finished / total to-dos. Null without a list. */
 export function stepCount(plan: PlanItem[] | null): { done: number; total: number } | null {
   if (!plan) return null
   return { done: plan.filter(item => item.status === 'completed').length, total: plan.length }
@@ -512,23 +511,16 @@ function Shimmer({ children }: { children: string }) {
   )
 }
 
-/** What the body says when the turn ran no steps — one row, in the same shape as a step. */
-const NO_STEPS: Record<Exclude<TurnState, 'idle' | 'working'>, { icon: React.ReactNode; text: string }> = {
-  done:    { icon: <BubbleChatIcon size={16} />, text: 'Answered directly — no tools needed' },
-  stopped: { icon: <StopCircleIcon size={16} color="var(--neutral-400)" />, text: 'Stopped before any steps ran' },
-  error:   { icon: <AlertCircleIcon size={16} color="var(--red-400)" />, text: 'Something went wrong before any steps ran' },
-}
-
-/** The plan card: every step from the start, each loading then ticking off in place. */
+/** The to-do list: every item from the start, each loading then ticking off in place. */
 function PlanList({ plan, steps }: { plan: PlanItem[]; steps: ActivityItem[] }) {
-  // What the agent is doing right now gives the current step its live detail line.
+  // What the agent is doing right now gives the current item its live detail line.
   const live = steps.findLast(isRunning)
   const liveText = live ? stepText(live) : null
   const reduceMotion = useReducedMotion()
   return (
-    // The plan arrives whole: one soft fade for the list, never row by row.
+    // The list arrives whole: one soft fade for the list, never row by row.
     <m.ol
-      aria-label="Plan"
+      aria-label="To-dos"
       initial={reduceMotion ? false : { opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, ease: EASE }}
@@ -536,12 +528,12 @@ function PlanList({ plan, steps }: { plan: PlanItem[]; steps: ActivityItem[] }) 
     >
       {plan.map(item => {
         const current = item.status === 'in_progress'
-        const detail = item.detail ?? (current && liveText ? liveText.label : undefined)
+        const detail = current && liveText ? liveText.label : undefined
         return (
           <li
             key={item.id}
             aria-current={current ? 'step' : undefined}
-            // Waiting steps sit faded and brighten as their turn comes.
+            // Waiting items sit faded and brighten as their turn comes.
             style={{ opacity: item.status === 'pending' ? 0.45 : 1, transition: reduceMotion ? undefined : 'opacity 320ms ease' }}
           >
             <ItemRow
@@ -558,27 +550,6 @@ function PlanList({ plan, steps }: { plan: PlanItem[]; steps: ActivityItem[] }) 
   )
 }
 
-/** The plan is the progress. Without one, only what is happening right now shows: one
- * live row while the turn works, and one line about how it ended. */
-function ProgressBody({ state, steps, plan }: { state: TurnState; steps: ActivityItem[]; plan: PlanItem[] | null }) {
-  if (plan) return <PlanList plan={plan} steps={steps} />
-  if (state === 'idle') return null
-  if (state === 'working') {
-    const live = steps.findLast(isRunning)
-    if (!live) {
-      return <ItemRow icon={<Spinner size={14} color="var(--blue-500)" />} label={<Shimmer>Thinking…</Shimmer>} labelStyle={stepLabelStyle('executing')} />
-    }
-    const { label, detail } = stepText(live)
-    return <ItemRow wrap icon={<StepIcon status={live.status} />} label={<Shimmer>{label}</Shimmer>} detail={detail} labelStyle={stepLabelStyle(live.status)} />
-  }
-  if (steps.length === 0) {
-    const { icon, text } = NO_STEPS[state]
-    return <ItemRow icon={icon} label={text} labelStyle={{ color: 'var(--neutral-600)' }} />
-  }
-  const failed = steps.filter(step => step.status === 'error').length
-  const summary = `${steps.length} ${steps.length === 1 ? 'step' : 'steps'}${failed ? `, ${failed} failed` : ''}`
-  return <ItemRow icon={<StepIcon status={failed ? 'error' : 'done'} />} label={summary} labelStyle={{ color: 'var(--neutral-600)' }} />
-}
 
 // ── Overview ──────────────────────────────────────────────────────────────────
 
@@ -601,7 +572,7 @@ export interface OverviewData {
   latest:     UIMessage | undefined
   /** The latest turn's activity, in order. */
   steps:      ActivityItem[]
-  /** The latest turn's plan, when the backend sent one. */
+  /** The latest turn's to-do list, when the model wrote one. */
   plan:       PlanItem[] | null
   agents:     ActivityItem[]
   connectors: { slug: string; name: string; used: number; active: boolean; failed: boolean }[]
@@ -698,7 +669,7 @@ export function OverviewView({ messages, timing }: { messages: UIMessage[]; timi
   ])
 
   const counts: Record<SectionKey, number> = {
-    progress:   data.steps.length,
+    progress:   data.plan?.length ?? 0,
     agents:     data.agents.length,
     connectors: data.connectors.length,
     sources:    data.sources.length,
@@ -719,7 +690,7 @@ export function OverviewView({ messages, timing }: { messages: UIMessage[]; timi
     return (
       <PanelCard>
         <p style={{ ...TEXT, color: 'var(--neutral-500)', padding: 14 }}>
-          Nothing here yet. Progress, agents, connectors, sources and documents for this chat show up as soon as it starts working.
+          Nothing here yet. To-dos, agents, connectors, sources and documents for this chat show up as soon as it starts working.
         </p>
       </PanelCard>
     )
@@ -731,12 +702,12 @@ export function OverviewView({ messages, timing }: { messages: UIMessage[]; timi
     <PanelCard>
       <PanelSection
         first
-        title="Progress"
+        title="To-dos"
         aside={<TurnStatus state={state} seconds={seconds} count={stepCount(data.plan)} />}
         loading={state === 'working'}
         {...section('progress')}
       >
-        <ProgressBody state={state} steps={data.steps} plan={data.plan} />
+        {data.plan && <PlanList plan={data.plan} steps={data.steps} />}
       </PanelSection>
 
       <PanelSection title="Agents" count={counts.agents} {...section('agents')}>
