@@ -503,3 +503,10 @@
     padding: 8px;
   }
 }
+
+.checkRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+}

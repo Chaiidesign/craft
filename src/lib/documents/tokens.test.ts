@@ -92,17 +92,31 @@ describe('the HTML preview consumes tokens, not literals', () => {
   const primitives = read('../../components/documents/DocumentPrimitives.tsx')
 
   it('document CSS sets no literal font family, size, weight, leading or tracking', () => {
-    // The trailing .emptyState rule is workbench chrome, not document output.
-    const documentCss = css.slice(0, css.indexOf('.emptyState'))
+    // The trailing workbench-side states are app chrome, not document output.
+    const cut = css.indexOf('/* ── Workbench-side states')
+    expect(cut).toBeGreaterThan(0)
+    const documentCss = css.slice(0, cut)
     const declarations = [...documentCss.matchAll(/(font-family|font-size|font-weight|line-height|letter-spacing|font-style)\s*:\s*([^;]+);/g)]
     const literal = declarations.filter(([, , value]) => !/^var\(--doc-/.test(value.trim()))
     expect(literal.map(([d]) => d)).toEqual([])
   })
 
   it('primitives set typography only through the token-backed type() helper', () => {
-    const typeFn = primitives.slice(primitives.indexOf('export function type('), primitives.indexOf('// ── Inline primitives'))
+    const start = primitives.indexOf('export function type(')
+    const end = primitives.indexOf('// ── End of token style helpers')
+    expect(start).toBeGreaterThan(-1)
+    expect(end).toBeGreaterThan(start)
+    const typeFn = primitives.slice(start, end)
     const outside = primitives.replace(typeFn, '')
-    expect(outside).not.toMatch(/\b(fontSize|fontFamily|fontWeight|lineHeight|letterSpacing)\s*:/)
+    expect(outside).not.toMatch(/\b(fontSize|fontFamily|fontWeight|letterSpacing)\s*:/)
+    // Line boxes take the engine's leading, computed from the same tokens — never a literal.
+    for (const m of outside.matchAll(/\blineHeight\s*:\s*([^,}]+)/g)) expect(m[1].trim()).toMatch(/^pt\((lh|leading\(PRINT_TYPE\.\w+\))\)$/)
     expect(typeFn).toMatch(/fontFamily: `var\(\$\{p\}-family\)`/)
+    expect(typeFn).not.toMatch(/function (StyledLineView|BarPlot|LineView)/)
+  })
+
+  it('the deck preview sets typography only through the token helpers', () => {
+    const deck = read('../../components/documents/DeckPreview.tsx')
+    expect(deck).not.toMatch(/\b(fontSize|fontFamily|fontWeight|letterSpacing|lineHeight)\s*:/)
   })
 })

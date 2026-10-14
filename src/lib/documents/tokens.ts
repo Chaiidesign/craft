@@ -58,6 +58,21 @@ export const PRINT_TYPE = {
 
 export type PrintTypeKey = keyof typeof PRINT_TYPE
 
+const PRINT_KEY_BY_STYLE = new Map<TextStyle, PrintTypeKey>(Object.entries(PRINT_TYPE).map(([k, v]) => [v, k as PrintTypeKey]))
+
+/** The token key of a print style object (layout segments carry the object itself). */
+export function printTypeKey(style: TextStyle): PrintTypeKey | undefined {
+  return PRINT_KEY_BY_STYLE.get(style)
+}
+
+/** CSS variable prefix for any token text style (print or slide), e.g. `--doc-type-body`. */
+export function cssTypePrefix(style: TextStyle): string | undefined {
+  const print = PRINT_KEY_BY_STYLE.get(style)
+  if (print) return `--doc-type-${print.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`
+  for (const [k, v] of Object.entries({ ...SLIDE_TYPE, ...SLIDE_INLINE })) if (v === style) return `--doc-slide-${k}`
+  return undefined
+}
+
 // ── Slide type scale ─────────────────────────────────────────────────────────
 
 export const SLIDE_TYPE = {
@@ -65,6 +80,12 @@ export const SLIDE_TYPE = {
   heading: style({ role: 'display', weight: 600, sizePt: 24, lineHeight: 1.2 }),
   body: style({ role: 'voice', weight: 400, sizePt: 18, lineHeight: 1.4 }),
   caption: style({ role: 'function', weight: 400, sizePt: 12, lineHeight: 1.35 }),
+} as const satisfies Record<string, TextStyle>
+
+/** Inline variants used inside slide text: the true italic cut for emphasis, and citation markers at the caption floor. */
+export const SLIDE_INLINE = {
+  emphasis: style({ role: 'voice', weight: 400, style: 'italic', sizePt: 18, lineHeight: 1.4 }),
+  citation: style({ role: 'function', weight: 400, sizePt: 12, lineHeight: 1.35 }),
 } as const satisfies Record<string, TextStyle>
 
 /** Readability floors. Dense slides split; text never shrinks below these to fit. */
@@ -125,6 +146,40 @@ export const CHART = {
   axisStrokePt: 0.75,
 } as const
 
+// ── Flow: spacing between and inside blocks (pt) ─────────────────────────────
+// The layout engine places every block from these values; the preview draws
+// at the engine's positions, so CSS margins never add height of their own.
+
+export const FLOW = {
+  letterhead: { paddingBottom: SPACE.lg, gap: SPACE.lg },
+  titleBlock: { paddingTop: SPACE.xxl, paddingBottom: SPACE.xl, draftGap: SPACE.md, draftPaddingX: SPACE.sm, draftPaddingY: SPACE.xxs, metaGap: SPACE.lg, metaColumns: 3, metaColumnGap: SPACE.xxl, metaRowGap: SPACE.sm, labelGap: SPACE.xxs },
+  sectionHeading: { before: SPACE.xxl, after: SPACE.sm },
+  paragraph: { before: 0, after: SPACE.md },
+  summary: { before: 0, after: SPACE.xl, inset: SPACE.lg, paddingY: SPACE.lg },
+  pullQuote: { before: SPACE.lg, after: SPACE.lg, indent: SPACE.xxl },
+  list: { before: 0, after: SPACE.md, indent: SPACE.xl, itemGap: SPACE.xs },
+  keyValueGroup: { before: 0, after: SPACE.xl, titleGap: SPACE.sm, rowGap: SPACE.md, columnGap: SPACE.xxl, labelGap: SPACE.xxs },
+  table: { before: 0, after: SPACE.xl, captionGap: SPACE.sm },
+  totals: { before: 0, after: SPACE.xxl, minWidthShare: 0.55, grandPaddingTop: SPACE.md, columnGap: SPACE.xl },
+  callout: { before: SPACE.md, after: SPACE.xl, paddingX: SPACE.lg, paddingY: SPACE.md, labelGap: SPACE.xs },
+  chart: { before: 0, after: SPACE.xl, titleGap: SPACE.sm, noteGap: SPACE.xs },
+  image: { before: 0, after: SPACE.xl, captionGap: SPACE.sm, maxHeightPt: 300 },
+  sourceList: { before: 0, after: SPACE.md, indent: SPACE.xl, itemGap: SPACE.xs },
+  missing: { paddingX: SPACE.xs, border: 0.5 },
+  runningHeader: { gap: SPACE.sm, after: SPACE.lg },
+} as const
+
+/** Pagination rules (PRD §8). */
+export const KEEP = {
+  /** Lines of a paragraph or list item that must stay together at the bottom (orphans) and top (widows) of a page. */
+  orphans: 2,
+  widows: 2,
+  /** Line-item rows that must share a page with the totals. */
+  rowsWithTotals: 2,
+  /** At a preferred break, start a new page when less than this remains. */
+  preferredBreakMinSpacePt: 120,
+} as const
+
 // ── Tables ───────────────────────────────────────────────────────────────────
 
 export const TABLE = {
@@ -161,6 +216,17 @@ export const SLIDE = {
   widthPt: 960,
   heightPt: 540,
   safeAreaPt: 48,
+} as const
+
+/** Spacing inside the slide safe area (pt). */
+export const SLIDE_FLOW = {
+  headingGap: SPACE.xxl,
+  blockGap: SPACE.lg,
+  listIndent: SPACE.xxl,
+  itemGap: SPACE.sm,
+  chartPlotHeightPt: 220,
+  /** Slide number and source line at the foot of the safe area. */
+  footerGap: SPACE.lg,
 } as const
 
 // ── Resolution helpers ───────────────────────────────────────────────────────
@@ -203,7 +269,7 @@ export function documentCssVariables(themeId: string | undefined): Record<string
     }
   }
   addType('type', PRINT_TYPE)
-  addType('slide', SLIDE_TYPE)
+  addType('slide', { ...SLIDE_TYPE, ...SLIDE_INLINE })
   for (const [key, v] of Object.entries(SPACE)) vars[`--doc-space-${key}`] = `${v}pt`
   vars['--doc-margin-top'] = `${PAGE.marginPt.top}pt`
   vars['--doc-margin-right'] = `${PAGE.marginPt.right}pt`

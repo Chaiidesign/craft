@@ -36,7 +36,8 @@ export type PlanNode =
   | { primitive: 'section-heading'; id: string; text: string; level: 1 | 2 | 3 }
   | { primitive: 'paragraph'; id: string; runs: readonly PlanRun[]; role: 'body' | 'pull-quote' }
   | { primitive: 'list'; id: string; ordered: boolean; items: readonly (readonly PlanRun[])[] }
-  | { primitive: 'key-value-group'; id: string; title?: string; layout: 'stack' | 'columns' | 'parties'; entries: readonly KeyValueEntry[] }
+  /** `keepWithPrevious`: never placed on a page apart from the block before it (invoice payment terms stay with the totals). */
+  | { primitive: 'key-value-group'; id: string; title?: string; layout: 'stack' | 'columns' | 'parties'; entries: readonly KeyValueEntry[]; keepWithPrevious?: boolean }
   | { primitive: 'table'; id: string; caption?: string; columns: readonly TableColumn[]; rows: readonly { id: string; cells: readonly string[] }[]; citations: readonly number[] }
   | { primitive: 'invoice-line-items'; id: string; headers: { description: string; quantity: string; unitPrice: string; amount: string }; currencyNote: string | null; rows: readonly InvoiceRow[] }
   | { primitive: 'totals'; id: string; rows: readonly TotalsRow[]; grand: TotalsRow; complete: boolean }
@@ -45,6 +46,7 @@ export type PlanNode =
   | { primitive: 'chart-with-data-summary'; id: string; chartType: 'bar' | 'line'; title: string; unit: string; xLabel: string; yLabel: string; axesText: string; contentWidthPt: number; series: readonly ChartSeries[]; valueLabels: readonly (readonly string[])[]; dataSummary: string; citations: readonly number[] }
   | { primitive: 'source-list'; id: string; entries: readonly SourceEntry[] }
   | { primitive: 'page-break-hint'; id: string; kind: 'preferred' }
+  /** `pageLabel` is a template; pagination fills {n} and {total}. */
   | { primitive: 'page-footer'; id: string; identification: string; pageLabel: string }
 
 export type InvoiceRow = { id: string; description: string; quantity: string; unitPrice: PlanValue; amount: PlanValue }
@@ -153,8 +155,7 @@ function calloutNode(block: Extract<Block, { type: 'callout' }>, numbers: Map<st
 }
 
 function footer(identification: string): PlanNode {
-  // Page numbers are assigned by pagination (Step 3); an unpaginated plan says so rather than printing "1 of 1".
-  return { primitive: 'page-footer', id: 'footer', identification, pageLabel: 'Unpaginated preview' }
+  return { primitive: 'page-footer', id: 'footer', identification, pageLabel: 'Page {n} of {total}' }
 }
 
 // ── Invoice template (invoice@1) ─────────────────────────────────────────────
@@ -173,6 +174,10 @@ function amountValue(amount: Amount, locale: string, style: PrintTypeKey, negate
   if (!amount.known) return { kind: 'unknown', text: 'Unknown', reasons: amount.reasons.map((r) => r.message), style: 'tableText' }
   const money: Money = negate ? { ...amount.money, amountMinor: -amount.money.amountMinor || 0 } : amount.money
   return { kind: 'text', text: formatMoney(money, locale), style }
+}
+
+function withoutReasons(v: PlanValue): PlanValue {
+  return v.kind === 'unknown' ? { ...v, reasons: [] } : v
 }
 
 function composeInvoice(snapshot: InvoiceSnapshot, audience: Audience, readiness: Readiness): Pick<DocumentPlan, 'nodes' | 'placedBlockIds' | 'excludedBlocks'> {
@@ -225,9 +230,11 @@ function composeInvoice(snapshot: InvoiceSnapshot, audience: Audience, readiness
           rows: block.items.map((li) => ({
             id: li.id,
             description: li.description,
-            quantity: `${formatQuantity(li.quantityMilli, locale)}${li.unit ? ` ${li.unit}` : ''}`,
+            // No-break space: a quantity never wraps away from its unit.
+            quantity: `${formatQuantity(li.quantityMilli, locale)}${li.unit ? `\u00a0${li.unit}` : ''}`,
             unitPrice: li.unitPrice ? { kind: 'text', text: formatMoney(li.unitPrice, locale), style: 'amount' } : { kind: 'missing', label: 'Unit price', required: true },
-            amount: amountValue(amountById.get(li.id) ?? { known: false, reasons: [] }, locale, 'amount'),
+            // The reason an amount is unknown is stated once, in the totals; the cell says only "Unknown".
+            amount: withoutReasons(amountValue(amountById.get(li.id) ?? { known: false, reasons: [] }, locale, 'amount')),
           })),
         })
         break
@@ -236,7 +243,7 @@ function composeInvoice(snapshot: InvoiceSnapshot, audience: Audience, readiness
         nodes.push(invoiceTotals(snapshot, totals))
         break
       case 'blk-payment':
-        nodes.push({ primitive: 'key-value-group', id: 'payment', title: 'Payment', layout: 'stack', entries: entries(snapshot, [F.paymentTerms]) })
+        nodes.push({ primitive: 'key-value-group', id: 'payment', title: 'Payment', layout: 'stack', entries: entries(snapshot, [F.paymentTerms]), keepWithPrevious: true })
         break
       // blk-adjustments: its fields are shown inside the totals rows they affect.
     }
@@ -370,6 +377,11 @@ function briefNode(block: Block, snapshot: DocumentSnapshot, numbers: Map<string
   }
 }
 
+/** One snapshot block as a plan node, with the snapshot's citation numbering (used by deck layout). */
+export function planNodeForBlock(snapshot: DocumentSnapshot, block: Block): PlanNode | null {
+  return briefNode(block, snapshot, citationNumbers(snapshot))
+}
+
 // ── Entry point ──────────────────────────────────────────────────────────────
 
 export class UnsupportedTemplateError extends Error {}
@@ -383,7 +395,7 @@ export function composeDocument(snapshot: DocumentSnapshot, options: ComposeOpti
   let body
   if (snapshot.kind === 'invoice') body = composeInvoice(snapshot, audience, readiness)
   else if (snapshot.kind === 'brief') body = composeBrief(snapshot, audience, readiness)
-  else throw new UnsupportedTemplateError('Deck layouts arrive in Step 3 (slide splitting); there is no deck page template.')
+  else throw new UnsupportedTemplateError('Decks have no page template: derive one with deriveDeck() and lay it out with layoutDeck().')
   return {
     kind: snapshot.kind,
     themeId: snapshot.brand.themeId,
@@ -407,7 +419,7 @@ export function collectStyledText(plan: DocumentPlan): StyledText[] {
   const add = (style: PrintTypeKey, text: string) => { if (text) out.push({ style, text }) }
   const runs = (style: PrintTypeKey, rs: readonly PlanRun[]) => rs.forEach((r) => {
     add(r.emphasis ? 'emphasis' : style, r.text)
-    if (r.citations.length) add('citation', `[${r.citations.join(', ')}]`)
+    if (r.citations.length) add('citation', citationMarker(r.citations))
   })
   const value = (v: PlanValue) => {
     if (v.kind === 'text') add(v.style, v.text)
@@ -436,20 +448,25 @@ export function collectStyledText(plan: DocumentPlan): StyledText[] {
         break
       case 'totals': node.rows.forEach((r) => { add('tableText', r.label); value(r.value) }); add('tableHeader', node.grand.label); value(node.grand.value); break
       case 'callout': if (node.label) add('label', node.label); runs('body', node.runs); break
-      case 'image-with-caption': add('label', node.brokenNote); add('label', node.caption); if (node.citations.length) add('citation', `[${node.citations.join(', ')}]`); break
+      case 'image-with-caption': add('label', node.brokenNote); add('label', node.caption); if (node.citations.length) add('citation', citationMarker(node.citations)); break
       case 'chart-with-data-summary':
         add('label', node.title); add('label', node.axesText)
-        if (node.citations.length) add('citation', `[${node.citations.join(', ')}]`)
+        if (node.citations.length) add('citation', citationMarker(node.citations))
         node.series.forEach((s) => { add('label', s.label); s.points.forEach((p) => add('label', p.x)) })
         node.valueLabels.forEach((vs) => vs.forEach((v) => add('label', v)))
         add('label', node.dataSummary)
         break
       case 'source-list': node.entries.forEach((e) => add('citation', `${e.number}. ${e.text}`)); break
-      case 'page-footer': add('footer', node.identification); add('footer', node.pageLabel); break
+      case 'page-footer': add('footer', node.identification); add('footer', node.pageLabel.replace('{n}', '0123456789').replace('{total}', '0123456789')); break
       case 'page-break-hint': break
     }
   }
   return out
+}
+
+/** Inline citation marker, glued to its claim with no-break spaces so it never wraps alone. */
+export function citationMarker(numbers: readonly number[]): string {
+  return `\u00a0[${numbers.join(',\u00a0')}]`
 }
 
 export function missingText(v: Extract<PlanValue, { kind: 'missing' }>): string {

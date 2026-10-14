@@ -70,7 +70,7 @@ export const FIXTURES: readonly Fixture[] = [
   {
     id: 'deck-from-brief', prdNumber: 5, type: 'scenario', title: 'Brief → slide deck', baseFixtureId: 'brief-evidence', runsIn: 'step-3',
     purpose: 'Adapt the brief into a 16:9 deck that records the source brief revision and splits dense content by meaning.',
-    steps: ['Derive a deck from the brief’s current revision', 'Check ancestry points at that exact brief revision', 'Check mandatory facts and citations survive', 'Check no slide text falls below the type floor'],
+    steps: ['Derive a deck from a given brief revision', 'Check ancestry points at that exact brief revision (Step 4, when revisions exist)', 'Check mandatory facts and citations survive', 'Check no slide text falls below the type floor'],
   },
   {
     id: 'bounded-edit', prdNumber: 6, type: 'scenario', title: 'One-line edit', baseFixtureId: 'invoice-complete', runsIn: 'step-4',

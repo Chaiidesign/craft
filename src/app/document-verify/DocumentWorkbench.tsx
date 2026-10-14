@@ -4,20 +4,23 @@
 //
 // Step 1: fixture inspector — typed fields, validation and derived totals
 // exactly as the model holds them.
-// Step 2: HTML document preview composed from the same snapshot with the
-// document tokens and primitives (unpaginated until Step 3).
+// Step 2: document tokens, primitives and templates.
+// Step 3: the preview is laid out with real font metrics and paginated by meaning.
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Button } from '@/components/Button'
-import { DocumentPreview } from '@/components/documents/DocumentPreview'
-import type { FontLoadState } from '@/components/documents/useDocumentFonts'
+import { DeckPreview, deckChecks } from '@/components/documents/DeckPreview'
+import { DocumentPreview, type PreviewState } from '@/components/documents/DocumentPreview'
 import { composeDocument, type Audience } from '@/lib/documents/compose'
 import { describeFieldState } from '@/lib/documents/display'
 import { FIXTURES, getFixture, SAMPLE_LABEL, type Fixture } from '@/lib/documents/fixtures'
 import { computeInvoiceTotals, type Amount } from '@/lib/documents/invoice'
 import type { Block, DocumentSnapshot, InvoiceSnapshot } from '@/lib/documents/model'
 import { formatMoney, formatQuantity } from '@/lib/documents/money'
+import { deriveDeck } from '@/lib/documents/deck'
+import { evidenceBrief } from '@/lib/documents/fixtures/brief'
+import type { DeckLayout } from '@/lib/documents/layout/slides'
 import { resolveTheme } from '@/lib/documents/theme'
 import { validateSnapshot, type Readiness, type ValidationIssue } from '@/lib/documents/validation'
 
@@ -284,39 +287,51 @@ function describeTheme(themeId: string): string {
 
 // ── Preview ─────────────────────────────────────────────────────────────────
 
-const FONT_STATUS: Record<FontLoadState['status'], string> = {
-  loading: 'Loading document fonts…',
-  ready: 'Document fonts loaded from the committed TTF files.',
-  failed: 'Some document fonts failed to load — text below may use a fallback face.',
+function previewStatus(state: PreviewState): string {
+  if (state.status === 'loading') return 'Loading document fonts and checking image files…'
+  if (state.status === 'fonts-failed') return 'Document fonts failed to load — no preview rather than a fallback face.'
+  const { paged } = state
+  if (paged.status === 'empty') return 'Nothing to lay out.'
+  if (paged.status === 'error') return 'Layout refused — see the message below.'
+  const n = paged.pages.length
+  return `${n} page${n === 1 ? '' : 's'}, laid out with the committed document fonts.`
 }
 
 function PreviewPanel({ snapshot }: { snapshot: DocumentSnapshot }) {
   const [audience, setAudience] = useState<Audience>('recipient')
+  const [preset, setPreset] = useState<'a4-portrait' | 'letter-portrait'>('a4-portrait')
   const [showHints, setShowHints] = useState(false)
-  const [fontState, setFontState] = useState<FontLoadState>({ status: 'loading' })
-  const onFontState = useCallback((s: FontLoadState) => setFontState(s), [])
+  const [previewState, setPreviewState] = useState<PreviewState>({ status: 'loading' })
+  const onState = useCallback((s: PreviewState) => setPreviewState(s), [])
   const plan = useMemo(() => composeDocument(snapshot, { audience }), [snapshot, audience])
 
   return (
     <section className={styles.panel} aria-labelledby="preview-title">
       <h2 id="preview-title" className={styles.panelTitle}>Document preview</h2>
       <p className={styles.muted} style={{ marginTop: 0 }}>
-        Rendered from the snapshot with the document tokens and primitives. Unpaginated — page breaks arrive in Step 3. Not an export.
+        Laid out from the snapshot with the document fonts, tokens and primitives, and paginated by meaning. Not an export.
       </p>
-      <div className={styles.toolbar} role="group" aria-label="Preview options">
+      <div className={styles.toolbar} role="group" aria-label="Audience">
         <Button variant={audience === 'recipient' ? 'secondary' : 'ghost'} size="sm" aria-pressed={audience === 'recipient'} onClick={() => setAudience('recipient')}>
           Recipient view
         </Button>
         <Button variant={audience === 'internal' ? 'secondary' : 'ghost'} size="sm" aria-pressed={audience === 'internal'} onClick={() => setAudience('internal')}>
           Include internal notes
         </Button>
+      </div>
+      <div className={styles.toolbar} role="group" aria-label="Page size and hints">
+        <Button variant={preset === 'a4-portrait' ? 'secondary' : 'ghost'} size="sm" aria-pressed={preset === 'a4-portrait'} onClick={() => setPreset('a4-portrait')}>
+          A4
+        </Button>
+        <Button variant={preset === 'letter-portrait' ? 'secondary' : 'ghost'} size="sm" aria-pressed={preset === 'letter-portrait'} onClick={() => setPreset('letter-portrait')}>
+          Letter
+        </Button>
         <Button variant={showHints ? 'secondary' : 'ghost'} size="sm" aria-pressed={showHints} onClick={() => setShowHints((v) => !v)}>
-          Show break hints
+          Show page-break reasons
         </Button>
       </div>
-      <p className={styles.muted} role="status" data-font-status={fontState.status}>
-        {FONT_STATUS[fontState.status]}
-        {fontState.status === 'failed' && ` (${fontState.failedFiles.join(', ')})`}
+      <p className={styles.muted} role="status" data-preview-status={previewState.status === 'laid-out' ? previewState.paged.status : previewState.status}>
+        {previewStatus(previewState)}
       </p>
       {plan.excludedBlocks.length > 0 && (
         <p className={styles.muted}>
@@ -324,7 +339,7 @@ function PreviewPanel({ snapshot }: { snapshot: DocumentSnapshot }) {
         </p>
       )}
       <div className={styles.previewWell}>
-        <DocumentPreview plan={plan} showHints={showHints} onFontState={onFontState} />
+        <DocumentPreview plan={plan} preset={preset} showHints={showHints} onState={onState} />
       </div>
     </section>
   )
@@ -431,7 +446,7 @@ function ScenarioInspector({ fixture, onOpenFixture }: { fixture: Extract<Fixtur
       <h2 id="fixture-title" className={styles.fixtureTitle}>{fixture.title}</h2>
       <p className={styles.muted}>Fixture {fixture.prdNumber} · {fixture.purpose}</p>
       <div className={styles.metaRow}>
-        <span className={styles.pill} data-tone="neutral">Scenario — runnable from {STEP_LABEL[fixture.runsIn]}</span>
+        <span className={styles.pill} data-tone="neutral">{fixture.runsIn === 'step-3' ? 'Scenario — runnable now' : `Scenario — runnable from ${STEP_LABEL[fixture.runsIn]}`}</span>
       </div>
       {base && (
         <p>
@@ -439,9 +454,48 @@ function ScenarioInspector({ fixture, onOpenFixture }: { fixture: Extract<Fixtur
           <a href={`#${base.id}`} onClick={(e) => { e.preventDefault(); onOpenFixture(base.id) }}>{base.title}</a>
         </p>
       )}
-      <h3 className={styles.groupHeading} style={{ marginTop: 16 }}>What it will check</h3>
+      <h3 className={styles.groupHeading} style={{ marginTop: 16 }}>What it checks</h3>
       <ol className={styles.stepsList}>{fixture.steps.map((s) => <li key={s}>{s}</li>)}</ol>
-      <p className={styles.muted} style={{ marginTop: 12 }}>Not runnable yet. Nothing on this page simulates its result.</p>
+      {fixture.id === 'deck-from-brief'
+        ? <DeckScenario />
+        : <p className={styles.muted} style={{ marginTop: 12 }}>Not runnable yet. Nothing on this page simulates its result.</p>}
     </section>
+  )
+}
+
+// ── Fixture 5: brief → deck ─────────────────────────────────────────────────
+
+/** Fixture IDs for the source brief. Real output/revision records arrive in Step 4. */
+const BRIEF_SOURCE = { outputId: 'out-brief-evidence', revisionId: 'rev-brief-evidence-001' }
+const BRIEF_FACTS = ['61%', '8 of 112', '15 of 109', 'week 3 (21%)']
+
+function DeckScenario() {
+  const brief = useMemo(() => evidenceBrief(), [])
+  const derived = useMemo(() => deriveDeck(brief, BRIEF_SOURCE), [brief])
+  const [layout, setLayout] = useState<DeckLayout | null>(null)
+  const onLayout = useCallback((l: DeckLayout | null) => setLayout(l), [])
+  const checks = layout ? deckChecks(derived, layout, { facts: BRIEF_FACTS, citationCount: brief.citations.length }) : []
+  return (
+    <>
+      <h3 className={styles.groupHeading} style={{ marginTop: 16 }}>Result</h3>
+      {checks.length === 0
+        ? <p className={styles.muted}>Laying out slides…</p>
+        : (
+          <ul className={styles.issueList}>
+            {checks.map((c) => (
+              <li key={c.label} className={styles.checkRow}>
+                <span className={styles.pill} data-tone={c.result === 'pass' ? 'ready' : c.result === 'fail' ? 'invalid' : 'neutral'}>{c.result === 'pass' ? 'Pass' : c.result === 'fail' ? 'Fail' : 'Deferred to Step 4'}</span>
+                <span><strong>{c.label}.</strong> {c.detail}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      <p className={styles.muted}>
+        Step 3 checks the adaptation itself. Whether the recorded IDs point at a real, current brief revision is checked in Step 4, when revisions exist.
+      </p>
+      <div className={styles.previewWell}>
+        <DeckPreview derived={derived} onLayout={onLayout} />
+      </div>
+    </>
   )
 }
