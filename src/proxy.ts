@@ -187,6 +187,16 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Document-quality demo: fictional fixtures and local state only, no service
+  // calls. Also reachable on Vercel *preview* deployments, which sit behind
+  // Vercel's own deployment protection. Never in production.
+  if (
+    pathname === "/document-verify" &&
+    (process.env.NODE_ENV !== "production" || process.env.VERCEL_ENV === "preview")
+  ) {
+    return NextResponse.next();
+  }
+
   // The organization security page was removed. Redirect before Auth0/session
   // handling so stale client links and logged-out bookmarks cannot preserve
   // /org/security as a post-login return path.

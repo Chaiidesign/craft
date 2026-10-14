@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
 const auth0Mocks = vi.hoisted(() => {
@@ -84,5 +84,52 @@ describe("proxy Slack Connect landing", () => {
     expect(response.headers.get("location")).toBe(
       "https://app.getsouvenir.com/onboarding/setup",
     );
+  });
+});
+
+describe("proxy document-quality demo", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.unstubAllEnvs();
+    auth0Mocks.getSession.mockResolvedValue(null);
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("opens /document-verify without a session outside production", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    const response = await proxy(new NextRequest("https://app.getsouvenir.com/document-verify"));
+
+    expect(response.status).toBe(200);
+    expect(auth0Mocks.getSession).not.toHaveBeenCalled();
+  });
+
+  it("opens /document-verify on a Vercel preview deployment", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("VERCEL_ENV", "preview");
+    const response = await proxy(new NextRequest("https://craft-git-feat.vercel.app/document-verify"));
+
+    expect(response.status).toBe(200);
+    expect(auth0Mocks.getSession).not.toHaveBeenCalled();
+  });
+
+  it.each([undefined, "production"])("keeps /document-verify behind login in production (VERCEL_ENV=%s)", async (vercelEnv) => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("VERCEL_ENV", vercelEnv);
+    const response = await proxy(new NextRequest("https://app.getsouvenir.com/document-verify"));
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get("location")).toBe(
+      `https://app.getsouvenir.com/auth/login?returnTo=${encodeURIComponent("/document-verify")}`,
+    );
+  });
+
+  it("does not open anything beneath it", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    const response = await proxy(new NextRequest("https://app.getsouvenir.com/document-verify/other"));
+
+    expect(response.status).toBe(302);
   });
 });
