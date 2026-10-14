@@ -1,0 +1,426 @@
+/* Document preview layout. Every size, space and colour reads a --doc-* variable
+   generated from src/lib/documents/tokens.ts and the issuer palette. Text styles
+   are applied inline from the same tokens (DocumentPrimitives `type()`); this file
+   sets no font family and no font size. */
+
+.frame {
+  width: 100%;
+  min-width: 0;
+}
+
+.sheet {
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: var(--doc-margin-top) var(--doc-margin-right) var(--doc-margin-bottom) var(--doc-margin-left);
+  background: var(--doc-paper);
+  color: var(--doc-ink);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08), 0 4px 16px rgb(0 0 0 / 0.06);
+  display: flex;
+  flex-direction: column;
+  /* Token base: nothing inside the sheet can fall back to app chrome fonts or metrics. */
+  font-family: var(--doc-type-body-family);
+  font-size: var(--doc-type-body-size);
+  line-height: var(--doc-type-body-leading);
+  font-synthesis: none;
+  font-kerning: normal;
+}
+
+/* Zero-specificity reset so primitive classes below always win. */
+:where(.sheet) :where(p, dl, dd, ol, ul, figure, blockquote, h1, h2, h3) {
+  margin: 0;
+}
+
+/* While theme faces load, hold text invisible rather than flash a fallback that
+   could be mistaken for the document font. */
+.sheet[data-fonts='loading'] {
+  visibility: hidden;
+}
+
+.muted {
+  color: var(--doc-muted);
+}
+
+/* Values are block-level so their own token leading sets the line box, not the
+   containing cell's inherited strut. */
+.value {
+  display: block;
+  white-space: pre-line;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Letterhead ────────────────────────────────────────────────────────────── */
+
+.letterhead {
+  display: flex;
+  align-items: center;
+  gap: var(--doc-space-lg);
+  padding-bottom: var(--doc-space-lg);
+  border-bottom: var(--doc-accent-rule) solid var(--doc-accent);
+}
+
+.logo {
+  display: block;
+  max-height: var(--doc-logo-max-h);
+  max-width: var(--doc-logo-max-w);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.logoFallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: var(--doc-logo-max-h);
+  padding: 0 var(--doc-space-md);
+  border: var(--doc-rule) dashed var(--doc-rule-colour);
+  color: var(--doc-muted);
+  text-align: center;
+  flex: none;
+}
+
+.issuerName {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ── Title block ───────────────────────────────────────────────────────────── */
+
+.titleBlock {
+  padding: var(--doc-space-xxl) 0 var(--doc-space-xl);
+}
+
+.draftMarker {
+  display: inline-block;
+  margin-bottom: var(--doc-space-md);
+  padding: var(--doc-space-xxs) var(--doc-space-sm);
+  border: var(--doc-rule) solid var(--doc-missing-rule);
+  background: var(--doc-missing-fill);
+  color: var(--doc-missing-ink);
+}
+
+.title {
+  overflow-wrap: anywhere;
+}
+
+.titleMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--doc-space-sm) var(--doc-space-xxl);
+  margin-top: var(--doc-space-lg);
+}
+
+.metaItem {
+  display: grid;
+  gap: var(--doc-space-xxs);
+}
+
+/* ── Text ──────────────────────────────────────────────────────────────────── */
+
+.summary {
+  padding: var(--doc-space-lg) 0 var(--doc-space-lg) var(--doc-space-lg);
+  border-left: var(--doc-accent-rule) solid var(--doc-accent);
+  margin-bottom: var(--doc-space-xl);
+}
+
+.sectionHeading {
+  margin-top: var(--doc-space-xxl);
+  margin-bottom: var(--doc-space-sm);
+  break-after: avoid;
+}
+
+.paragraph {
+  margin-bottom: var(--doc-space-md);
+}
+
+.pullQuote {
+  margin: var(--doc-space-lg) 0 var(--doc-space-lg) var(--doc-space-xxl);
+  color: var(--doc-ink);
+}
+
+.list {
+  padding-left: var(--doc-space-xl);
+  list-style: disc outside;
+  margin-bottom: var(--doc-space-md);
+  display: grid;
+  gap: var(--doc-space-xs);
+}
+
+.citation {
+  margin-left: var(--doc-space-xxs);
+  color: var(--doc-muted);
+  white-space: nowrap;
+}
+
+/* ── Key/value groups ──────────────────────────────────────────────────────── */
+
+.kvGroup {
+  margin-bottom: var(--doc-space-xl);
+}
+
+.groupTitle {
+  margin-bottom: var(--doc-space-sm);
+  color: var(--doc-muted);
+}
+
+.kvList {
+  display: grid;
+  gap: var(--doc-space-md) var(--doc-space-xxl);
+}
+
+.kvList[data-layout='columns'] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Issuer on the left, buyer on the right: name above address in each column. */
+.kvList[data-layout='parties'] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, auto);
+  grid-auto-flow: column;
+}
+
+.kvField {
+  display: grid;
+  align-content: start;
+  gap: var(--doc-space-xxs);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ── Missing / unknown ─────────────────────────────────────────────────────── */
+
+.missing {
+  display: block;
+  width: fit-content;
+  padding: 0 var(--doc-space-xs);
+  border: var(--doc-rule) dashed var(--doc-missing-rule);
+  background: var(--doc-missing-fill);
+  color: var(--doc-missing-ink);
+}
+
+.unknown {
+  display: grid;
+  gap: var(--doc-space-xxs);
+  color: var(--doc-unknown-ink);
+  text-align: inherit;
+}
+
+.unknownReasons {
+  color: var(--doc-muted);
+}
+
+/* ── Tables ────────────────────────────────────────────────────────────────── */
+
+.figure {
+  margin: 0 0 var(--doc-space-xl);
+  min-width: 0;
+}
+
+.table,
+.totals {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td,
+.totals th,
+.totals td {
+  padding: var(--doc-cell-py) var(--doc-cell-px);
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.table thead th {
+  border-bottom: var(--doc-rule-strong) solid var(--doc-ink);
+}
+
+.table tbody td {
+  border-bottom: var(--doc-rule) solid var(--doc-rule-colour);
+}
+
+.table [data-align='end'],
+.totals [data-align='end'] {
+  text-align: right;
+}
+
+.table [data-align='end'] .missing,
+.totals [data-align='end'] .missing {
+  margin-left: auto;
+}
+
+.lineItems td[data-align='end'],
+.lineItems th[data-align='end'] {
+  white-space: nowrap;
+}
+
+.lineItems th:first-child {
+  width: 55%;
+}
+
+.caption {
+  caption-side: top;
+  text-align: left;
+  padding-bottom: var(--doc-space-sm);
+  color: var(--doc-muted);
+}
+
+.totals {
+  width: auto;
+  min-width: 55%;
+  max-width: 100%;
+  margin: 0 0 var(--doc-space-xxl) auto;
+  break-inside: avoid;
+}
+
+.totals th {
+  white-space: nowrap;
+}
+
+/* Labels and amounts differ in size on the grand-total row: share a baseline. */
+.totals th,
+.totals td {
+  vertical-align: baseline;
+}
+
+.totals tr[data-grand] th,
+.totals tr[data-grand] td {
+  border-top: var(--doc-rule-strong) solid var(--doc-ink);
+  padding-top: var(--doc-space-md);
+}
+
+/* ── Callouts ──────────────────────────────────────────────────────────────── */
+
+.callout {
+  margin: var(--doc-space-md) 0 var(--doc-space-xl);
+  padding: var(--doc-space-md) var(--doc-space-lg);
+  border-left: var(--doc-accent-rule) solid var(--doc-rule-colour);
+}
+
+.callout[data-tone='warning'] {
+  border-left-color: var(--doc-missing-rule);
+}
+
+.callout[data-audience='internal'] {
+  background: var(--doc-internal-fill);
+  border: var(--doc-rule) dashed var(--doc-muted);
+}
+
+.internalLabel {
+  color: var(--doc-muted);
+  margin-bottom: var(--doc-space-xs);
+}
+
+/* ── Images and charts ─────────────────────────────────────────────────────── */
+
+.image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.chartTitle {
+  margin-bottom: var(--doc-space-sm);
+  color: var(--doc-ink);
+}
+
+.chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.chartAxis {
+  stroke: var(--doc-ink);
+}
+
+.chartBar {
+  fill: var(--doc-accent);
+}
+
+.chartText {
+  fill: var(--doc-ink);
+}
+
+.chartAxes,
+.chartSummary {
+  margin-top: var(--doc-space-xs);
+  color: var(--doc-muted);
+}
+
+.chartSummary {
+  color: var(--doc-ink);
+}
+
+/* ── Sources, breaks, footer ───────────────────────────────────────────────── */
+
+.list:is(ol) {
+  list-style-type: decimal;
+}
+
+.sourceList {
+  padding-left: var(--doc-space-xl);
+  list-style: decimal outside;
+  display: grid;
+  gap: var(--doc-space-xs);
+}
+
+.breakHint {
+  display: block;
+  height: 0;
+}
+
+.breakHintVisible {
+  margin: var(--doc-space-md) 0;
+  padding-top: var(--doc-space-xxs);
+  border-top: var(--doc-rule) dashed var(--doc-accent);
+  color: var(--doc-accent);
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--doc-space-lg);
+  margin-top: auto;
+  padding-top: var(--doc-footer-clearance);
+  color: var(--doc-muted);
+}
+
+.footer > span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.footer > span:last-child {
+  flex: none;
+}
+
+/* Workbench-side empty state (not part of the document). */
+.emptyState {
+  display: grid;
+  gap: 8px;
+  max-width: 48ch;
+  margin: 24px auto;
+  padding: 16px;
+  border: 1px dashed var(--neutral-300);
+  border-radius: 8px;
+  background: var(--color-surface-default);
+  color: var(--color-text-default);
+}
+
+.emptyState p {
+  margin: 0;
+}

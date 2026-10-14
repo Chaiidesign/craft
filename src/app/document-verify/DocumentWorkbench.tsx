@@ -1,19 +1,24 @@
 'use client'
 
-// Document-quality workbench (Step 1: fixture inspector).
+// Document-quality workbench.
 //
-// Shows each fictional fixture's typed fields, validation and derived totals
-// exactly as the model holds them. No document rendering yet — that arrives
-// in Step 2 — so nothing here is labelled as a preview.
+// Step 1: fixture inspector — typed fields, validation and derived totals
+// exactly as the model holds them.
+// Step 2: HTML document preview composed from the same snapshot with the
+// document tokens and primitives (unpaginated until Step 3).
 
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Button } from '@/components/Button'
+import { DocumentPreview } from '@/components/documents/DocumentPreview'
+import type { FontLoadState } from '@/components/documents/useDocumentFonts'
+import { composeDocument, type Audience } from '@/lib/documents/compose'
 import { describeFieldState } from '@/lib/documents/display'
 import { FIXTURES, getFixture, SAMPLE_LABEL, type Fixture } from '@/lib/documents/fixtures'
 import { computeInvoiceTotals, type Amount } from '@/lib/documents/invoice'
 import type { Block, DocumentSnapshot, InvoiceSnapshot } from '@/lib/documents/model'
 import { formatMoney, formatQuantity } from '@/lib/documents/money'
+import { resolveTheme } from '@/lib/documents/theme'
 import { validateSnapshot, type Readiness, type ValidationIssue } from '@/lib/documents/validation'
 
 import styles from './workbench.module.css'
@@ -155,9 +160,6 @@ function DocumentInspector({ fixture, snapshot, onOpenFixture }: { fixture: Fixt
           <span className={styles.pill} data-tone="neutral">{snapshot.locale}</span>
           <span className={styles.pill} data-tone="neutral">{snapshot.layoutPreset}</span>
         </div>
-        <p className={styles.muted} style={{ marginTop: 12 }}>
-          This is the structured model, not a rendered document. The document preview arrives in Step 2.
-        </p>
         {scenarios.length > 0 && (
           <p className={styles.muted}>
             Used by:{' '}
@@ -170,6 +172,8 @@ function DocumentInspector({ fixture, snapshot, onOpenFixture }: { fixture: Fixt
           </p>
         )}
       </section>
+
+      <PreviewPanel snapshot={snapshot} />
 
       <section className={styles.panel} aria-labelledby="issues-title">
         <h2 id="issues-title" className={styles.panelTitle}>Issues ({report.issues.length})</h2>
@@ -245,7 +249,7 @@ function DocumentInspector({ fixture, snapshot, onOpenFixture }: { fixture: Fixt
           <BrandRow label="Issuer display name" value={snapshot.brand.issuerDisplayName} />
           <BrandRow label="Logo" value={snapshot.brand.logo ? `${snapshot.brand.logo.src} (status claimed: ${snapshot.brand.assetStatus}; load check happens when rendering)` : 'None supplied — a labelled neutral fallback will be used'} />
           <BrandRow label="Profile" value={`${snapshot.brand.profileId} v${snapshot.brand.version}`} />
-          <BrandRow label="Typography theme" value={`${snapshot.brand.themeId} (resolved in Step 2)`} />
+          <BrandRow label="Typography theme" value={describeTheme(snapshot.brand.themeId)} />
         </div>
       </section>
 
@@ -270,6 +274,59 @@ function DocumentInspector({ fixture, snapshot, onOpenFixture }: { fixture: Fixt
         {showJson && <pre id="snapshot-json" className={styles.json} tabIndex={0}>{JSON.stringify(snapshot, null, 2)}</pre>}
       </section>
     </>
+  )
+}
+
+function describeTheme(themeId: string): string {
+  const { theme, fellBack } = resolveTheme(themeId)
+  return fellBack ? `“${themeId}” is not a known theme — using ${theme.label}` : `${theme.id} — ${theme.label}`
+}
+
+// ── Preview ─────────────────────────────────────────────────────────────────
+
+const FONT_STATUS: Record<FontLoadState['status'], string> = {
+  loading: 'Loading document fonts…',
+  ready: 'Document fonts loaded from the committed TTF files.',
+  failed: 'Some document fonts failed to load — text below may use a fallback face.',
+}
+
+function PreviewPanel({ snapshot }: { snapshot: DocumentSnapshot }) {
+  const [audience, setAudience] = useState<Audience>('recipient')
+  const [showHints, setShowHints] = useState(false)
+  const [fontState, setFontState] = useState<FontLoadState>({ status: 'loading' })
+  const onFontState = useCallback((s: FontLoadState) => setFontState(s), [])
+  const plan = useMemo(() => composeDocument(snapshot, { audience }), [snapshot, audience])
+
+  return (
+    <section className={styles.panel} aria-labelledby="preview-title">
+      <h2 id="preview-title" className={styles.panelTitle}>Document preview</h2>
+      <p className={styles.muted} style={{ marginTop: 0 }}>
+        Rendered from the snapshot with the document tokens and primitives. Unpaginated — page breaks arrive in Step 3. Not an export.
+      </p>
+      <div className={styles.toolbar} role="group" aria-label="Preview options">
+        <Button variant={audience === 'recipient' ? 'secondary' : 'ghost'} size="sm" aria-pressed={audience === 'recipient'} onClick={() => setAudience('recipient')}>
+          Recipient view
+        </Button>
+        <Button variant={audience === 'internal' ? 'secondary' : 'ghost'} size="sm" aria-pressed={audience === 'internal'} onClick={() => setAudience('internal')}>
+          Include internal notes
+        </Button>
+        <Button variant={showHints ? 'secondary' : 'ghost'} size="sm" aria-pressed={showHints} onClick={() => setShowHints((v) => !v)}>
+          Show break hints
+        </Button>
+      </div>
+      <p className={styles.muted} role="status" data-font-status={fontState.status}>
+        {FONT_STATUS[fontState.status]}
+        {fontState.status === 'failed' && ` (${fontState.failedFiles.join(', ')})`}
+      </p>
+      {plan.excludedBlocks.length > 0 && (
+        <p className={styles.muted}>
+          Left out of this view: {plan.excludedBlocks.map((b) => `${b.blockId} — ${b.reason}`).join(' ')}
+        </p>
+      )}
+      <div className={styles.previewWell}>
+        <DocumentPreview plan={plan} showHints={showHints} onFontState={onFontState} />
+      </div>
+    </section>
   )
 }
 

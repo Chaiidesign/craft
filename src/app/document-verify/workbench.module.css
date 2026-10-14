@@ -481,3 +481,25 @@
     text-align: right;
   }
 }
+
+/* ── Preview panel ────────────────────────────────────────────────────────── */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 8px;
+}
+
+.previewWell {
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 8px;
+  background: var(--neutral-100);
+}
+
+@media (max-width: 639px) {
+  .previewWell {
+    padding: 8px;
+  }
+}
