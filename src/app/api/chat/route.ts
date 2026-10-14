@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic"
 // Allow up to Vercel's Fluid-compute ceiling for Claude extended-thinking +
 // agentic multi-round responses. Without this Vercel serverless cuts the
 // request at 10 s (Hobby) / 60 s (Pro, no Fluid) / 300 s (Pro, default Fluid).
-export const maxDuration = 800
+export const maxDuration = 300
 
 const BACKEND_BASE = (process.env.SERVER_URL ?? "").replace(/\/+$/, "")
 

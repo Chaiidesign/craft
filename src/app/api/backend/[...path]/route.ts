@@ -20,7 +20,7 @@ export const runtime = "nodejs"
 // turn at 5:00 flat (brain streams ride this catch-all, not the named chat
 // routes that already export 800). 800 matches those routes and outlives the
 // backend's 740s stream deadline plus the 300s prompt gate.
-export const maxDuration = 800
+export const maxDuration = 300
 
 const UPSTREAM = (process.env.SERVER_URL || "http://localhost:8000").replace(/\/$/, "")
 
