@@ -7,6 +7,7 @@ import { completeInvoice } from '@/lib/documents/fixtures/invoices'
 import { SAMPLE_REVIEWER } from '@/lib/documents/fixtures/revisions'
 import { createDocument, emptyStore, markApproved, saveEdit } from '@/lib/documents/revisions'
 
+import { DocumentWorkbench } from './DocumentWorkbench'
 import { parsePercentInput, parseQuantity, textTargets } from './Editors'
 import { HistoryPanel, RevisionBar } from './RevisionPanels'
 import { runApprovedThenEdited, runBoundedEdit, runRestore } from './scenarios'
@@ -40,9 +41,17 @@ describe('strict input parsing', () => {
 })
 
 describe('brand-owned fields', () => {
-  it('the workbench offers no Edit control for the issuer name', async () => {
-    const src = (await import('node:fs')).readFileSync(new URL('./DocumentWorkbench.tsx', import.meta.url), 'utf8')
-    expect(src).toMatch(/canEdit && !BRAND_OWNED_FIELDS\[fieldId\]/)
+  it('the rendered workbench offers no Edit control for the issuer name, and says why', () => {
+    const html = renderToStaticMarkup(<DocumentWorkbench />)
+    const rows = html.split('role="listitem"').slice(1)
+    const issuer = rows.find((r) => r.includes('aria-label="Issuer:'))!
+    const address = rows.find((r) => r.includes('aria-label="Issuer address:'))!
+    expect(issuer).toBeDefined()
+    expect(issuer).not.toContain('<button')
+    expect(strip(issuer)).toContain('The issuer name comes from the issuer’s brand profile, so it can’t be edited here.')
+    // The address stays editable; other fields offer Edit too.
+    expect(address).toContain('aria-label="Edit Issuer address"')
+    expect(html).toContain('aria-label="Edit Payment terms"')
   })
 })
 

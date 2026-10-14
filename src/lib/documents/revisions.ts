@@ -124,11 +124,16 @@ function addRevision(
     snapshot: deepFreeze(input.snapshot),
   })
   const existing = store.documents.get(outputId)
+  // The record title follows the content: when the revision changes the title-bearing value
+  // (a brief's title, an invoice's number), the title is recomputed from the new snapshot.
+  const parent = input.parent ? store.revisions.get(input.parent) : undefined
+  const retitled = parent && titleOf(parent.snapshot) !== titleOf(input.snapshot) ? { title: titleOf(input.snapshot) } : {}
   const doc: DocumentRecord = deepFreeze({
     outputId,
     kind: (existing?.kind ?? input.snapshot.kind) as DocumentKind,
     title: existing?.title ?? titleOf(input.snapshot),
     ...existing,
+    ...retitled,
     ...record,
     currentRevisionId: revision.revisionId,
     revisionIds: [...(existing?.revisionIds ?? []), revision.revisionId],
@@ -165,6 +170,36 @@ export const BRAND_OWNED_FIELDS: Readonly<Record<FieldId, string>> = {
   'issuer.name': 'The issuer name comes from the issuer’s brand profile, so it can’t be edited here. Brand editing is outside this step.',
 }
 
+/** A real calendar date in YYYY-MM-DD form (2026-13-45 is refused). */
+function isCalendarDate(iso: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false
+  const d = new Date(`${iso}T00:00:00Z`)
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === iso
+}
+
+/** The invoice's currency; amounts entered on an invoice must be in it. */
+function requireInvoiceCurrency(snapshot: DocumentSnapshot, money: Money, what: string): void {
+  if (!Number.isInteger(money.amountMinor) || money.amountMinor < 0) throw new RevisionError('invalid-edit', `${what} must be a whole number of minor units, not negative.`)
+  if (snapshot.kind !== 'invoice') return
+  const currency = snapshot.fields['invoice.currency']
+  if (currency?.state.status !== 'provided' || currency.state.value.type !== 'currency') throw new RevisionError('invalid-edit', `Set the invoice currency before entering ${what.toLowerCase()}.`)
+  if (currency.state.value.code !== money.currency) throw new RevisionError('invalid-edit', `${what} is in ${money.currency}, but this invoice is in ${currency.state.value.code}.`)
+}
+
+/** Trims a value before saving; whitespace-only content is refused by the caller. */
+function normaliseValue(value: FieldValue): FieldValue {
+  if (value.type === 'text') return { type: 'text', text: value.text.trim() }
+  if (value.type === 'multiline') return { type: 'multiline', lines: value.lines.map((l) => l.trim()).filter(Boolean) }
+  return value
+}
+
+/** Replaces a run's text, keeping the run's own leading/trailing spacing so it still joins its neighbours. */
+function withEdges(original: string, text: string): string {
+  const lead = /^\s*/.exec(original)![0]
+  const trail = /\s*$/.exec(original)![0]
+  return `${lead}${text.trim()}${trail}`
+}
+
 const PROPERTY_LABEL = { description: 'description', quantity: 'quantity', unitPrice: 'unit price' } as const
 
 function sameValue(a: unknown, b: unknown): boolean {
@@ -192,14 +227,20 @@ export function applyBoundedEdit(snapshot: DocumentSnapshot, edit: BoundedEdit):
     if (!field) throw new RevisionError('invalid-edit', `This document has no field ${edit.fieldId}.`)
     if (BRAND_OWNED_FIELDS[edit.fieldId]) throw new RevisionError('unsupported', BRAND_OWNED_FIELDS[edit.fieldId])
     if (edit.value.type !== field.valueType) throw new RevisionError('invalid-edit', `${field.label} takes a ${field.valueType} value, not ${edit.value.type}.`)
-    if (edit.value.type === 'choice' && !field.options?.some((o) => o.value === (edit.value as { option: string }).option)) {
-      throw new RevisionError('invalid-edit', `“${edit.value.option}” is not an option for ${field.label}.`)
+    const value = normaliseValue(edit.value)
+    if (value.type === 'date' && !isCalendarDate(value.iso)) throw new RevisionError('invalid-edit', `“${value.iso}” is not a real calendar date.`)
+    if (value.type === 'money') requireInvoiceCurrency(snapshot, value.money, field.label)
+    if (value.type === 'percent' && (!Number.isInteger(value.basisPoints) || value.basisPoints < 0 || value.basisPoints > 10_000)) {
+      throw new RevisionError('invalid-edit', `${field.label} must be between 0% and 100%.`)
     }
-    if ((edit.value.type === 'text' && !edit.value.text.trim()) || (edit.value.type === 'multiline' && !edit.value.lines.some((l) => l.trim()))) {
+    if (value.type === 'choice' && !field.options?.some((o) => o.value === value.option)) {
+      throw new RevisionError('invalid-edit', `“${value.option}” is not an option for ${field.label}.`)
+    }
+    if ((value.type === 'text' && !value.text.trim()) || (value.type === 'multiline' && !value.lines.some((l) => l.trim()))) {
       throw new RevisionError('invalid-edit', `${field.label} cannot be blank. Leave it missing instead of saving an empty value.`)
     }
-    if (field.state.status === 'provided' && sameValue(field.state.value, edit.value)) throw new RevisionError('no-change', `${field.label} already has that value; no revision was created.`)
-    const fields = { ...snapshot.fields, [edit.fieldId]: { ...field, state: { status: 'provided' as const, value: edit.value } } }
+    if (field.state.status === 'provided' && sameValue(field.state.value, value)) throw new RevisionError('no-change', `${field.label} already has that value; no revision was created.`)
+    const fields = { ...snapshot.fields, [edit.fieldId]: { ...field, state: { status: 'provided' as const, value: value } } }
     return { snapshot: { ...snapshot, fields }, changeSummary: `Edited ${field.label}`, target: { kind: 'field', fieldId: edit.fieldId } }
   }
 
@@ -214,15 +255,16 @@ export function applyBoundedEdit(snapshot: DocumentSnapshot, edit: BoundedEdit):
     let next: InvoiceLineItem
     const c = edit.change
     if (c.property === 'description') {
-      if (!c.value.trim()) throw new RevisionError('invalid-edit', 'A line item needs a description.')
-      if (c.value === item.description) throw new RevisionError('no-change', 'The description is unchanged; no revision was created.')
-      next = { ...item, description: c.value }
+      const description = c.value.trim()
+      if (!description) throw new RevisionError('invalid-edit', 'A line item needs a description.')
+      if (description === item.description) throw new RevisionError('no-change', 'The description is unchanged; no revision was created.')
+      next = { ...item, description }
     } else if (c.property === 'quantity') {
       if (!Number.isInteger(c.quantityMilli) || c.quantityMilli <= 0) throw new RevisionError('invalid-edit', 'Quantity must be greater than zero, in thousandths.')
       if (c.quantityMilli === item.quantityMilli) throw new RevisionError('no-change', 'The quantity is unchanged; no revision was created.')
       next = { ...item, quantityMilli: c.quantityMilli }
     } else {
-      if (!Number.isInteger(c.value.amountMinor) || c.value.amountMinor < 0) throw new RevisionError('invalid-edit', 'Unit price must be a whole number of minor units, not negative.')
+      requireInvoiceCurrency(snapshot, c.value, 'Unit price')
       if (item.unitPrice && sameValue(item.unitPrice, c.value)) throw new RevisionError('no-change', 'The unit price is unchanged; no revision was created.')
       next = { ...item, unitPrice: c.value }
     }
@@ -244,10 +286,11 @@ export function applyBoundedEdit(snapshot: DocumentSnapshot, edit: BoundedEdit):
   const run = runs[edit.run]
   if (!run) throw new RevisionError('invalid-edit', `${block.id} has no sentence ${edit.run}.`)
   if (!edit.text.trim()) throw new RevisionError('invalid-edit', 'Text cannot be blank.')
-  if (edit.text === run.text) throw new RevisionError('no-change', 'The text is unchanged; no revision was created.')
+  const newText = withEdges(run.text, edit.text)
+  if (newText === run.text) throw new RevisionError('no-change', 'The text is unchanged; no revision was created.')
   const heading = sectionHeading(snapshot, block.id)
   if (!heading) throw new RevisionError('unsupported', `Text in ${block.id} is not under a section heading; only sectioned text can be edited.`)
-  const nextRuns = runs.map((r, k) => (k === edit.run ? { ...r, text: edit.text } : r))
+  const nextRuns = runs.map((r, k) => (k === edit.run ? { ...r, text: newText } : r))
   const nextBlock: Block = block.type === 'list'
     ? { ...block, items: block.items.map((it, k) => (k === edit.item ? nextRuns : it)) }
     : { ...block, runs: nextRuns } as Block
@@ -312,6 +355,9 @@ export function restoreRevision(store: RevisionStore, env: DocumentEnv, outputId
   const from = getRevision(store, fromRevisionId)
   if (from.outputId !== outputId) throw new RevisionError('wrong-document', `${fromRevisionId} belongs to ${from.outputId}, not ${outputId}.`)
   if (doc.currentRevisionId === fromRevisionId) throw new RevisionError('no-change', `${versionLabel(store, fromRevisionId)} is already the current revision.`)
+  if (JSON.stringify(from.snapshot) === JSON.stringify(getRevision(store, doc.currentRevisionId).snapshot)) {
+    throw new RevisionError('no-change', `${versionLabel(store, fromRevisionId)} has the same content as the current revision (${versionLabel(store, doc.currentRevisionId)}); no revision was created.`)
+  }
   // A restored deck's record points at the source of the content it now carries.
   const source = doc.kind === 'deck' ? deriveSourceOf(store, fromRevisionId) : null
   return addRevision(store, env, outputId, {
@@ -355,6 +401,10 @@ export function deriveDeckRevision(store: RevisionStore, env: DocumentEnv, brief
   if (deckOutputId) {
     const deck = getDocument(store, deckOutputId)
     if (deck.kind !== 'deck') throw new RevisionError('wrong-document', `${deckOutputId} is not a deck.`)
+    const current = getRevision(store, deck.currentRevisionId)
+    if (JSON.stringify(current.snapshot) === JSON.stringify(derived.snapshot)) {
+      throw new RevisionError('no-change', `This deck is already derived from brief ${versionLabel(store, briefRevisionId)}; no revision was created.`)
+    }
     const { store: next, revision } = addRevision(store, env, deckOutputId, { parent: deck.currentRevisionId, author: SYSTEM_AUTHOR, changeSummary, operation: { type: 'derive', from }, snapshot: derived.snapshot }, { derivedFrom: from })
     return { store: next, outputId: deckOutputId, revision }
   }

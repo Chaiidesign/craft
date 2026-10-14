@@ -167,9 +167,67 @@ describe('bounded edits (fixture 6)', () => {
     const err = expectError(() => saveEdit(store, env, outputId, v1.revisionId, { kind: 'field', fieldId: 'issuer.name', value: text('Renamed Studio Ltd') }), 'unsupported')
     expect(err.message).toMatch(/brand profile/)
     expect(store.revisions.size).toBe(1)
-    // Proposals go through the same rule.
-    const forged = { proposalId: 'p', outputId, baseRevisionId: v1.revisionId, title: 'x', edit: { kind: 'field' as const, fieldId: 'issuer.name', value: text('Renamed') }, fictional: true as const }
-    expectError(() => acceptProposal(store, env, forged), 'unsupported')
+  })
+
+  it('refuses a proposal that touches the issuer name, and shows no preview for it (forced)', () => {
+    const { env, store, outputId, v1 } = withDoc(completeInvoice())
+    const proposal = { proposalId: 'p-issuer', outputId, baseRevisionId: v1.revisionId, title: 'Rename issuer', edit: { kind: 'field' as const, fieldId: 'issuer.name', value: text('Renamed') }, fictional: true as const }
+    expectError(() => previewProposal(store, proposal), 'unsupported')
+    expectError(() => acceptProposal(store, env, proposal), 'unsupported')
+    expect(store.revisions.size).toBe(1)
+  })
+
+  it('keeps the issuer address editable as a document field', () => {
+    const { env, store, outputId, v1 } = withDoc(completeInvoice())
+    expect(saveEdit(store, env, outputId, v1.revisionId, { kind: 'field', fieldId: 'issuer.address', value: { type: 'multiline', lines: ['2 New Street', 'Portland, OR 97209'] } }).revision.changeSummary).toBe('Edited Issuer address')
+  })
+
+  it('validates values at the store: real dates, money in the invoice currency, percent range, trimmed text', () => {
+    const { env, store, outputId, v1 } = withDoc(completeInvoice())
+    const edit = (e: Parameters<typeof saveEdit>[4]) => saveEdit(store, env, outputId, v1.revisionId, e)
+    expectError(() => edit({ kind: 'field', fieldId: 'invoice.dueDate', value: { type: 'date', iso: '2026-13-45' } }), 'invalid-edit')
+    expectError(() => edit({ kind: 'field', fieldId: 'invoice.dueDate', value: { type: 'date', iso: '2026-02-30' } }), 'invalid-edit')
+    expect(edit({ kind: 'field', fieldId: 'invoice.dueDate', value: { type: 'date', iso: '2026-02-28' } }).revision.changeSummary).toBe('Edited Due date')
+    expectError(() => edit({ kind: 'field', fieldId: 'tax.rate', value: { type: 'percent', basisPoints: 10_001 } }), 'invalid-edit')
+    expectError(() => edit({ kind: 'field', fieldId: 'tax.rate', value: { type: 'percent', basisPoints: -5 } }), 'invalid-edit')
+    expectError(() => edit({ kind: 'field', fieldId: 'tax.rate', value: { type: 'percent', basisPoints: 82.5 } }), 'invalid-edit')
+    expectError(() => edit({ kind: 'line-item', blockId: 'blk-lines', itemId: 'li-2', change: { property: 'unitPrice', value: m(18_500.5, 'USD') } }), 'invalid-edit')
+    const wrong = expectError(() => edit({ kind: 'line-item', blockId: 'blk-lines', itemId: 'li-2', change: { property: 'unitPrice', value: m(18_000, 'EUR') } }), 'invalid-edit')
+    expect(wrong.message).toBe('Unit price is in EUR, but this invoice is in USD.')
+    // Trimmed before saving; whitespace-only differences are no change.
+    expect((edit({ kind: 'field', fieldId: 'payment.terms', value: text('  Net 15.  ') }).revision.snapshot.fields['payment.terms'].state as { value: { text: string } }).value.text).toBe('Net 15.')
+    expectError(() => edit({ kind: 'field', fieldId: 'payment.terms', value: text(' Net 30. Bank transfer to the account on the remittance slip. ') }), 'no-change')
+    const li = edit({ kind: 'line-item', blockId: 'blk-lines', itemId: 'li-1', change: { property: 'description', value: '  Brand identity system  ' } }).revision.snapshot.blocks.find((b) => b.id === 'blk-lines')
+    expect(li?.type === 'line-items' && li.items[0].description).toBe('Brand identity system')
+    const brief = withDoc(evidenceBrief())
+    const s = saveEdit(brief.store, brief.env, brief.outputId, brief.v1.revisionId, { kind: 'text', blockId: 'blk-goals', item: 0, run: 0, text: '  Lower first-month cancellations.  ' }).revision.snapshot.blocks.find((b) => b.id === 'blk-goals')
+    expect(s?.type === 'list' && s.items[0][0].text).toBe('Lower first-month cancellations.')
+    expect(store.revisions.size).toBe(1)
+  })
+
+  it('refuses money on an invoice whose currency is not set', () => {
+    const base = completeInvoice()
+    const noCurrency = { ...base, fields: { ...base.fields, 'invoice.currency': { ...base.fields['invoice.currency'], state: { status: 'missing' as const } } } }
+    const { env, store, outputId, v1 } = withDoc(noCurrency)
+    expectError(() => saveEdit(store, env, outputId, v1.revisionId, { kind: 'line-item', blockId: 'blk-lines', itemId: 'li-2', change: { property: 'unitPrice', value: m(100, 'USD') } }), 'invalid-edit')
+  })
+
+  it('recomputes the record title when the title-bearing value changes, and derives with the new title', () => {
+    const inv = withDoc(completeInvoice())
+    expect(inv.store.documents.get(inv.outputId)!.title).toBe('Invoice HRS-2026-0142')
+    const r = saveEdit(inv.store, inv.env, inv.outputId, inv.v1.revisionId, { kind: 'field', fieldId: 'invoice.number', value: text('HRS-2026-0200') })
+    expect(r.store.documents.get(inv.outputId)!.title).toBe('Invoice HRS-2026-0200')
+    const back = restoreRevision(r.store, inv.env, inv.outputId, inv.v1.revisionId)
+    expect(back.store.documents.get(inv.outputId)!.title).toBe('Invoice HRS-2026-0142')
+    // Unrelated edits leave the title alone.
+    expect(saveEdit(r.store, inv.env, inv.outputId, r.revision.revisionId, { kind: 'field', fieldId: 'payment.terms', value: text('Net 15.') }).store.documents.get(inv.outputId)!.title).toBe('Invoice HRS-2026-0200')
+
+    const brief = withDoc(evidenceBrief(), 'out-brief')
+    const b2 = saveEdit(brief.store, brief.env, 'out-brief', brief.v1.revisionId, { kind: 'field', fieldId: 'brief.title', value: text('A shorter brief title') })
+    expect(b2.store.documents.get('out-brief')!.title).toBe('A shorter brief title')
+    const deck = deriveDeckRevision(b2.store, brief.env, 'out-brief', b2.revision.revisionId)
+    expect(deck.revision.changeSummary).toBe('Derived from A shorter brief title v2')
+    expect(deck.store.documents.get(deck.outputId)!.title).toBe('A shorter brief title')
   })
 
   it('refuses edits to a revision that is not current (forced)', () => {
@@ -240,6 +298,15 @@ describe('restore (fixture 8)', () => {
     expect(getRevision(s4, v3.revisionId)).toBe(v3)
     expect(approvalOf(s4, v1.revisionId)).not.toBeNull()
     expect(approvalOf(s4, v4.revisionId)).toBeNull()
+  })
+
+  it('refuses a restore whose content equals the current revision (forced)', () => {
+    const { env, store, outputId, v1 } = withDoc(completeInvoice())
+    const r2 = saveEdit(store, env, outputId, v1.revisionId, { kind: 'field', fieldId: 'payment.terms', value: text('Net 15.') })
+    const r3 = restoreRevision(r2.store, env, outputId, v1.revisionId)
+    const err = expectError(() => restoreRevision(r3.store, env, outputId, v1.revisionId), 'no-change')
+    expect(err.message).toBe('v1 has the same content as the current revision (v3); no revision was created.')
+    expect(history(r3.store, outputId)).toHaveLength(3)
   })
 
   it('refuses restoring the current revision, a missing one, or another document’s (forced)', () => {
@@ -320,6 +387,13 @@ describe('deck ancestry (fixture 5)', () => {
     expectError(() => deriveDeckRevision(inv.store, env, 'out-inv', inv.revision.revisionId), 'unsupported')
     expectError(() => deriveDeckRevision(store, env, 'out-inv', briefV1.revisionId), 'wrong-document')
     expectError(() => deriveDeckRevision(store, env, 'out-brief', 'rev-missing'), 'not-found')
+  })
+
+  it('refuses deriving again from the same brief revision (forced)', () => {
+    const { env, store, briefId, deckId, briefV1 } = briefAndDeck()
+    const err = expectError(() => deriveDeckRevision(store, env, briefId, briefV1.revisionId, deckId), 'no-change')
+    expect(err.message).toBe('This deck is already derived from brief v1; no revision was created.')
+    expect(history(store, deckId)).toHaveLength(1)
   })
 
   it('decks are not edited directly', () => {
