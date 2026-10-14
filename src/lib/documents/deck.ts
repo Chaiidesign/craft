@@ -1,9 +1,9 @@
 // Brief → deck adaptation (PRD §7, fixture 5).
 //
 // A deck is derived from one exact brief revision: the caller passes the
-// source output and revision IDs, and they are recorded on the result. Real
-// revision records arrive in Step 4; until then the IDs are supplied
-// explicitly and nothing here invents revision state.
+// source output and revision IDs, and they are recorded on the result.
+// revisions.ts (deriveDeckRevision / checkAncestry) stores decks as revisions
+// and verifies those IDs against real brief revisions.
 //
 // Adaptation changes hierarchy, not facts: every recipient-facing block keeps
 // its words, numbers and citations. Nothing is summarised (so no slide sets

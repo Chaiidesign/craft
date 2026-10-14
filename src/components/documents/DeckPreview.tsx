@@ -8,7 +8,8 @@ import React, { useEffect, useMemo, useRef, useState, type CSSProperties } from 
 
 import { lineText } from '@/lib/documents/layout/inspect'
 import { layoutDeck, type DeckLayout, type SlideLayout } from '@/lib/documents/layout/slides'
-import type { DerivedDeck } from '@/lib/documents/deck'
+import type { DeckSnapshot } from '@/lib/documents/model'
+import type { AncestryCheck } from '@/lib/documents/revisions'
 import { documentCssVariables, SLIDE, SLIDE_FLOORS, SLIDE_FLOW, SLIDE_INLINE, SLIDE_TYPE } from '@/lib/documents/tokens'
 
 import { BarPlot, StyledLineView, typeOfStyle } from './DocumentPrimitives'
@@ -21,7 +22,8 @@ const pt = (n: number) => `${n}pt`
 export interface DeckCheck { label: string; result: 'pass' | 'fail' | 'deferred'; detail: string }
 
 /** Checks for fixture 5, computed from the laid-out slides. */
-export function deckChecks(derived: DerivedDeck, layout: DeckLayout, sourceText: { facts: string[]; citationCount: number }): DeckCheck[] {
+export function deckChecks(snapshot: DeckSnapshot, layout: DeckLayout, input: { facts: string[]; citationCount: number; ancestry: AncestryCheck; excludedBlocks: readonly { blockId: string; reason: string }[] }): DeckCheck[] {
+  const sourceText = input
   if (layout.status !== 'ok') return [{ label: 'Deck laid out', result: 'fail', detail: layout.error.message }]
   const all = layout.slides.flatMap((s) => [...(s.title ?? []), ...(s.heading ?? []), ...s.items.flatMap((i) => (i.kind === 'text' ? [...(i.label ?? []), ...i.lines] : i.kind === 'heading' ? i.lines : [...i.title, ...i.axes, ...i.summary]))])
   const text = all.map(lineText).join(' ').replace(/ /g, ' ')
@@ -30,18 +32,18 @@ export function deckChecks(derived: DerivedDeck, layout: DeckLayout, sourceText:
   const below = all.flatMap((l) => l.segments).filter((s) => s.style.sizePt < (s.style === SLIDE_TYPE.caption || s.style === SLIDE_INLINE.citation ? SLIDE_FLOORS.captionPt : SLIDE_FLOORS.bodyPt))
   const verdict = (ok: boolean): DeckCheck['result'] => (ok ? 'pass' : 'fail')
   return [
-    // Nothing to verify yet: the IDs are fixture values passed in. Step 4 checks them against real revisions.
-    { label: 'Ancestry points at that exact brief revision', result: 'deferred', detail: `Recorded as ${derived.derivedFrom.outputId} @ ${derived.derivedFrom.revisionId} (fixture IDs). Checked against real revision records in Step 4.` },
+    // Verified against real revisions: the source exists, is a brief, and this deck is exactly what it derives.
+    { label: 'Ancestry points at that exact brief revision', result: verdict(input.ancestry.status !== 'invalid'), detail: input.ancestry.label },
     { label: 'Mandatory facts survive', result: verdict(missingFacts.length === 0), detail: missingFacts.length ? `Missing: ${missingFacts.join(', ')}` : sourceText.facts.join(' · ') },
     { label: 'Every citation survives', result: verdict(cited.size === sourceText.citationCount), detail: `${cited.size} of ${sourceText.citationCount} sources cited on slides, plus a sources slide.` },
     { label: 'No text below the floors', result: verdict(below.length === 0), detail: `Body ≥ ${SLIDE_FLOORS.bodyPt}pt, captions and citations ≥ ${SLIDE_FLOORS.captionPt}pt. Dense content splits instead.` },
-    { label: 'Internal note left out', result: verdict(derived.excludedBlocks.every((b) => b.reason.startsWith('Internal'))), detail: derived.excludedBlocks.map((b) => b.blockId).join(', ') || 'None to exclude' },
+    { label: 'Internal note left out', result: verdict(input.excludedBlocks.length > 0 && input.excludedBlocks.every((b) => b.reason.startsWith('Internal')) && !snapshot.blocks.some((b) => b.type === 'callout' && b.audience === 'internal')), detail: input.excludedBlocks.map((b) => b.blockId).join(', ') || 'None to exclude' },
   ]
 }
 
-export function DeckPreview({ derived, onLayout }: { derived: DerivedDeck; onLayout?: (l: DeckLayout | null) => void }) {
-  const fonts = useDocumentFonts(derived.snapshot.brand.themeId)
-  const layout = useMemo(() => (fonts.status === 'ready' ? layoutDeck(derived.snapshot, fonts.fonts) : null), [fonts, derived])
+export function DeckPreview({ snapshot, onLayout }: { snapshot: DeckSnapshot; onLayout?: (l: DeckLayout | null) => void }) {
+  const fonts = useDocumentFonts(snapshot.brand.themeId)
+  const layout = useMemo(() => (fonts.status === 'ready' ? layoutDeck(snapshot, fonts.fonts) : null), [fonts, snapshot])
   useEffect(() => { onLayout?.(layout) }, [layout, onLayout])
 
   const frameRef = useRef<HTMLDivElement>(null)
@@ -58,12 +60,12 @@ export function DeckPreview({ derived, onLayout }: { derived: DerivedDeck; onLay
   }, [slideWidthPx, layout])
 
   const vars = useMemo(() => ({
-    ...documentCssVariables(derived.snapshot.brand.themeId),
-    '--doc-ink': derived.snapshot.brand.palette.ink,
-    '--doc-muted': derived.snapshot.brand.palette.muted,
-    '--doc-rule-colour': derived.snapshot.brand.palette.rule,
-    '--doc-accent': derived.snapshot.brand.palette.accent,
-  }) as CSSProperties, [derived])
+    ...documentCssVariables(snapshot.brand.themeId),
+    '--doc-ink': snapshot.brand.palette.ink,
+    '--doc-muted': snapshot.brand.palette.muted,
+    '--doc-rule-colour': snapshot.brand.palette.rule,
+    '--doc-accent': snapshot.brand.palette.accent,
+  }) as CSSProperties, [snapshot])
 
   if (fonts.status === 'loading') return <p className={styles.status} role="status">Loading document fonts…</p>
   if (fonts.status === 'failed') return <p className={styles.status} role="alert">Document fonts failed to load ({fonts.failedFiles.join(', ')}); slides are not shown with a fallback face.</p>
@@ -72,7 +74,7 @@ export function DeckPreview({ derived, onLayout }: { derived: DerivedDeck; onLay
 
   return (
     <div ref={frameRef} className={styles.frame}>
-      <div className={styles.pages} style={{ ...vars, zoom }} lang={derived.snapshot.locale}>
+      <div className={styles.pages} style={{ ...vars, zoom }} lang={snapshot.locale}>
         {layout.slides.map((slide) => <SlideView key={slide.number} slide={slide} total={layout.slides.length} />)}
       </div>
     </div>

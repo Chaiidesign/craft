@@ -20,6 +20,9 @@ This README grows with each build step. Sections marked *(Step N)* describe work
 | Font metrics (TTF advances, no dependency) | `src/lib/documents/metrics.ts` |
 | Layout engine: line breaking, blocks, pagination, slides | `src/lib/documents/layout/` |
 | Brief → deck adaptation | `src/lib/documents/deck.ts` |
+| Revisions: store, bounded edits, proposals, restore, approval markers, deck ancestry | `src/lib/documents/revisions.ts` |
+| Revision sample data (proposals, reviewer) | `src/lib/documents/fixtures/revisions.ts` |
+| Workbench editors, history, scenario runners | `src/app/document-verify/Editors.tsx`, `RevisionPanels.tsx`, `scenarios.ts` |
 | Layout primitives (HTML preview) | `src/components/documents/DocumentPrimitives.tsx` |
 | Paged preview, deck preview, font loading | `src/components/documents/DocumentPreview.tsx`, `DeckPreview.tsx`, `useDocumentFonts.ts` |
 | Workbench page | `src/app/document-verify/` |
@@ -64,14 +67,14 @@ In the browser (desktop width, the page's own zoom accounted for), every drawn l
 
 ## Brief → deck *(fixture 5)*
 
-`deriveDeck(brief, { outputId, revisionId })` adapts a brief into a 16:9 deck and records the exact source it was given. Real output and revision records arrive in Step 4; the workbench passes fixture IDs, and checking that they point at a real, current revision is a Step 4 test.
+`deriveDeck(brief, { outputId, revisionId })` adapts a brief into a 16:9 deck and records the exact source it was given. In the workbench, decks are stored as revisions (`deriveDeckRevision`) and the recorded source is verified against real brief revisions (`checkAncestry`; see Revisions).
 
 - Hierarchy changes, facts do not: every recipient block keeps its words, numbers and citations. Nothing is summarised, so no slide sets `summaryOf`. The internal note is left out.
 - Slides: a title slide (the brief's own field labels and values), content slides per section, the chart on its own slide with its units and data summary, and a closing sources slide.
 - At most two short consecutive sections share a slide, each keeping its own heading (a heading gap apart). Sections are only combined when each fits a slide alone and both fit together; split sections and chart slides never share.
 - Dense content splits across slides by block, then list item, then sentence; continuation slides repeat the heading with "(continued)". Text never goes below 18pt (body) or 12pt (captions, citations, chart summaries). One sentence too large for an empty slide is an explicit error.
 - Slides use the same font metrics and line breaking as print.
-- In the workbench, scenario 5 runs now. Its ancestry check shows **Deferred to Step 4**: the recorded IDs are fixture values, and nothing checks them against a real revision until revisions exist.
+- In the workbench, scenario 5 derives the deck from the workbench's own brief and checks its ancestry against real revisions: current, stale after the brief is edited, or a failed check.
 
 ## Typography
 
@@ -152,6 +155,24 @@ The Noto fallback is **not** committed. Text in scripts outside the placeholder 
 - **PPTX:** fonts referenced by name, fallback recorded; PowerPoint does not reliably honour embedded fonts across platforms. Visual fidelity **unverified**.
 - Identical rendering across operating systems is not claimed.
 
+## Revisions *(Step 4)*
+
+Every document in the workbench lives in an **in-memory revision store** (`revisions.ts`). Reloading the page resets it; browser storage and broken-session recovery are Step 6.
+
+- **Identity.** A document record has an output ID, a current revision and an ordered list of revisions; a revision has its own ID, its parent, a timestamp, an author, a change summary, the operation that made it and a snapshot. "v1, v2…" are display labels in creation order; the revision ID is the identity, so two documents (or a brief and its deck) with the same title never get confused.
+- **Immutability.** Snapshots, revisions and records are deep-frozen when created: changing saved content throws. Every operation returns a new store; earlier stores are untouched.
+- **Bounded edits.** One field value, one line item's description, quantity or unit price, or the text of one sentence or list item (citations stay attached). No adding or removing blocks or rows. An edit must start from the current revision; Save creates the next revision, Cancel changes nothing. Unchanged blocks, fields and the brand stay the very same objects, which is how "only this changed" is proven; totals are derived, so they follow. Invalid, blank, unchanged or out-of-scope edits are refused with a specific message and create no revision.
+- **Issuer name is not editable.** Issuer identity comes from the brand profile (letterhead, footer, running header); editing the Issuer field alone would put two issuer names in one document, so the edit is refused with that reason, in the workbench and in the engine (`BRAND_OWNED_FIELDS`). Brand editing is outside Step 4.
+- **Decks are derived artifacts.** They are not edited directly — a direct deck edit is refused; edit the brief and derive again.
+- **Filling a missing field** is an edit: validation updates, and an unknown amount stays unknown until the fact that decides it is supplied.
+- **Proposals** are fictional sample edits written against an exact revision, shown as before and after. Accept creates a revision ("Accepted proposal: …"); Reject changes nothing. A proposal whose base is no longer current can't be accepted.
+- **Restore** creates a new current revision from an earlier one's content. Later revisions stay in history, and approval is not carried over.
+- **Mock approval** is a marker on one exact revision: "Approved (sample) by … — applies to v{n} only". Every other revision reads "Not approved". Exports will target an explicitly selected revision (Step 5).
+- **Deck ancestry.** A deck revision records the brief revision it was derived from. `checkAncestry` verifies that revision exists, belongs to that brief, is a brief, and that the deck is exactly what it derives. When the brief moves on, the deck keeps pointing at its source and says so; deriving again creates a new deck revision. A failed check reads "Ancestry check failed: {reason}".
+- **Authors.** "Sample operator (fictional)" for edits and accepted proposals; "System" for creation from sample data, derivations and restores. Fixture 7's reviewer is "Sample reviewer (fictional)".
+
+Scenarios 5–8 run in the workbench: 6, 7 and 8 on a fresh deterministic store with the real revision functions; 5 against the workbench's own brief, so editing that brief makes the deck stale.
+
 ## Approved working agreements
 
 Recorded values (approved as recorded values, not spec changes):
@@ -164,6 +185,8 @@ Recorded values (approved as recorded values, not spec changes):
 | Chart plot height 128pt in print, 220pt on slides | `CHART.plotHeightPt`, `SLIDE_FLOW.chartPlotHeightPt` |
 | Block spacing | `FLOW` (print), `SLIDE_FLOW` (slides) |
 | Issuer name leading 1.2, grand total leading 1.3, field values Function 9.5/1.4 | `PRINT_TYPE` |
+
+Approved Step 4 wording: history labels "v{n} · Current" and "Viewing v{n} — not the current revision"; change summaries "Created", "Edited {field label}", "Edited line {n}: {quantity / unit price / description}", "Edited text in {section heading}", "Accepted proposal: {proposal title}", "Restored from v{n}", "Derived from {brief title} v{n}"; "Approved (sample) by {reviewer} on {date} — applies to v{n} only" and "Not approved"; "Derived from brief v{n} — current", "Derived from brief v{n} — the brief now has v{m}. This deck does not update by itself; derive again to update." and "Ancestry check failed: {reason}"; authors "Sample operator (fictional)", "System" and reviewer "Sample reviewer (fictional)"; proposal titles "Clearer payment terms" and "Tighter evidence sentence". Workbench text (buttons, refusal messages, notes) approved as written. Em dashes (—) are used throughout, consistent with "Draft — incomplete".
 
 Approved document wording: "Continued from previous page" (a row carried over a page break), "(continued)" after a repeated slide heading, "Page n of N" (pages) and "n / N" (slides), and a running header of issuer · document number plus the draft state on pages 2 onward. Payment terms never stand alone on a page. Up to two short consecutive sections may share a slide.
 

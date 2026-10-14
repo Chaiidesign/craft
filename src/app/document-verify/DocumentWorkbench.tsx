@@ -6,6 +6,10 @@
 // exactly as the model holds them.
 // Step 2: document tokens, primitives and templates.
 // Step 3: the preview is laid out with real font metrics and paginated by meaning.
+// Step 4: every document lives in an in-memory revision store. Panels show the
+// revision being viewed; bounded edits, proposals and restores create new
+// revisions; scenarios 5–8 run against real revisions. Reloading resets the
+// store (browser storage arrives in Step 6).
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -13,17 +17,40 @@ import { Button } from '@/components/Button'
 import { DeckPreview, deckChecks } from '@/components/documents/DeckPreview'
 import { DocumentPreview, type PreviewState } from '@/components/documents/DocumentPreview'
 import { composeDocument, type Audience } from '@/lib/documents/compose'
+import { deriveDeck } from '@/lib/documents/deck'
 import { describeFieldState } from '@/lib/documents/display'
 import { FIXTURES, getFixture, SAMPLE_LABEL, type Fixture } from '@/lib/documents/fixtures'
+import { outputIdFor, PROPOSAL_TEMPLATES, proposalFrom, SAMPLE_REVIEWER } from '@/lib/documents/fixtures/revisions'
 import { computeInvoiceTotals, type Amount } from '@/lib/documents/invoice'
-import type { Block, DocumentSnapshot, InvoiceSnapshot } from '@/lib/documents/model'
-import { formatMoney, formatQuantity } from '@/lib/documents/money'
-import { deriveDeck } from '@/lib/documents/deck'
-import { evidenceBrief } from '@/lib/documents/fixtures/brief'
 import type { DeckLayout } from '@/lib/documents/layout/slides'
+import type { Block, BriefSnapshot, DeckSnapshot, DocumentEnv, DocumentSnapshot, InvoiceSnapshot } from '@/lib/documents/model'
+import { formatMoney, formatQuantity } from '@/lib/documents/money'
+import {
+  acceptProposal,
+  BRAND_OWNED_FIELDS,
+  checkAncestry,
+  createDocument,
+  currentRevision,
+  deriveDeckRevision,
+  emptyStore,
+  getDocument,
+  getRevision,
+  history,
+  markApproved,
+  rejectProposal,
+  restoreRevision,
+  RevisionError,
+  saveEdit,
+  versionLabel,
+  type BoundedEdit,
+  type RevisionStore,
+} from '@/lib/documents/revisions'
 import { resolveTheme } from '@/lib/documents/theme'
 import { validateSnapshot, type Readiness, type ValidationIssue } from '@/lib/documents/validation'
 
+import { FieldEditor, LineItemEditor, TextEditor, textTargets, type SaveEdit } from './Editors'
+import { ComparePanel, HistoryPanel, ProposalPanel, RevisionBar, type ProposalState } from './RevisionPanels'
+import { runApprovedThenEdited, runBoundedEdit, runRestore, type ScenarioCheck } from './scenarios'
 import styles from './workbench.module.css'
 
 const READINESS_LABEL: Record<Readiness, string> = {
@@ -39,16 +66,56 @@ const SEVERITY_LABEL: Record<ValidationIssue['severity'], string> = {
 }
 
 const STEP_LABEL = { 'step-3': 'Step 3', 'step-4': 'Step 4', 'step-5': 'Step 5', 'step-6': 'Step 6' } as const
+const RUNNABLE_NOW = new Set(['step-3', 'step-4'])
 
 const documentFixtures = FIXTURES.filter((f) => f.type === 'document')
 const scenarioFixtures = FIXTURES.filter((f) => f.type === 'scenario')
 
+/** Real clock and unique IDs for the interactive workbench (tests use fixedEnv). */
+function workbenchEnv(): DocumentEnv {
+  let n = 0
+  const session = Date.now().toString(36)
+  return { now: () => new Date().toISOString(), nextId: (prefix) => `${prefix}-${session}-${String(++n).padStart(3, '0')}` }
+}
+
+function initialStore(env: DocumentEnv): RevisionStore {
+  let store = emptyStore()
+  for (const f of documentFixtures) {
+    if (f.type !== 'document') continue
+    store = createDocument(store, env, f.build(), { outputId: outputIdFor(f.id) }).store
+  }
+  return store
+}
+
+interface Workbench {
+  store: RevisionStore
+  env: DocumentEnv
+  viewing: Readonly<Record<string, string>>
+  deckId: string | null
+  view: (outputId: string, revisionId: string | null) => void
+  commit: (store: RevisionStore, message: string) => void
+  setDeckId: (id: string) => void
+}
+
 export function DocumentWorkbench() {
   const [fixtureId, setFixtureId] = useState(FIXTURES[0].id)
   const fixture = getFixture(fixtureId) ?? FIXTURES[0]
-  // Build once per fixture so the snapshot keeps its identity across renders.
-  const snapshot = useMemo(() => (fixture.type === 'document' ? fixture.build() : null), [fixture])
+  const [env] = useState(workbenchEnv)
+  const [store, setStore] = useState(() => initialStore(env))
+  const [viewing, setViewing] = useState<Record<string, string>>({})
+  const [deckId, setDeckId] = useState<string | null>(null)
   const [announcement, setAnnouncement] = useState('')
+
+  const wb: Workbench = {
+    store, env, viewing, deckId, setDeckId,
+    view: (outputId, revisionId) => setViewing((v) => {
+      const next = { ...v }
+      if (revisionId) next[outputId] = revisionId
+      else delete next[outputId]
+      return next
+    }),
+    commit: (next, message) => { setStore(next); setAnnouncement(message) },
+  }
 
   const select = (id: string) => {
     setFixtureId(id)
@@ -70,8 +137,8 @@ export function DocumentWorkbench() {
         <FixturePicker fixtureId={fixture.id} onSelect={select} />
         <main className={styles.main} aria-labelledby="fixture-title">
           {fixture.type === 'scenario'
-            ? <ScenarioInspector fixture={fixture} onOpenFixture={select} />
-            : snapshot && <DocumentInspector key={fixture.id} fixture={fixture} snapshot={snapshot} onOpenFixture={select} />}
+            ? <ScenarioInspector key={fixture.id} fixture={fixture} wb={wb} onOpenFixture={select} />
+            : <DocumentInspector key={fixture.id} fixture={fixture} wb={wb} onOpenFixture={select} />}
         </main>
       </div>
 
@@ -130,10 +197,20 @@ function FixtureGroup({ heading, fixtures, fixtureId, onSelect }: { heading: str
 
 // ── Document fixture ────────────────────────────────────────────────────────
 
-function DocumentInspector({ fixture, snapshot, onOpenFixture }: { fixture: Fixture; snapshot: DocumentSnapshot; onOpenFixture: (id: string) => void }) {
+function DocumentInspector({ fixture, wb, onOpenFixture }: { fixture: Fixture; wb: Workbench; onOpenFixture: (id: string) => void }) {
+  const outputId = outputIdFor(fixture.id)
+  const doc = getDocument(wb.store, outputId)
+  const viewedId = wb.viewing[outputId] && doc.revisionIds.includes(wb.viewing[outputId]) ? wb.viewing[outputId] : doc.currentRevisionId
+  const viewed = getRevision(wb.store, viewedId)
+  const snapshot = viewed.snapshot
+  const isCurrent = viewedId === doc.currentRevisionId
+  const canEdit = isCurrent && snapshot.kind !== 'deck'
+
   const report = useMemo(() => validateSnapshot(snapshot), [snapshot])
   const [highlighted, setHighlighted] = useState<string | null>(null)
   const [showJson, setShowJson] = useState(false)
+  const [editingField, setEditingField] = useState<string | null>(null)
+  const [proposalState, setProposalState] = useState<ProposalState>({ kind: 'open' })
   const rowRefs = useRef(new Map<string, HTMLDivElement>())
 
   useEffect(() => {
@@ -150,7 +227,45 @@ function DocumentInspector({ fixture, snapshot, onOpenFixture }: { fixture: Fixt
     setHighlighted(fieldId)
   }
 
+  /** Runs a revision operation; a refused one comes back as its message, nothing changes. */
+  const attempt = (op: () => { store: RevisionStore; revisionId?: string; message: string }): string | null => {
+    try {
+      const { store, message } = op()
+      wb.commit(store, message)
+      wb.view(outputId, null)
+      return null
+    } catch (e) {
+      if (e instanceof RevisionError) return e.message
+      throw e
+    }
+  }
+
+  const save: SaveEdit = (edit: BoundedEdit) => attempt(() => {
+    const { store, revision } = saveEdit(wb.store, wb.env, outputId, doc.currentRevisionId, edit)
+    return { store, message: `Saved ${versionLabel(store, revision.revisionId)}: ${revision.changeSummary}.` }
+  })
+
+  const [opError, setOpError] = useState<string | null>(null)
+  const restore = (revisionId: string) => setOpError(attempt(() => {
+    const { store, revision } = restoreRevision(wb.store, wb.env, outputId, revisionId)
+    return { store, message: `Saved ${versionLabel(store, revision.revisionId)}: ${revision.changeSummary}.` }
+  }))
+  const approve = (revisionId: string) => {
+    try {
+      const store = markApproved(wb.store, wb.env, revisionId, SAMPLE_REVIEWER)
+      wb.commit(store, `${versionLabel(store, revisionId)} marked approved (sample).`)
+      setOpError(null)
+    } catch (e) {
+      if (e instanceof RevisionError) setOpError(e.message)
+      else throw e
+    }
+  }
+
+  const template = PROPOSAL_TEMPLATES.find((t) => t.fixtureId === fixture.id)
+  const proposal = useMemo(() => (template ? proposalFrom(template, outputId, doc.revisionIds[0]) : null), [template, outputId, doc.revisionIds])
+
   const scenarios = scenarioFixtures.filter((s) => s.type === 'scenario' && s.baseFixtureId === fixture.id)
+  const targets = useMemo(() => textTargets(snapshot), [snapshot])
 
   return (
     <>
@@ -163,6 +278,8 @@ function DocumentInspector({ fixture, snapshot, onOpenFixture }: { fixture: Fixt
           <span className={styles.pill} data-tone="neutral">{snapshot.locale}</span>
           <span className={styles.pill} data-tone="neutral">{snapshot.layoutPreset}</span>
         </div>
+        <RevisionBar store={wb.store} outputId={outputId} viewedId={viewedId} onViewCurrent={() => wb.view(outputId, null)} />
+        {!isCurrent && <p className={styles.muted}>Older revisions are read-only. To work from this one, restore it — that creates a new current revision.</p>}
         {scenarios.length > 0 && (
           <p className={styles.muted}>
             Used by:{' '}
@@ -213,6 +330,7 @@ function DocumentInspector({ fixture, snapshot, onOpenFixture }: { fixture: Fixt
                 if (!field) return null
                 const fieldReport = report.fields[fieldId]
                 const shown = describeFieldState(field, snapshot.locale)
+                const editing = editingField === fieldId
                 return (
                   <div
                     key={fieldId}
@@ -231,7 +349,20 @@ function DocumentInspector({ fixture, snapshot, onOpenFixture }: { fixture: Fixt
                       {!field.required && <span className={styles.muted}> (optional)</span>}
                       <div className={styles.code}>{fieldId}</div>
                     </div>
-                    <p className={styles.fieldValue} data-status={shown.status}>{shown.text}</p>
+                    <div>
+                      <p className={styles.fieldValue} data-status={shown.status}>{shown.text}</p>
+                      {canEdit && BRAND_OWNED_FIELDS[fieldId] && <p className={styles.muted} style={{ margin: 0 }}>{BRAND_OWNED_FIELDS[fieldId]}</p>}
+                      {canEdit && !BRAND_OWNED_FIELDS[fieldId] && field.state.status !== 'not-applicable' && !editing && (
+                        <Button id={`edit-field-${fieldId}`} variant="ghost" size="sm" onClick={() => setEditingField(fieldId)} aria-label={`${field.state.status === 'missing' ? 'Fill' : 'Edit'} ${field.label}`}>
+                          {field.state.status === 'missing' ? 'Fill' : 'Edit'}
+                        </Button>
+                      )}
+                    </div>
+                    {editing && (
+                      <div className={styles.fieldEditor}>
+                        <FieldEditor field={field} snapshot={snapshot} onSave={save} onClose={() => { setEditingField(null); returnFocus(`edit-field-${fieldId}`) }} />
+                      </div>
+                    )}
                     {fieldReport && fieldReport.messages.length > 0 && (
                       <ul className={styles.fieldMessages}>
                         {fieldReport.messages.map((message) => <li key={message}>{message}</li>)}
@@ -244,7 +375,34 @@ function DocumentInspector({ fixture, snapshot, onOpenFixture }: { fixture: Fixt
           )}
       </section>
 
-      {snapshot.kind === 'invoice' && <InvoiceAmounts snapshot={snapshot} />}
+      {snapshot.kind === 'invoice' && <InvoiceAmounts snapshot={snapshot} canEdit={canEdit} onSave={save} />}
+
+      {targets.length > 0 && <TextEditPanel snapshot={snapshot} canEdit={canEdit} onSave={save} />}
+
+      {proposal && (
+        <ProposalPanel
+          store={wb.store}
+          proposal={proposal}
+          state={proposalState}
+          onAccept={() => {
+            let saved = ''
+            const refused = attempt(() => {
+              const { store, revision } = acceptProposal(wb.store, wb.env, proposal)
+              saved = `Accepted — saved as ${versionLabel(store, revision.revisionId)}.`
+              return { store, message: `Saved ${versionLabel(store, revision.revisionId)}: ${revision.changeSummary}.` }
+            })
+            setProposalState(refused ? { kind: 'refused', message: refused } : { kind: 'accepted', message: saved })
+          }}
+          onReject={() => {
+            rejectProposal(wb.store, proposal)
+            setProposalState({ kind: 'rejected' })
+          }}
+        />
+      )}
+
+      {opError && <p className={styles.formError} role="alert">{opError}</p>}
+      <HistoryPanel store={wb.store} outputId={outputId} viewedId={viewedId} onView={(id) => wb.view(outputId, id)} onRestore={restore} onApprove={approve} />
+      <ComparePanel key={viewedId} store={wb.store} outputId={outputId} viewedId={viewedId} />
 
       <section className={styles.panel} aria-labelledby="brand-title">
         <h2 id="brand-title" className={styles.panelTitle}>Issuer brand</h2>
@@ -280,9 +438,46 @@ function DocumentInspector({ fixture, snapshot, onOpenFixture }: { fixture: Fixt
   )
 }
 
+/** After an editor closes, return focus to the control that opened it (or the panel, if a save removed it). */
+function returnFocus(id: string) {
+  window.setTimeout(() => {
+    const el = document.getElementById(id)
+    if (el) el.focus()
+  }, 0)
+}
+
 function describeTheme(themeId: string): string {
   const { theme, fellBack } = resolveTheme(themeId)
   return fellBack ? `“${themeId}” is not a known theme — using ${theme.label}` : `${theme.id} — ${theme.label}`
+}
+
+// ── Text edits ──────────────────────────────────────────────────────────────
+
+function TextEditPanel({ snapshot, canEdit, onSave }: { snapshot: DocumentSnapshot; canEdit: boolean; onSave: SaveEdit }) {
+  const targets = textTargets(snapshot)
+  const [selected, setSelected] = useState(0)
+  const [editing, setEditing] = useState(false)
+  const target = targets[Math.min(selected, targets.length - 1)]
+  return (
+    <section className={styles.panel} aria-labelledby="text-edit-title">
+      <h2 id="text-edit-title" className={styles.panelTitle}>Edit one sentence or list item</h2>
+      {!canEdit
+        ? <p className={styles.muted}>Only the current revision can be edited.</p>
+        : editing
+          ? <TextEditor key={`${target.blockId}:${target.item}:${target.run}`} target={target} onSave={onSave} onClose={() => { setEditing(false); returnFocus('edit-text-button') }} />
+          : (
+            <>
+              <label className={styles.label} htmlFor="text-target">Sentence or list item</label>
+              <select id="text-target" className={styles.select} value={selected} onChange={(e) => setSelected(Number(e.target.value))}>
+                {targets.map((t, i) => <option key={`${t.blockId}:${t.item}:${t.run}`} value={i}>{t.label}: {t.text.slice(0, 60)}{t.text.length > 60 ? '…' : ''}</option>)}
+              </select>
+              <div className={styles.toolbar}>
+                <Button id="edit-text-button" variant="outline" size="sm" onClick={() => setEditing(true)}>Edit this text</Button>
+              </div>
+            </>
+          )}
+    </section>
+  )
 }
 
 // ── Preview ─────────────────────────────────────────────────────────────────
@@ -309,7 +504,7 @@ function PreviewPanel({ snapshot }: { snapshot: DocumentSnapshot }) {
     <section className={styles.panel} aria-labelledby="preview-title">
       <h2 id="preview-title" className={styles.panelTitle}>Document preview</h2>
       <p className={styles.muted} style={{ marginTop: 0 }}>
-        Laid out from the snapshot with the document fonts, tokens and primitives, and paginated by meaning. Not an export.
+        Laid out from the viewed revision with the document fonts, tokens and primitives, and paginated by meaning. Not an export.
       </p>
       <div className={styles.toolbar} role="group" aria-label="Audience">
         <Button variant={audience === 'recipient' ? 'secondary' : 'ghost'} size="sm" aria-pressed={audience === 'recipient'} onClick={() => setAudience('recipient')}>
@@ -372,11 +567,14 @@ function describeBlock(block: Block): string {
 
 // ── Invoice amounts ─────────────────────────────────────────────────────────
 
-function InvoiceAmounts({ snapshot }: { snapshot: InvoiceSnapshot }) {
+function InvoiceAmounts({ snapshot, canEdit, onSave }: { snapshot: InvoiceSnapshot; canEdit: boolean; onSave: SaveEdit }) {
   const totals = useMemo(() => computeInvoiceTotals(snapshot), [snapshot])
-  const items = snapshot.blocks.flatMap((b) => (b.type === 'line-items' ? b.items : []))
+  const block = snapshot.blocks.find((b): b is Extract<Block, { type: 'line-items' }> => b.type === 'line-items')
+  const items = block?.items ?? []
   const amountById = new Map(totals.lines.map((l) => [l.itemId, l.amount]))
   const { locale } = snapshot
+  const [editing, setEditing] = useState<string | null>(null)
+  const editingIndex = items.findIndex((i) => i.id === editing)
 
   const show = (amount: Amount, negate = false) => amount.known
     ? formatMoney(negate ? { ...amount.money, amountMinor: -amount.money.amountMinor || 0 } : amount.money, locale)
@@ -396,13 +594,16 @@ function InvoiceAmounts({ snapshot }: { snapshot: InvoiceSnapshot }) {
       <p className={styles.muted} style={{ marginTop: 0 }}>
         Computed from integer minor units ({totals.currency ?? 'no currency'}). Totals are derived on every render, never stored.
       </p>
+      {block && editingIndex >= 0 && (
+        <LineItemEditor key={editing} blockId={block.id} item={items[editingIndex]} index={editingIndex} snapshot={snapshot} onSave={onSave} onClose={() => { const id = editing; setEditing(null); returnFocus(`edit-line-${id}`) }} />
+      )}
       <div className={styles.scrollBox} tabIndex={0} role="region" aria-label={`Line items, ${items.length} rows`}>
         <table className={`${styles.amountTable} ${styles.lineItems}`}>
           <thead>
-            <tr><th scope="col">Description</th><th scope="col" className={styles.num}>Qty</th><th scope="col" className={styles.num}>Unit price</th><th scope="col" className={styles.num}>Amount</th></tr>
+            <tr><th scope="col">Description</th><th scope="col" className={styles.num}>Qty</th><th scope="col" className={styles.num}>Unit price</th><th scope="col" className={styles.num}>Amount</th>{canEdit && <th scope="col"><span className={styles.srOnly}>Edit</span></th>}</tr>
           </thead>
           <tbody>
-            {items.map((li) => {
+            {items.map((li, i) => {
               const amount = amountById.get(li.id)
               return (
                 <tr key={li.id}>
@@ -410,6 +611,9 @@ function InvoiceAmounts({ snapshot }: { snapshot: InvoiceSnapshot }) {
                   <td className={styles.num} data-label="Qty"><span className={styles.cell}>{formatQuantity(li.quantityMilli, locale)}{li.unit ? ` ${li.unit}` : ''}</span></td>
                   <td className={styles.num} data-label="Unit price"><span className={styles.cell}>{li.unitPrice ? formatMoney(li.unitPrice, locale) : <span className={styles.unknownAmount}>Missing</span>}</span></td>
                   <td className={styles.num} data-label="Amount"><span className={styles.cell}>{amount && show(amount) ? show(amount) : <span className={styles.unknownAmount}>Unknown</span>}</span></td>
+                  {canEdit && (
+                    <td data-label=""><span className={styles.cell}><Button id={`edit-line-${li.id}`} variant="ghost" size="sm" onClick={() => setEditing(li.id)} aria-label={`Edit line ${i + 1}`}>Edit</Button></span></td>
+                  )}
                 </tr>
               )
             })}
@@ -439,14 +643,22 @@ function InvoiceAmounts({ snapshot }: { snapshot: InvoiceSnapshot }) {
 
 // ── Scenario fixture ────────────────────────────────────────────────────────
 
-function ScenarioInspector({ fixture, onOpenFixture }: { fixture: Extract<Fixture, { type: 'scenario' }>; onOpenFixture: (id: string) => void }) {
+const RUNNERS: Partial<Record<string, () => ScenarioCheck[]>> = {
+  'bounded-edit': runBoundedEdit,
+  'approved-then-edited': runApprovedThenEdited,
+  restore: runRestore,
+}
+
+function ScenarioInspector({ fixture, wb, onOpenFixture }: { fixture: Extract<Fixture, { type: 'scenario' }>; wb: Workbench; onOpenFixture: (id: string) => void }) {
   const base = fixture.baseFixtureId ? getFixture(fixture.baseFixtureId) : undefined
+  const runner = RUNNERS[fixture.id]
+  const [results, setResults] = useState<ScenarioCheck[] | null>(null)
   return (
     <section className={styles.panel} aria-labelledby="fixture-title">
       <h2 id="fixture-title" className={styles.fixtureTitle}>{fixture.title}</h2>
       <p className={styles.muted}>Fixture {fixture.prdNumber} · {fixture.purpose}</p>
       <div className={styles.metaRow}>
-        <span className={styles.pill} data-tone="neutral">{fixture.runsIn === 'step-3' ? 'Scenario — runnable now' : `Scenario — runnable from ${STEP_LABEL[fixture.runsIn]}`}</span>
+        <span className={styles.pill} data-tone="neutral">{RUNNABLE_NOW.has(fixture.runsIn) ? 'Scenario — runnable now' : `Scenario — runnable from ${STEP_LABEL[fixture.runsIn]}`}</span>
       </div>
       {base && (
         <p>
@@ -457,45 +669,89 @@ function ScenarioInspector({ fixture, onOpenFixture }: { fixture: Extract<Fixtur
       <h3 className={styles.groupHeading} style={{ marginTop: 16 }}>What it checks</h3>
       <ol className={styles.stepsList}>{fixture.steps.map((s) => <li key={s}>{s}</li>)}</ol>
       {fixture.id === 'deck-from-brief'
-        ? <DeckScenario />
-        : <p className={styles.muted} style={{ marginTop: 12 }}>Not runnable yet. Nothing on this page simulates its result.</p>}
+        ? <DeckScenario wb={wb} />
+        : runner
+          ? (
+            <>
+              <p className={styles.muted}>Runs the steps on a fresh sample store with the real revision functions. To try it by hand, open {base?.title ?? 'the base document'} and use its edit, history and restore controls.</p>
+              <div className={styles.toolbar}><Button size="sm" onClick={() => setResults(runner())}>{results ? 'Run again' : 'Run scenario'}</Button></div>
+              {results && <CheckList checks={results} />}
+            </>
+          )
+          : <p className={styles.muted} style={{ marginTop: 12 }}>Not runnable yet. Nothing on this page simulates its result.</p>}
     </section>
   )
 }
 
-// ── Fixture 5: brief → deck ─────────────────────────────────────────────────
+function CheckList({ checks }: { checks: readonly { label: string; result: 'pass' | 'fail' | 'deferred'; detail: string }[] }) {
+  return (
+    <ul className={styles.issueList} aria-label="Results">
+      {checks.map((c) => (
+        <li key={c.label} className={styles.checkRow}>
+          <span className={styles.pill} data-tone={c.result === 'pass' ? 'ready' : c.result === 'fail' ? 'invalid' : 'neutral'}>{c.result === 'pass' ? 'Pass' : c.result === 'fail' ? 'Fail' : 'Deferred'}</span>
+          <span><strong>{c.label}.</strong> {c.detail}</span>
+        </li>
+      ))}
+    </ul>
+  )
+}
 
-/** Fixture IDs for the source brief. Real output/revision records arrive in Step 4. */
-const BRIEF_SOURCE = { outputId: 'out-brief-evidence', revisionId: 'rev-brief-evidence-001' }
+// ── Fixture 5: brief → deck, with ancestry checked against real revisions ────
+
 const BRIEF_FACTS = ['61%', '8 of 112', '15 of 109', 'week 3 (21%)']
 
-function DeckScenario() {
-  const brief = useMemo(() => evidenceBrief(), [])
-  const derived = useMemo(() => deriveDeck(brief, BRIEF_SOURCE), [brief])
+function DeckScenario({ wb }: { wb: Workbench }) {
+  const briefId = outputIdFor('brief-evidence')
+  const brief = currentRevision(wb.store, briefId)
+  const deckDoc = wb.deckId ? getDocument(wb.store, wb.deckId) : null
+  const deckRev = deckDoc ? getRevision(wb.store, deckDoc.currentRevisionId) : null
+  const ancestry = deckRev ? checkAncestry(wb.store, deckRev.revisionId) : null
   const [layout, setLayout] = useState<DeckLayout | null>(null)
   const onLayout = useCallback((l: DeckLayout | null) => setLayout(l), [])
-  const checks = layout ? deckChecks(derived, layout, { facts: BRIEF_FACTS, citationCount: brief.citations.length }) : []
+  const [error, setError] = useState<string | null>(null)
+
+  const derive = () => {
+    try {
+      const { store, outputId, revision } = deriveDeckRevision(wb.store, wb.env, briefId, brief.revisionId, wb.deckId ?? undefined)
+      wb.setDeckId(outputId)
+      wb.commit(store, `Deck ${versionLabel(store, revision.revisionId)}: ${revision.changeSummary}.`)
+      setError(null)
+    } catch (e) {
+      if (e instanceof RevisionError) setError(e.message)
+      else throw e
+    }
+  }
+
+  const source = deckDoc?.derivedFrom ? getRevision(wb.store, deckDoc.derivedFrom.revisionId) : null
+  const excluded = source ? deriveDeck(source.snapshot as BriefSnapshot, deckDoc!.derivedFrom!).excludedBlocks : []
+  const checks = deckRev && layout && ancestry
+    ? deckChecks(deckRev.snapshot as DeckSnapshot, layout, { facts: BRIEF_FACTS, citationCount: brief.snapshot.citations.length, ancestry, excludedBlocks: excluded })
+    : []
+
   return (
     <>
       <h3 className={styles.groupHeading} style={{ marginTop: 16 }}>Result</h3>
-      {checks.length === 0
-        ? <p className={styles.muted}>Laying out slides…</p>
-        : (
-          <ul className={styles.issueList}>
-            {checks.map((c) => (
-              <li key={c.label} className={styles.checkRow}>
-                <span className={styles.pill} data-tone={c.result === 'pass' ? 'ready' : c.result === 'fail' ? 'invalid' : 'neutral'}>{c.result === 'pass' ? 'Pass' : c.result === 'fail' ? 'Fail' : 'Deferred to Step 4'}</span>
-                <span><strong>{c.label}.</strong> {c.detail}</span>
-              </li>
-            ))}
-          </ul>
-        )}
       <p className={styles.muted}>
-        Step 3 checks the adaptation itself. Whether the recorded IDs point at a real, current brief revision is checked in Step 4, when revisions exist.
+        The deck is derived from the evidence-backed brief in this workbench. Edit that brief and come back: the deck keeps pointing at the revision it came from until you derive again.
       </p>
-      <div className={styles.previewWell}>
-        <DeckPreview derived={derived} onLayout={onLayout} />
-      </div>
+      {!deckRev
+        ? <div className={styles.toolbar}><Button size="sm" onClick={derive}>Derive deck from brief {versionLabel(wb.store, brief.revisionId)}</Button></div>
+        : (
+          <>
+            <p className={styles.pill} data-tone={ancestry?.status === 'current' ? 'ready' : ancestry?.status === 'stale' ? 'incomplete' : 'invalid'} role="status">{ancestry?.label}</p>
+            <p className={styles.muted}>Deck {versionLabel(wb.store, deckRev.revisionId)} · {deckRev.changeSummary}</p>
+            {ancestry?.status === 'stale' && <div className={styles.toolbar}><Button size="sm" onClick={derive}>Derive again from brief {versionLabel(wb.store, brief.revisionId)}</Button></div>}
+            {checks.length === 0 ? <p className={styles.muted}>Laying out slides…</p> : <CheckList checks={checks} />}
+            <h4 className={styles.groupHeading}>Deck history ({history(wb.store, deckDoc!.outputId).length})</h4>
+            <ol className={styles.blockOutline}>
+              {history(wb.store, deckDoc!.outputId).map((r) => <li key={r.revisionId}>{versionLabel(wb.store, r.revisionId)} — {r.changeSummary} — {checkAncestry(wb.store, r.revisionId).label}</li>)}
+            </ol>
+            <div className={styles.previewWell}>
+              <DeckPreview snapshot={deckRev.snapshot as DeckSnapshot} onLayout={onLayout} />
+            </div>
+          </>
+        )}
+      {error && <p className={styles.formError} role="alert">{error}</p>}
     </>
   )
 }

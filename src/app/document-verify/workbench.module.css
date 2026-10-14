@@ -510,3 +510,132 @@
   gap: 8px;
   align-items: start;
 }
+
+/* ── Revisions (Step 4) ───────────────────────────────────────────────────── */
+
+.revisionBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.revisionBar .pill {
+  white-space: normal;
+}
+
+.historyList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.historyItem {
+  display: grid;
+  gap: 8px;
+  padding: 4px;
+  border-radius: 18px;
+}
+
+.historyItem[data-viewing] {
+  box-shadow: 0 0 0 2px var(--color-focus-ring);
+}
+
+.historyDetail {
+  display: grid;
+  gap: 2px;
+  padding: 0 8px 4px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.historyDetail p {
+  margin: 0;
+}
+
+.historySummary {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.compareList {
+  margin: 12px 0 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+  overflow-wrap: anywhere;
+}
+
+.diffList {
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.diffRow {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid var(--neutral-200);
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
+
+.diffRow dt {
+  font-weight: var(--font-weight-medium);
+}
+
+.diffRow dd {
+  margin: 0;
+}
+
+.diffLabel {
+  display: inline-block;
+  min-width: 52px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.editForm {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0;
+  padding: 12px;
+  border: 1px solid var(--neutral-200);
+  border-radius: 8px;
+  background: var(--neutral-50);
+}
+
+.fieldEditor {
+  grid-column: 1 / -1;
+}
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border-interactive);
+  border-radius: 8px;
+  background: var(--color-surface-default);
+  color: var(--color-text-primary);
+  font: inherit;
+}
+
+.input:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.formError {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--red-50);
+  color: var(--red-700);
+}

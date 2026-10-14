@@ -29,7 +29,7 @@ function laidOut(brief = evidenceBrief()) {
 }
 
 describe('brief → deck', () => {
-  it('records the exact source it was derived from (revision records arrive in Step 4)', () => {
+  it('records the exact source it was derived from (verified against revisions in revisions.test.ts)', () => {
     const { derived } = laidOut()
     expect(derived.derivedFrom).toEqual(SOURCE)
     expect(derived.snapshot.kind).toBe('deck')
