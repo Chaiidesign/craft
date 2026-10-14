@@ -296,6 +296,8 @@ interface ExportBase {
   format: ExportFormat
   /** True when exported with missing required fields — the artifact carries a visible draft marker. */
   draft: boolean
+  /** Set on a retry: the export it repeats (same revision, same format). */
+  retryOf?: ExportId
 }
 
 export type ExportRecord =

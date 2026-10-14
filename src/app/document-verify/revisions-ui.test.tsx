@@ -10,20 +10,25 @@ import { createDocument, emptyStore, markApproved, saveEdit } from '@/lib/docume
 import { DocumentWorkbench } from './DocumentWorkbench'
 import { parsePercentInput, parseQuantity, textTargets } from './Editors'
 import { HistoryPanel, RevisionBar } from './RevisionPanels'
-import { runApprovedThenEdited, runBoundedEdit, runRestore } from './scenarios'
+import { nodeResources } from '@/lib/documents/testing/nodeResources'
+import { readPdf } from '@/lib/documents/testing/pdfText'
+
+import { runApprovedThenEdited, runBoundedEdit, runPartialExport, runRestore, type ExportDeps } from './scenarios'
+
+const NODE_DEPS: ExportDeps = { resources: async (s) => nodeResources(s), pdfPageTexts: async (b) => (await readPdf(b)).pages.map((p) => p.text) }
 
 const strip = (html: string) => html.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ')
 
-describe('scenario runners (fixtures 6, 7, 8)', () => {
+describe('scenario runners (fixtures 6, 7, 8, 9)', () => {
   it.each([
     ['bounded edit', runBoundedEdit],
-    ['approved then edited', runApprovedThenEdited],
+    ['approved then edited', () => runApprovedThenEdited(NODE_DEPS)],
     ['restore', runRestore],
-  ])('%s: every check passes (exports deferred to Step 5)', (_, run) => {
-    const checks = run()
+    ['partial export', () => runPartialExport(NODE_DEPS)],
+  ])('%s: every check passes, none deferred', async (_, run) => {
+    const checks = await run()
     expect(checks.length).toBeGreaterThan(2)
-    for (const c of checks) expect(c.result, `${c.label}: ${c.detail}`).not.toBe('fail')
-    expect(checks.filter((c) => c.result === 'deferred').every((c) => /Step 5/.test(c.detail))).toBe(true)
+    for (const c of checks) expect(c.result, `${c.label}: ${c.detail}`).toBe('pass')
   })
 })
 

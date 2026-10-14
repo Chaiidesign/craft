@@ -639,3 +639,24 @@
   background: var(--red-50);
   color: var(--red-700);
 }
+
+/* ── Export panel ──────────────────────────────────────────────────────────── */
+
+.exportFormat {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.draftConfirm {
+  margin-top: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--yellow-100);
+  border-radius: 8px;
+  background: var(--yellow-50);
+}
+
+.draftConfirm p {
+  margin: 0 0 8px;
+}

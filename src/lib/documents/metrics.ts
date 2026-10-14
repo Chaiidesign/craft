@@ -17,6 +17,8 @@ export interface FaceMetrics {
   typoDescender: number
   /** Advance width in font units, or undefined when the face has no glyph for the code point. */
   advance(codePoint: number): number | undefined
+  /** Glyph index for a code point (outlines.ts draws it), or undefined when the face has none. */
+  glyphId(codePoint: number): number | undefined
 }
 
 function tables(view: DataView, bytes: Uint8Array): Map<string, number> {
@@ -108,6 +110,7 @@ export function readFaceMetrics(bytes: Uint8Array, file: string): FaceMetrics {
     typoAscender: view.getInt16(os2 + 68),
     typoDescender: view.getInt16(os2 + 70),
     advance: (cp) => advances.get(cp),
+    glyphId: (cp) => glyphs.get(cp),
   }
 }
 

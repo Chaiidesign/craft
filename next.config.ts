@@ -71,15 +71,15 @@ const nextConfig: NextConfig = {
     proxyClientMaxBodySize: '320mb',
   },
 
-  ...(hasDesignSystemSibling
+  // Always declared (empty unless the sibling exists): with a `webpack` hook
+  // present, Next 16 refuses to start Turbopack dev without a `turbopack` key.
+  turbopack: hasDesignSystemSibling
     ? {
-        turbopack: {
-          // Expand the root to the monorepo root so Turbopack can resolve CSS
-          // @imports that reach into the sibling design-system/ package.
-          root: monorepoRoot,
-        },
+        // Expand the root to the monorepo root so Turbopack can resolve CSS
+        // @imports that reach into the sibling design-system/ package.
+        root: monorepoRoot,
       }
-    : {}),
+    : {},
 
   // Re-export server-only env vars to the client bundle.
   // AUTH0_AUDIENCE is read by jwt-utils.ts (getAccessToken call).
@@ -97,6 +97,22 @@ const nextConfig: NextConfig = {
   // rule. Rewrites cause `next dev` (Turbopack) to buffer chunked responses,
   // which broke SSE. The route handler streams both directions
   // and works identically in dev and production.
+
+  // pptxgenjs 4 (document-quality workbench, PowerPoint export) reaches for
+  // node:fs / node:https only when it runs under Node. Webpack cannot bundle the
+  // `node:` scheme for the browser, so client bundles get empty modules for
+  // exactly these two; server bundles are untouched.
+  webpack(config, { isServer, webpack }) {
+    if (!isServer) {
+      config.plugins.push(
+        new webpack.NormalModuleReplacementPlugin(/^node:(fs|https)$/, (resource: { request: string }) => {
+          resource.request = resource.request.replace(/^node:/, "");
+        }),
+      );
+      config.resolve.fallback = { ...config.resolve.fallback, fs: false, https: false };
+    }
+    return config;
+  },
 
   async redirects() {
     return [

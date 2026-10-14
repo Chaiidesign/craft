@@ -1,11 +1,12 @@
 # Document-quality prototype
 
-Mock-data prototype of Souvenir's document design system: invoice and brief templates, document tokens and layout primitives, and (in later steps) pagination, revisions and real PDF/DOCX/PPTX exports. Fixtures are fictional. Nothing here calls a backend, AI service, auth provider or sending channel.
+Mock-data prototype of Souvenir's document design system: invoice and brief templates, document tokens and layout primitives, pagination, revisions and real PDF, Word and PowerPoint exports (browser storage and recovery arrive in Step 6). Fixtures are fictional. Nothing here calls a backend, AI service, auth provider or sending channel.
 
 - **Workbench:** `/document-verify` — run `npx next dev -p 4010`, open http://localhost:4010/document-verify. Available in development and on Vercel preview deployments; 404 in production.
-- **Tests:** `npx vitest run src/lib/documents src/components/documents`
+- **Tests:** `npx vitest run src/lib/documents src/components/documents src/app/document-verify`
+- **Sample exports:** `npx vite-node scripts/documents/export-samples.ts`, then `scripts/documents/render-sample-pages.sh` for page images (see [Exports](#exports-step-5)).
 
-This README grows with each build step. Sections marked *(Step N)* describe work not built yet.
+This README grows with each build step; a section heading names the step that built it.
 
 ## Where things live
 
@@ -25,9 +26,13 @@ This README grows with each build step. Sections marked *(Step N)* describe work
 | Workbench editors, history, scenario runners | `src/app/document-verify/Editors.tsx`, `RevisionPanels.tsx`, `scenarios.ts` |
 | Layout primitives (HTML preview) | `src/components/documents/DocumentPrimitives.tsx` |
 | Paged preview, deck preview, font loading | `src/components/documents/DocumentPreview.tsx`, `DeckPreview.tsx`, `useDocumentFonts.ts` |
+| Exports: capabilities, filenames, adapters, jobs, PDF / Word / PowerPoint renderers | `src/lib/documents/export/` |
+| Glyph outlines (chart picture in Word files) | `src/lib/documents/outlines.ts` |
+| Export panel, generated-PDF preview, browser export resources | `src/app/document-verify/ExportPanel.tsx`, `src/components/documents/PdfFilePreview.tsx`, `exportResources.ts`, `pdfjs.ts` |
+| Sample exports and their page images | `docs/documents/samples/`, `scripts/documents/` |
 | Workbench page | `src/app/document-verify/` |
 
-A **document plan** is the renderer-neutral output of a template: an ordered list of primitive nodes with all display text already derived from typed values. The **layout engine** turns a plan into pages: it breaks lines with the theme's real font metrics and places blocks by meaning. The HTML preview draws the engine's lines at the engine's positions, and the PDF renderer (Step 5) will draw the same lines, so every surface wraps and breaks pages identically.
+A **document plan** is the renderer-neutral output of a template: an ordered list of primitive nodes with all display text already derived from typed values. The **layout engine** turns a plan into pages: it breaks lines with the theme's real font metrics and places blocks by meaning. The HTML preview draws the engine's lines at the engine's positions, and the PDF renderer draws the same lines at the same positions, so the preview and the PDF wrap and break pages identically. Word and PowerPoint lay text out themselves; see [Exports](#exports-step-5).
 
 ## Layout and pagination
 
@@ -52,7 +57,7 @@ Line breaking (`layout/text.ts`) breaks at spaces, after hyphens, dashes and sla
 | Every page | "Page n of N" and the document identification in the footer (shortened by measured width with an ellipsis when long); pages 2+ carry a running header with the identification and draft state. |
 | Too big to fit | Anything that cannot fit an empty page is an explicit layout error. Nothing is clipped, shrunk or substituted. |
 
-Every page records **why** it began (shown with "Show page-break reasons" in the workbench). Spacing between blocks lives in `FLOW` and the rules in `KEEP` in `tokens.ts`. These rules are written so the DOCX writer (Step 5) can map them to Word's keep-with-next, keep-lines-together, can't-split-row and repeat-header settings.
+Every page records **why** it began (shown with "Show page-break reasons" in the workbench). Spacing between blocks lives in `FLOW` and the rules in `KEEP` in `tokens.ts`. The Word renderer maps them to Word's keep-with-next, widow-control, can't-split-row and repeat-header settings (see Exports).
 
 ### Tests
 
@@ -142,18 +147,15 @@ Slides: title Display 32/1.1, heading Display 24/1.2, body Voice 18/1.4, caption
 
 `glyphs.test.ts` also checks every character in each fixture's plan against its face, and that both Money cuts carry every fixture currency symbol: ₹, €, £ and $ are covered by every face.
 
-**Known gap:** Japanese-locale yen (`ja-JP`) formats with the full-width sign ￥ (U+FFE5), which no placeholder face contains. No fixture uses it. It is recorded by a test as missing and is **never** silently swapped for ¥. Approved handling: the layout engine refuses the document with an explicit error (preview now; export validation in Step 5). In practice the whole `ja-JP` locale is refused: its dates use 年, 月 and 日, which the placeholder faces also lack.
+**Known gap:** Japanese-locale yen (`ja-JP`) formats with the full-width sign ￥ (U+FFE5), which no placeholder face contains. No fixture uses it. It is recorded by a test as missing and is **never** silently swapped for ¥. Approved handling: the layout engine refuses the document with an explicit error, in the preview and in every export (`font-missing-glyph`). In practice the whole `ja-JP` locale is refused: its dates use 年, 月 and 日, which the placeholder faces also lack.
 
 ### Non-Latin scripts
 
 The Noto fallback is **not** committed. Text in scripts outside the placeholder faces' Latin coverage (for example Devanagari) is an explicit unsupported state, not a silent fallback. Complex-script shaping (reordering, conjuncts) depends on each renderer: browsers shape, jsPDF does not, and Word/PowerPoint depend on installed fonts. Any future support must be tested per renderer.
 
-### Renderer caveats *(Step 5)*
+### Renderer caveats
 
-- **PDF:** fonts embedded from the same TTFs (jsPDF native text, not page screenshots).
-- **DOCX:** families declared by name-table name and embedded where the format allows. Visual fidelity in Word is **unverified** — this machine has no Word/LibreOffice render check.
-- **PPTX:** fonts referenced by name, fallback recorded; PowerPoint does not reliably honour embedded fonts across platforms. Visual fidelity **unverified**.
-- Identical rendering across operating systems is not claimed.
+See [Exports](#exports-step-5): the PDF embeds the TTFs; Word files name and embed them; PowerPoint files name them only. Identical rendering across operating systems is not claimed.
 
 ## Revisions *(Step 4)*
 
@@ -171,11 +173,45 @@ Every document in the workbench lives in an **in-memory revision store** (`revis
 - **Filling a missing field** is an edit: validation updates, and an unknown amount stays unknown until the fact that decides it is supplied.
 - **Proposals** are fictional sample edits written against an exact revision, shown as before and after. Accept creates a revision ("Accepted proposal: …"); Reject changes nothing. A proposal whose base is no longer current can't be accepted.
 - **Restore** creates a new current revision from an earlier one's content. Later revisions stay in history, and approval is not carried over.
-- **Mock approval** is a marker on one exact revision: "Approved (sample) by … — applies to v{n} only". Every other revision reads "Not approved". Exports will target an explicitly selected revision (Step 5).
+- **Mock approval** is a marker on one exact revision: "Approved (sample) by … — applies to v{n} only". Every other revision reads "Not approved". Exports target an explicitly selected revision (see Exports); approval is not export success.
 - **Deck ancestry.** A deck revision records the brief revision it was derived from. `checkAncestry` verifies that revision exists, belongs to that brief, is a brief, and that the deck is exactly what it derives. When the brief moves on, the deck keeps pointing at its source and says so; deriving again creates a new deck revision. A failed check reads "Ancestry check failed: {reason}".
 - **Authors.** "Sample operator (fictional)" for edits and accepted proposals; "System" for creation from sample data, derivations and restores. Fixture 7's reviewer is "Sample reviewer (fictional)".
 
 Scenarios 5–8 run in the workbench: 6, 7 and 8 on a fresh deterministic store with the real revision functions; 5 against the workbench's own brief, so editing that brief makes the deck stale.
+
+## Exports *(Step 5)*
+
+The workbench exports the revision being viewed: invoices and briefs as **PDF** and **Word**, derived decks as **PowerPoint** and **PDF**. Anything else is shown disabled with its reason ("Invoices and briefs have no slide format." / "Decks export as PowerPoint or PDF.") — there is no invoice-to-slides or deck-to-Word conversion. Everything runs in the browser; nothing is uploaded or sent.
+
+**Rules (`export/jobs.ts`, `export/adapters.ts`).**
+- One export = one frozen revision, chosen when it starts. The snapshot is taken from the revision store at that moment, so later edits never retarget it. Fixture 7 exports v1 while v2 is current and reads the PDF back to prove it is v1.
+- Each adapter has `capabilities`, `validate(snapshot)` and `render(snapshot, options)` with a typed result. Records are `pending`, `succeeded` (filename, MIME type, byte size, local URL), `failed` or `unsupported`, each with a typed error (`unsupported-format`, `validation-blocked`, `renderer-failed`, `font-missing-glyph`). Events: `exportStarted`, `exportSucceeded`, `exportFailed`.
+- Formats succeed or fail independently; there is no blanket success. A second export of the same revision and format is refused while one is pending. A retry is a new record (`retryOf`) with the same revision and format. Approval is not export success, and export is not sending.
+- A revision with missing required facts exports only after the draft warning ("This revision is a draft: {n} required facts are missing. The file will carry the draft marker." — "Export draft" / "Cancel"); the file carries "Draft — incomplete" in the title block and running header. An **invalid** revision is refused with its validation messages; the **empty** document is refused ("This invoice has no fields and no content blocks, so there is nothing to export."). Layout refusals (missing glyphs, a block taller than a page) refuse the export with the engine's message.
+- Exports always use the recipient view (internal notes left out) and the snapshot's own page size, never the preview's A4/Letter or audience toggles.
+- **Filenames:** `{issuer}_{document number or title}_v{n}_{short revision ID}.{ext}`, each name part capped at 40 characters (cut at a hyphen where possible); the short ID is the low four hex digits of FNV-1a over the revision ID. The name is for people; the revision ID in the record is the identity. A brief and its deck share issuer and title, so their PDFs differ only by short ID and, for decks, by being slides — the duplicate-filename fixture is Step 6.
+- **Fixture 9** forces the Word renderer to fail at its render step — only in that scenario, labelled "Forced failure (scenario 9 only)", error "Forced renderer failure (scenario 9 only)" — while PDF succeeds and PowerPoint is unsupported; the retry keeps the original revision.
+
+**PDF (jsPDF 4.2.1, native text).** Draws `paginate()` pages and slide layouts line by line at the engine's coordinates, every segment placed from its engine width (no re-measuring, no kerning), so line breaks, page breaks, totals, citations and the letterhead match the preview. Each face the document uses is embedded from the committed TTF as its own font, named by its PostScript name, so jsPDF maps no weights or styles. jsPDF subsets each face to the glyphs drawn (about 20–34 KB per face against 120–200 KB TTFs; it does not add the usual six-letter subset prefix, so `pdffonts` reports `sub no`). Sample PDFs are 60–85 KB. Charts are vector shapes. Baselines follow the browser's line-box rule with exact hhea metrics; the preview snaps to whole pixels, so the two differ by under 1px (≤ 0.7pt) per line. Tests check: PDF signature, page count = engine pages, every engine line on its own page in order (pdf.js text), the embedded faces equal the faces used, metadata.
+
+**Word (docx 9.11.0).** Native paragraphs, runs and tables built from the same plan, with the engine's column widths and totals box. Fonts are named exactly as their TTF name tables (weights are separate families, so bold is never set and never faked) and **all eight faces are embedded** (`w:embedTrueTypeFonts`; a test de-obfuscates each `.odttf` back to the committed bytes). Page-break rules become Word settings: keep-with-next on headings, the last two line-item rows and the totals (so payment terms stay with them); widow control; rows that can't split (except a row taller than a page); repeating header rows; `PAGE` / `NUMPAGES` footer fields; a different first page so page 1 has no running header. The chart appears **twice, as approved**: a picture (SVG with every label drawn as glyph outlines, plus a PNG fallback) and an editable data table, with the title, axes line and data summary as text. Differences from the PDF, recorded:
+- Word lays pages out itself: page breaks can differ from the PDF (the long invoice is 4 pages in the PDF and 5 in Pages).
+- Word has one top margin for every page, so the running header sits in the top margin (24pt from the edge) and pages 2+ start higher than in the PDF; page 1 matches.
+- Missing values are shaded runs with a dashed run border; some readers (Pages) show the shading but not the border.
+- **Pages and long tables:** Pages will not start a table that is taller than the space left on a page partway down that page; it moves the whole table to the next page (tested with every keep rule, can't-split flag and repeating header removed — same result). Because the "Amounts in INR" caption keeps with its table, in Pages the long invoice's caption sits alone on page 2 and the table starts on page 3. Word normally splits such a table where it starts; unverified here. **Decision (approved):** this is recorded as a Pages limitation; Word's page-break rules (the caption's keep-with-next, can't-split rows, repeating headers) are kept as they are and not weakened to suit Pages.
+
+**PowerPoint (pptxgenjs 4.0.1).** One native text box per engine item at the engine's position and size, holding real paragraphs and runs in the theme's named fonts; the chart is a **native, editable bar chart** with the source values, with its title, axes line and data summary kept as text on the slide. pptxgenjs cannot embed fonts: a viewer without them substitutes, and since PowerPoint wraps text itself, lines can then wrap differently and overflow their boxes.
+
+**What was verified, and how.** Sample files are in `docs/documents/samples/` (made by `npx vite-node scripts/documents/export-samples.ts`); page images in `samples/pages/` and Apple renders in `samples/apple/` (made by `scripts/documents/render-sample-pages.sh`).
+- **PDF:** every page of every sample rasterised with `pdftoppm` and inspected, including all four pages of the long invoice.
+- **Word:** opened in **Pages** (Apple) and exported to PDF, every page inspected. Pages ignores embedded fonts and substitutes Helvetica; content, tables, Missing states, draft marker, chart picture, data table and page numbers all come through. **Microsoft Word itself is unverified** (not installed).
+- **PowerPoint:** opened in **Keynote** (Apple) and exported to PDF, every slide inspected. Keynote substitutes Helvetica (wider than the condensed display face, so a long heading wraps to two lines and runs into the text below), and **Keynote 14.1 drops pptxgenjs charts entirely** — confirmed with a minimal one-chart file — so the chart slide shows its title, axes line and data summary but no bars. **Microsoft PowerPoint itself is unverified** (not installed); the chart XML is checked by tests.
+- **Determinism:** files carry the time they were made (PDF creation date; Office core properties; jsPDF's random file ID), so reruns are not byte-identical. Content is deterministic.
+- In the browser, the "PDF preview (generated file, v{n})" panel draws the exported bytes with pdf.js (page count, fit width / 100% / 150%, download); the paged preview above it is labelled "HTML preview (not the PDF)".
+
+**Dependencies.** Runtime: `jspdf` 4.2.1, `docx` 9.11.0, `pptxgenjs` 4.0.1; `pdfjs-dist` 5.7.284 for the generated-PDF preview (its worker is `public/pdf.worker.min.mjs`, identical to the installed build). Dev only: `sharp` 0.34.5 (declared as a devDependency, the same version `next` brings) rasterises the Word chart picture's PNG fallback in Node for tests and the sample script. Page images need `pdftoppm` (poppler) and, for the Word/PowerPoint renders, Pages and Keynote with permission for the terminal to control them. Word files are about 625 KB because all eight faces are embedded.
+
+**Build note.** pptxgenjs 4 contains `import('node:fs')` / `import('node:https')` for when it runs under Node; webpack can't bundle the `node:` scheme for browsers. `next.config.ts` therefore has a client-only `webpack` hook that maps exactly those two to empty modules, and now always declares `turbopack` (empty unless the design-system sibling is present) because Next 16 refuses to start Turbopack dev when a `webpack` hook exists without one.
 
 ## Approved working agreements
 
@@ -193,6 +229,10 @@ Recorded values (approved as recorded values, not spec changes):
 Approved Step 4 wording: history labels "v{n} · Current" and "Viewing v{n} — not the current revision"; change summaries "Created", "Edited {field label}", "Edited line {n}: {quantity / unit price / description}", "Edited text in {section heading}", "Accepted proposal: {proposal title}", "Restored from v{n}", "Derived from {brief title} v{n}"; "Approved (sample) by {reviewer} on {date} — applies to v{n} only" and "Not approved"; "Derived from brief v{n} — current", "Derived from brief v{n} — the brief now has v{m}. This deck does not update by itself; derive again to update." and "Ancestry check failed: {reason}"; authors "Sample operator (fictional)", "System" and reviewer "Sample reviewer (fictional)"; proposal titles "Clearer payment terms" and "Tighter evidence sentence". Workbench text (buttons, refusal messages, notes) approved as written. Em dashes (—) are used throughout, consistent with "Draft — incomplete".
 
 Approved document wording: "Continued from previous page" (a row carried over a page break), "(continued)" after a repeated slide heading, "Page n of N" (pages) and "n / N" (slides), and a running header of issuer · document number plus the draft state on pages 2 onward. Payment terms never stand alone on a page. Up to two short consecutive sections may share a slide.
+
+Approved Step 5 wording: the filename pattern; the draft warning, "Export draft" and "Cancel"; the unavailable reasons; the status labels "Preparing {format} of v{n}…", "{format} of v{n} ready ({size})", "{format} failed: {reason}" and "Retry {format} of v{n}"; the preview labels "HTML preview (not the PDF)" and "PDF preview (generated file, v{n})". Approved Step 5 choices: Pages/Keynote renders for the Word/PowerPoint check, the scenario-only forced Word failure, the built-in zip reader for tests, committed samples and page images, embedded fonts in Word, the chart as picture plus data table in Word, refusing invalid and empty revisions, the 40-character filename part cap, and the client-only webpack rule for pptxgenjs.
+
+Approved Step 5 values and text: `WORD_HEADER_FROM_EDGE_PT = 24` (Word's running header 24pt from the top edge, inside the top margin); always declaring `turbopack` in `next.config.ts`; short revision IDs in filenames as the last four hex digits of the revision ID's FNV-1a hash; the Word chart order (title, picture, axes line, data table, summary); and the workbench text — the export panel note "Files are made in this browser from the revision you are viewing (v{n}), fixed when the export starts. Approval is not export, and export is not sending."; buttons "Export {format}", "Preview", "Fit width", "100%", "150%", "Download {filename}"; "Forced failure (scenario 9 only)", the error "Forced renderer failure (scenario 9 only)", the checkbox "Force a Word renderer failure (scenario 9 only)" and the scenario 9 "Try it by hand" note; the refusal "An export of this revision to {format} is already in progress ({export ID})."; and the HTML-preview note's added sentence.
 
 New values and new document wording are proposed for approval before they are used.
 

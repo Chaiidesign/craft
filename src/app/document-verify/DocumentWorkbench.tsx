@@ -10,12 +10,17 @@
 // revision being viewed; bounded edits, proposals and restores create new
 // revisions; scenarios 5–8 run against real revisions. Reloading resets the
 // store (browser storage arrives in Step 6).
+// Step 5: real exports — PDF (jsPDF, the engine's own lines), Word and PowerPoint
+// — of an explicitly selected revision, with per-format records, the draft
+// warning, retries, and a preview of the generated PDF itself.
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Button } from '@/components/Button'
 import { DeckPreview, deckChecks } from '@/components/documents/DeckPreview'
 import { DocumentPreview, type PreviewState } from '@/components/documents/DocumentPreview'
+import { browserExportResources } from '@/components/documents/exportResources'
+import { pdfPageTexts } from '@/components/documents/pdfjs'
 import { composeDocument, type Audience } from '@/lib/documents/compose'
 import { deriveDeck } from '@/lib/documents/deck'
 import { describeFieldState } from '@/lib/documents/display'
@@ -23,7 +28,7 @@ import { FIXTURES, getFixture, SAMPLE_LABEL, type Fixture } from '@/lib/document
 import { outputIdFor, PROPOSAL_TEMPLATES, proposalFrom, SAMPLE_REVIEWER } from '@/lib/documents/fixtures/revisions'
 import { computeInvoiceTotals, type Amount } from '@/lib/documents/invoice'
 import type { DeckLayout } from '@/lib/documents/layout/slides'
-import type { Block, BriefSnapshot, DeckSnapshot, DocumentEnv, DocumentSnapshot, InvoiceSnapshot } from '@/lib/documents/model'
+import type { Block, BriefSnapshot, DeckSnapshot, DocumentEnv, DocumentSnapshot, ExportFormat, InvoiceSnapshot } from '@/lib/documents/model'
 import { formatMoney, formatQuantity } from '@/lib/documents/money'
 import {
   acceptProposal,
@@ -45,12 +50,14 @@ import {
   type BoundedEdit,
   type RevisionStore,
 } from '@/lib/documents/revisions'
+import { emptyExports, type ExportState } from '@/lib/documents/export/jobs'
 import { resolveTheme } from '@/lib/documents/theme'
 import { validateSnapshot, type Readiness, type ValidationIssue } from '@/lib/documents/validation'
 
+import { ExportPanel, type ExportControls } from './ExportPanel'
 import { FieldEditor, LineItemEditor, TextEditor, textTargets, type SaveEdit } from './Editors'
 import { ComparePanel, HistoryPanel, ProposalPanel, RevisionBar, type ProposalState } from './RevisionPanels'
-import { runApprovedThenEdited, runBoundedEdit, runRestore, type ScenarioCheck } from './scenarios'
+import { runApprovedThenEdited, runBoundedEdit, runPartialExport, runRestore, type ExportDeps, type ScenarioCheck } from './scenarios'
 import styles from './workbench.module.css'
 
 const READINESS_LABEL: Record<Readiness, string> = {
@@ -66,7 +73,7 @@ const SEVERITY_LABEL: Record<ValidationIssue['severity'], string> = {
 }
 
 const STEP_LABEL = { 'step-3': 'Step 3', 'step-4': 'Step 4', 'step-5': 'Step 5', 'step-6': 'Step 6' } as const
-const RUNNABLE_NOW = new Set(['step-3', 'step-4'])
+const RUNNABLE_NOW = new Set(['step-3', 'step-4', 'step-5'])
 
 const documentFixtures = FIXTURES.filter((f) => f.type === 'document')
 const scenarioFixtures = FIXTURES.filter((f) => f.type === 'scenario')
@@ -95,6 +102,8 @@ interface Workbench {
   view: (outputId: string, revisionId: string | null) => void
   commit: (store: RevisionStore, message: string) => void
   setDeckId: (id: string) => void
+  exports: ExportControls
+  announce: (message: string) => void
 }
 
 export function DocumentWorkbench() {
@@ -105,9 +114,16 @@ export function DocumentWorkbench() {
   const [viewing, setViewing] = useState<Record<string, string>>({})
   const [deckId, setDeckId] = useState<string | null>(null)
   const [announcement, setAnnouncement] = useState('')
+  const [exportState, setExportState] = useState<ExportState>(emptyExports)
+  const exportRef = useRef(exportState)
+  const exportControls: ExportControls = useMemo(() => ({
+    exports: exportState,
+    readExports: () => exportRef.current,
+    updateExports: (change) => { exportRef.current = change(exportRef.current); setExportState(exportRef.current) },
+  }), [exportState])
 
   const wb: Workbench = {
-    store, env, viewing, deckId, setDeckId,
+    store, env, viewing, deckId, setDeckId, exports: exportControls, announce: setAnnouncement,
     view: (outputId, revisionId) => setViewing((v) => {
       const next = { ...v }
       if (revisionId) next[outputId] = revisionId
@@ -294,6 +310,8 @@ function DocumentInspector({ fixture, wb, onOpenFixture }: { fixture: Fixture; w
       </section>
 
       <PreviewPanel snapshot={snapshot} />
+
+      <ExportPanel store={wb.store} env={wb.env} outputId={outputId} revisionId={viewedId} controls={wb.exports} onAnnounce={wb.announce} />
 
       <section className={styles.panel} aria-labelledby="issues-title">
         <h2 id="issues-title" className={styles.panelTitle}>Issues ({report.issues.length})</h2>
@@ -502,9 +520,9 @@ function PreviewPanel({ snapshot }: { snapshot: DocumentSnapshot }) {
 
   return (
     <section className={styles.panel} aria-labelledby="preview-title">
-      <h2 id="preview-title" className={styles.panelTitle}>Document preview</h2>
+      <h2 id="preview-title" className={styles.panelTitle}>HTML preview (not the PDF)</h2>
       <p className={styles.muted} style={{ marginTop: 0 }}>
-        Laid out from the viewed revision with the document fonts, tokens and primitives, and paginated by meaning. Not an export.
+        Laid out from the viewed revision with the document fonts, tokens and primitives, and paginated by meaning. Not an export: the PDF is made by the export panel below and drawn from the same layout.
       </p>
       <div className={styles.toolbar} role="group" aria-label="Audience">
         <Button variant={audience === 'recipient' ? 'secondary' : 'ghost'} size="sm" aria-pressed={audience === 'recipient'} onClick={() => setAudience('recipient')}>
@@ -643,16 +661,30 @@ function InvoiceAmounts({ snapshot, canEdit, onSave }: { snapshot: InvoiceSnapsh
 
 // ── Scenario fixture ────────────────────────────────────────────────────────
 
-const RUNNERS: Partial<Record<string, () => ScenarioCheck[]>> = {
+const BROWSER_EXPORT_DEPS: ExportDeps = { resources: browserExportResources, pdfPageTexts }
+
+const RUNNERS: Partial<Record<string, () => Promise<ScenarioCheck[]>>> = {
   'bounded-edit': runBoundedEdit,
-  'approved-then-edited': runApprovedThenEdited,
+  'approved-then-edited': () => runApprovedThenEdited(BROWSER_EXPORT_DEPS),
   restore: runRestore,
+  'partial-export': () => runPartialExport(BROWSER_EXPORT_DEPS),
 }
+
+const FORCE_WORD_FAILURE: ReadonlySet<ExportFormat> = new Set(['docx'])
 
 function ScenarioInspector({ fixture, wb, onOpenFixture }: { fixture: Extract<Fixture, { type: 'scenario' }>; wb: Workbench; onOpenFixture: (id: string) => void }) {
   const base = fixture.baseFixtureId ? getFixture(fixture.baseFixtureId) : undefined
   const runner = RUNNERS[fixture.id]
   const [results, setResults] = useState<ScenarioCheck[] | null>(null)
+  const [running, setRunning] = useState(false)
+  const [runError, setRunError] = useState<string | null>(null)
+  const [forceWord, setForceWord] = useState(true)
+  const runNow = async () => {
+    if (!runner) return
+    setRunning(true)
+    setRunError(null)
+    try { setResults(await runner()) } catch (e) { setRunError(e instanceof Error ? e.message : String(e)) } finally { setRunning(false) }
+  }
   return (
     <section className={styles.panel} aria-labelledby="fixture-title">
       <h2 id="fixture-title" className={styles.fixtureTitle}>{fixture.title}</h2>
@@ -674,8 +706,17 @@ function ScenarioInspector({ fixture, wb, onOpenFixture }: { fixture: Extract<Fi
           ? (
             <>
               <p className={styles.muted}>Runs the steps on a fresh sample store with the real revision functions. To try it by hand, open {base?.title ?? 'the base document'} and use its edit, history and restore controls.</p>
-              <div className={styles.toolbar}><Button size="sm" onClick={() => setResults(runner())}>{results ? 'Run again' : 'Run scenario'}</Button></div>
+              <div className={styles.toolbar}><Button size="sm" disabled={running} onClick={() => void runNow()}>{running ? 'Running…' : results ? 'Run again' : 'Run scenario'}</Button></div>
+              {runError && <p className={styles.formError} role="alert">{runError}</p>}
               {results && <CheckList checks={results} />}
+              {fixture.id === 'partial-export' && base && (
+                <>
+                  <h3 className={styles.groupHeading} style={{ marginTop: 16 }}>Try it by hand</h3>
+                  <p className={styles.muted}>Exports the current revision of {base.title} in this workbench. While the box is ticked, the Word renderer is made to fail at its render step — a deliberate, labelled fault that exists only in this scenario. Untick it and retry: the retry keeps the original revision.</p>
+                  <label className={styles.label}><input type="checkbox" checked={forceWord} onChange={(e) => setForceWord(e.target.checked)} /> Force a Word renderer failure (scenario 9 only)</label>
+                  <ExportPanel store={wb.store} env={wb.env} outputId={outputIdFor(base.id)} revisionId={currentRevision(wb.store, outputIdFor(base.id)).revisionId} controls={wb.exports} forceFailure={forceWord ? FORCE_WORD_FAILURE : undefined} onAnnounce={wb.announce} />
+                </>
+              )}
             </>
           )
           : <p className={styles.muted} style={{ marginTop: 12 }}>Not runnable yet. Nothing on this page simulates its result.</p>}
@@ -749,6 +790,7 @@ function DeckScenario({ wb }: { wb: Workbench }) {
             <div className={styles.previewWell}>
               <DeckPreview snapshot={deckRev.snapshot as DeckSnapshot} onLayout={onLayout} />
             </div>
+            <ExportPanel store={wb.store} env={wb.env} outputId={deckDoc!.outputId} revisionId={deckRev.revisionId} controls={wb.exports} onAnnounce={wb.announce} />
           </>
         )}
       {error && <p className={styles.formError} role="alert">{error}</p>}
