@@ -4,7 +4,7 @@ Decisions made while building the first vertical slice of the image-to-design-sy
 
 **Status.** The build ran overnight without a reviewer. Its brief said: "Uncovered choice: pick the senior-engineer option, record it, keep going." So every entry here is **proposed**: the builder's choice, recorded for Chaitanya and Instinct to approve or overturn. None is approved yet. Once a later decision replaces an earlier one, the earlier entry is marked **superseded by D-n** and kept.
 
-**Numbering.** PR #1 (`feat/document-quality`) keeps its own log in `docs/decisions.md`, which runs to D-46 and isn't on `main` yet. This log starts at D-47 so the two never share a number. It lives in its own file so merging both branches can't conflict on the log.
+**Numbering.** PR #1 (`feat/document-quality`) keeps its own log in `docs/decisions.md`, which runs to D-46 and isn't on `main` yet. This log claims **D-47 to D-64**, which its commit messages already cite. PR #1 is still in review, so its next entry should continue at **D-65**, not D-47, to keep the numbers unique. This log lives in its own file so merging both branches can't conflict on the log.
 
 ---
 

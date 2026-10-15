@@ -48,7 +48,7 @@ Screenshots, desktop and phone (375 px), are in [design-system/](design-system/)
 
 ## Tests
 
-111 new or changed tests, all passing. Every step ran typecheck, lint and the suite before committing.
+106 new tests (104 in the design-system files, 2 proxy cases), all passing. Every step ran typecheck, lint and the suite before committing.
 
 - **The schema rejects malformed tokens** (`extraction.test.ts`). It is run against 21 kinds of malformed output, among them three-digit hex, a named color, NaN, Infinity, `"16px"` strings, a font stack without a generic family, a font name that tries to break out of CSS, a weight of 450, extra or missing keys, a null value claimed as high confidence and an empty assumption. A control test checks that the unmodified proposal still passes. It also checks image validation (type, empty, over 10 MB, bytes that contradict the declared type), cancellation, and the cross-token rules: spacing grows, radii don't shrink, caption ≤ body ≤ title.
 - **Primitives render from tokens only** (`tokens-only.test.tsx`). Everything is rendered with *sentinel* tokens, in which every value is unique. Every inline style, the pseudo-state stylesheet and the SVG attributes must then be a defined `var(--ds-*)` with no fallback, or a structural keyword. A planted-violation control checks that the audit catches all four kinds of violation.
@@ -79,6 +79,7 @@ Every one of these passed the unit tests and was only visible in a real browser.
 - **D-50 and D-59: no invented values.** `null` means "couldn't read it". Low confidence is flagged and blocks Apply until confirmed. A missing token can only be resolved by typing a value. Nothing is auto-applied, including high-confidence tokens.
 - **D-54: two extra tokens.** `size.border` and `size.focusRing` were added so primitives hold no literals. There is no hover color, because inventing one would break the rule.
 - **D-57: what the rebuild drops.** framer-motion tap-scale, since there are no motion tokens yet. `onClick` becomes `onOpen`. A "body strong" style is approximated with the label weight.
+- **Decision numbering.** This log uses D-47 to D-64. PR #1's `docs/decisions.md` ends at D-46 and is still in review, so its next entry should be **D-65**; reusing D-47 would give two different decisions the same number.
 - **D-63: the merge conflict.** PR #1 edits the same proxy allowlist line, which gives a one-line conflict: keep every path. Also, unlike PR #1's D-05, this route does not open on Vercel previews.
 
 ## Not done
