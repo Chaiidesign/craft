@@ -1,16 +1,16 @@
 # Progress — document-generation build
 
-Updated 2026-10-14. Update this file and push before ending every session.
+Updated 2026-10-15. Update this file and push before ending every session.
 
 ## Where the work is
 
 - **Repo:** `Chaiidesign/craft` (a fork; never push upstream).
-- **Branch:** `feat/document-quality`, pushed to `origin`. Not merged; no pull request opened yet.
+- **Branch:** `feat/document-quality`, pushed to `origin`. Not merged. A draft pull request into the fork's `main` is open for review.
 - **Spec:** [souvenir-document-generation-prd.md](souvenir-document-generation-prd.md).
 - **Feature docs:** [documents/README.md](documents/README.md) (run commands, design rules, approved wording, limitations).
 - **Demo:** `npx next dev -p 4010`, then http://localhost:4010/document-verify.
 
-## What works (Steps 1–6, all committed and pushed)
+## What works (Steps 1–7, all committed and pushed)
 
 | Step | Commit | What it delivered |
 |---|---|---|
@@ -20,19 +20,19 @@ Updated 2026-10-14. Update this file and push before ending every session.
 | 4 | `cf6c9884`, `0e031c76` | Immutable revisions, bounded edits, proposals, restore, mock approval markers, deck ancestry |
 | 5 | `8a05e154` | Real PDF, Word and PowerPoint exports of one frozen revision; per-format status, retry, generated-PDF preview |
 | 6 | `0cca21d6` | Browser-session storage and malformed-session recovery, export cancel with late results discarded, renderer vs viewer errors, section error screens, duplicate-filename fixture |
+| 7 | see [reports/step-7.md](reports/step-7.md) | Full re-checks, phone and desktop screenshots, page-by-page export inspection, README completion, final report |
 
-Checks at Step 6: typecheck, lint and production build clean; 1,421 tests pass, 2 skipped. One known failure, `src/lib/theme.test.tsx`, predates this work and is unrelated.
+Checks at Step 7 (final code): typecheck, lint and production build clean; 1,421 tests pass, 2 skipped. One known failure, `src/lib/theme.test.tsx`, predates this work and is unrelated.
 
 ## Unfinished
 
-- **Word and PowerPoint in Microsoft's own apps are unverified.** Neither is installed here. Word files were checked in Pages and PowerPoint files in Keynote; the differences are recorded in the feature README.
-- **`docs/reports/step-1.md` … `step-6.md` don't exist yet.** The approved decisions for Steps 1–6 are in [decisions.md](decisions.md) (D-01 to D-44); the evidence from each step is in the feature README and commit messages.
-- **No draft pull request** has been opened for review.
-- **Known limitations:** listed in the feature README. They include: cancel only works while fonts and images load; two open tabs overwrite each other's saved session; the `ja-JP` locale is refused by the placeholder fonts; Pages moves long tables to the next page.
+- **Word and PowerPoint in Microsoft's own apps are unverified.** Neither is installed here. Word files were checked only in Apple Pages and PowerPoint files only in Apple Keynote, which both substitute Helvetica; differences are in the feature README's "Unsupported and unverified".
+- **Deck "(continued)" finding** from the Step 7 inspection: repeated headings across a deliberately split section don't say "(continued)". Awaiting a decision (see [reports/step-7.md](reports/step-7.md)).
+- **Known limitations:** listed in the feature README.
 
 ## Next step
 
-Backfill `docs/reports/step-1.md` … `step-6.md` from the feature README and the commit history. Then open a draft pull request on the fork for Instinct's review.
+Instinct reviews the draft pull request. Record the verdicts in [decisions.md](decisions.md), apply them (including the "(continued)" decision), commit and push; merge only after approval.
 
 ## Blockers
 
