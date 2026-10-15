@@ -41,7 +41,7 @@ Plan: prompt in chat → validated document → refine in conversation → expor
 | 5 | `2c89554e` | `/document-chat` with inline preview, live drafting state, refine, export; report [reports/chat-s1.md](reports/chat-s1.md) |
 | 5b | `ac54180d` | Each document's conversation starts at "New document" (D-64); D-63 ("$" = USD) recorded as proposed; hosted-path checks |
 | 5c | `64ce87cc` | Model provider switch: Souvenir's OpenRouter key, direct Anthropic API as fallback (D-65) |
-| 5d | see git log | Real-model smoke test through OpenRouter; forced tool use replaced (D-66) |
+| 5d | `4333fa06` | Real-model smoke test through OpenRouter; forced tool use replaced (D-66) |
 | 6 | | Done prompt and 8 evals (waiting on Chaitanya's reading of the streaming differences in the S1 report), then the hosted preview run |
 
 ## Next step
