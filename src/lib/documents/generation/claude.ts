@@ -8,9 +8,10 @@
 // request; only the base URL, the credential header and the model name differ.
 //
 // The model gets one tool, `submit_proposal`, whose input is the generation
-// schema, and is forced to call it. Its input streams as it is written, so the
-// chat can draft the document progressively; nothing it sends is trusted until
-// the gate has checked it.
+// schema, and is told to call it. Opus 5.5 rejects forced tool use (D-66), so
+// tool_choice is "auto"; a reply without the tool call is retried by the loop.
+// Its input streams as it is written, so the chat can draft the document
+// progressively; nothing it sends is trusted until the gate has checked it.
 
 import Anthropic from '@anthropic-ai/sdk'
 
@@ -36,9 +37,14 @@ const KEY_NAMES: Record<Provider, string> = { openrouter: 'OPENROUTER_API_KEY', 
 const PROVIDER_NAMES: Record<Provider, string> = { openrouter: 'OpenRouter', anthropic: 'Anthropic' }
 
 export const LIMITS = {
-  maxTokens: 4096,
+  // Thinking is always on for Opus 5.5 and counts toward this (D-66). Only what
+  // is generated is billed; a proposal itself is a few hundred tokens.
+  maxTokens: 16_000,
   timeoutMs: 90_000,
 } as const
+
+/** Set explicitly, at the model's documented default, so a default change can't shift behavior (D-66). */
+export const EFFORT = 'medium' as const
 
 const TOOL_NAME = 'submit_proposal'
 
@@ -110,7 +116,8 @@ export class ClaudeModel implements GenerationModel {
         max_tokens: LIMITS.maxTokens,
         system: SYSTEM_PROMPT,
         tools: [{ name: TOOL_NAME, description: 'Submit the operations that fill in or revise the document.', input_schema: inputSchema(), eager_input_streaming: true }],
-        tool_choice: { type: 'tool', name: TOOL_NAME },
+        tool_choice: { type: 'auto' },
+        output_config: { effort: EFFORT },
         messages: [{ role: 'user', content: userMessage(request) }],
         // OpenRouter's own routing field; the SDK passes it through in the body.
         ...(this.provider === 'openrouter' ? OPENROUTER_ROUTING : {}),

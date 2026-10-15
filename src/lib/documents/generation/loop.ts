@@ -27,6 +27,9 @@ export async function proposeUntilValid(
     try {
       raw = await model.propose(previousErrors ? { ...request, previousErrors } : request, options)
     } catch (e) {
+      // A reply that skipped the proposal tool (tool_choice is "auto", D-66) is asked again.
+      // Transport failures are not: the SDK has already retried those.
+      if (e instanceof ModelError && e.code === 'model-refused' && e.retryable && attempt <= maxRetries) continue
       if (e instanceof ModelError) return { ok: false, code: e.code, message: e.message, retryable: e.retryable, attempts: attempt }
       return { ok: false, code: 'model-failed', message: e instanceof Error ? e.message : String(e), retryable: true, attempts: attempt }
     }

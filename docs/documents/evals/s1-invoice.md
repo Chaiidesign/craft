@@ -26,4 +26,4 @@ The bar for every prompt:
 
 | Date | Commit | Model | Results |
 |---|---|---|---|
-| — | — | — | Not run yet: needs the OpenRouter key in `.env.local`. |
+| — | — | — | Not run yet. The smoke test passed on 2026-10-15 (see the S1 report). The evals wait on Chaitanya's reading of the streaming differences reported there. |

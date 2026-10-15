@@ -176,6 +176,21 @@ describe('the retry loop', () => {
     expect(model.requests[1].previousErrors).toEqual([expect.objectContaining({ code: 'evidence-not-found' })])
   })
 
+  it('asks again when the model answers without the proposal tool (D-66), within the same bound', async () => {
+    const noTool = () => new ModelError('model-refused', 'The model answered without proposing any operations.', true)
+    const model = new ScriptedModel([noTool(), acmeProposal])
+    const { result } = await generated(model)
+    expect(result.attempts).toBe(2)
+    const stubborn = new ScriptedModel([noTool(), noTool(), noTool(), acmeProposal])
+    const out = await generateDocument({ prompt: PROMPT }, context(stubborn))
+    expect(out).toMatchObject({ ok: false, error: { code: 'model-refused', retryable: true } })
+    expect(stubborn.requests).toHaveLength(MAX_RETRIES + 1)
+    // A real refusal is not asked again.
+    const declined = new ScriptedModel([new ModelError('model-refused', 'The model declined this request.'), acmeProposal])
+    expect(await generateDocument({ prompt: PROMPT }, context(declined))).toMatchObject({ ok: false, error: { code: 'model-refused', retryable: false } })
+    expect(declined.requests).toHaveLength(1)
+  })
+
   it('reports a model that cannot run as model-unavailable, without retrying or substituting', async () => {
     const model = new ScriptedModel([new ModelError('model-unavailable', 'ANTHROPIC_API_KEY is not set.')])
     const out = await generateDocument({ prompt: PROMPT }, context(model))

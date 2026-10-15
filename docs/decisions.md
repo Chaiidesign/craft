@@ -12,8 +12,22 @@ Status is **approved** unless marked otherwise. When a later decision replaces a
 
 The plan for this work is the "chat → document → refine → export" plan approved on 2026-10-15: slice S1 (invoice end to end, real model, hosted) is this branch; S2–S6 follow on later branches. Decisions D-49 to D-58 were settled by Chaitanya and Instinct before building; D-59 onward were made during the build.
 
+### D-66 · 2026-10-15 · Opus 5.5 can't be forced to call a tool: the proposal tool is offered, not forced
+**Problem.** The first real request (through OpenRouter, routed to Anthropic) returned 400 with Anthropic's own error and request ID (`req_011Cg4gpGEVMZe4wi6yB7zof`, `provider_name: Anthropic`): `tool_choice: type "tool" and "any" are not supported for this model.` This is the model's documented behavior on the direct API too, not an OpenRouter difference. Anthropic's "What's new in Claude Opus 5.5" says: "Claude Opus 5.5 doesn't support forced tool use. `tool_choice` set to `{"type": "any"}` or `{"type": "tool", "name": "..."}` returns a 400 `invalid_request_error`." The S1 step-4 code forced the tool, and the local stand-in accepted it, so the bug only showed against the real model. Claude Sonnet 5.5 rejects it the same way; Opus 4.8 accepts it. The model tier stays Opus 5.5 (D-59).
+
+**Rule.**
+- `tool_choice: auto`. The system prompt already says "Always respond by calling submit_proposal, exactly once."
+- A reply without the tool call is `model-refused`, retryable. The loop now asks again within the same bound of 2 retries. A real refusal (`stop_reason: refusal`) and transport errors are not retried by the loop; the SDK already retries transport errors.
+- Thinking is always on for Opus 5.5 and can't be disabled, so the request sends no `thinking` field. `max_tokens` goes from 4,096 to 16,000 to leave room for thinking, as the same page advises. A proposal measured 381–413 output tokens.
+- `output_config.effort` is set explicitly to `medium`, the model's documented default, so a change of default can't shift behavior. No sweep was run.
+- **Strict tool use is not adopted.** The proposal schema uses `minLength`, `maxLength`, `pattern` and `maxItems`. With strict on, Anthropic rejects these: "tools.0.custom: For 'array' type, property 'maxItems' is not supported". The gate and retries remain the safety net. Making the schema strict-compatible is a possible later change.
+
+Research (primary sources, 2026-10-15): Anthropic's "What's new in Claude Opus 5.5", "Fine-grained tool streaming" and "Structured outputs" pages, plus live probes recorded in the S1 report.
+
+Applied in: `generation/claude.ts`, `generation/loop.ts`; tests in `model.test.ts`, `generation.test.ts`.
+
 ### D-65 · 2026-10-15 · The model runs through Souvenir's OpenRouter key; the direct Anthropic API is the fallback
-**Status: approved in direction** (Chaitanya, 2026-10-15: use Souvenir's OpenRouter key instead of a direct Anthropic key, keep `ANTHROPIC_API_KEY` as an env-switched fallback). Two details below depart from the brief's wording, with evidence; they are listed in the S1 report for confirmation.
+**Status: approved** (Chaitanya, 2026-10-15). Chaitanya chose Souvenir's OpenRouter key over a direct Anthropic key, with `ANTHROPIC_API_KEY` kept as an env-switched fallback. Chaitanya then approved the base URL, bearer auth and Anthropic-only pinning below, and confirmed the D-59 model tier: "failing instead of silently moving to Bedrock/Vertex is the right tradeoff for behavior parity." Prompt retention on the OpenRouter account is Chaitanya's to check, as an account setting.
 
 **Rule.**
 - `MODEL_PROVIDER` picks the provider: `openrouter` or `anthropic`. Unset or blank: OpenRouter when `OPENROUTER_API_KEY` is set, otherwise Anthropic. Any other value is an error.

@@ -123,14 +123,15 @@ describe('ClaudeModel (with a stand-in client; no network)', () => {
     return { client: client as unknown as Anthropic, calls }
   }
 
-  it('forces the proposal tool with the generation schema and returns its input', async () => {
+  it('offers the proposal tool with the generation schema (auto, D-66) and returns its input', async () => {
     const { client, calls } = fakeClient({ content: [{ type: 'tool_use', id: 't1', name: 'submit_proposal', input: proposal } as Anthropic.ToolUseBlock] }, [{ intent: proposal.intent }])
     const partials: unknown[] = []
     const out = await new ClaudeModel({ key: 'test', client }).propose(request, { onPartial: (p) => partials.push(p) })
     expect(out).toEqual(proposal)
     expect(partials).toEqual([{ intent: proposal.intent }])
     const [params] = calls
-    expect(params).toMatchObject({ model: DEFAULT_MODEL, system: SYSTEM_PROMPT, tool_choice: { type: 'tool', name: 'submit_proposal' } })
+    expect(params).toMatchObject({ model: DEFAULT_MODEL, system: SYSTEM_PROMPT, tool_choice: { type: 'auto' }, output_config: { effort: 'medium' } })
+    expect(params).not.toHaveProperty('thinking')
     const tool = params.tools?.[0] as Anthropic.Tool
     expect(tool.input_schema).not.toHaveProperty('$schema')
     expect(JSON.stringify(tool.input_schema)).toContain('addLineItem')
@@ -160,7 +161,7 @@ describe('ClaudeModel (with a stand-in client; no network)', () => {
     expect(sent[0].url).toBe('https://openrouter.ai/api/v1/messages')
     expect(sent[0].headers.get('authorization')).toBe('Bearer or-key')
     expect(sent[0].headers.get('x-api-key')).toBeNull()
-    expect(sent[0].body).toMatchObject({ model: 'anthropic/claude-opus-5.5', stream: true, tool_choice: { type: 'tool', name: 'submit_proposal' }, provider: { order: ['anthropic'], allow_fallbacks: false } })
+    expect(sent[0].body).toMatchObject({ model: 'anthropic/claude-opus-5.5', stream: true, tool_choice: { type: 'auto' }, provider: { order: ['anthropic'], allow_fallbacks: false } })
   })
 
   it('sends the direct API its x-api-key and no OpenRouter routing', async () => {

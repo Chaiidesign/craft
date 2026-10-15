@@ -21,7 +21,7 @@ The same pipeline is callable without the chat:
 | Generation schema | `generation/ops.ts` | An exhaustive zod union of operations (`setField`, `markUnknown`, `setNotApplicable`, `addLineItem`, `updateLineItem`, `removeLineItem`), exported as JSON Schema. Values are decimal strings; the host converts them to integer units. |
 | Gate | `generation/gate.ts`, `apply.ts` | Three layers: (1) the schema; (2) structural checks: targets exist, digests match, values convert, every prompt-derived value quotes the request and its numbers appear in the quote; (3) `validateSnapshot` plus the check that line items add up to the stated amount. Only an invalid result is refused. Errors are `{code, path, target, message, retryable}`. |
 | Retry loop | `generation/loop.ts` | At most 2 retries, each given the previous errors. Stops at once when no error is retryable (for example, an unsupported document type). |
-| Models | `generation/model.ts`, `claude.ts`, `remote.ts` | `ScriptedModel` for tests. `ClaudeModel`: forced `submit_proposal` tool, eager input streaming, `claude-opus-5-5` by default, `DOCUMENT_MODEL` can override it. `RemoteModel`: the browser client for the route. A missing key returns `model-unavailable`; nothing is ever substituted. |
+| Models | `generation/model.ts`, `claude.ts`, `remote.ts` | `ScriptedModel` for tests. `ClaudeModel`: `submit_proposal` tool offered with `tool_choice: auto` (D-66; Opus 5.5 rejects forced tool use), eager input streaming, `claude-opus-5-5` by default, `DOCUMENT_MODEL` can override it. `RemoteModel`: the browser client for the route. A missing key returns `model-unavailable`; nothing is ever substituted. |
 | Model route | `src/app/api/document-model/route.ts`, `generation/modelRoute.ts` | 404 in production; open in dev and on previews. Schema-checked body, 256 KB cap, 40 requests per 10 minutes per address, NDJSON events. Never logs content. |
 | Live draft | `generation/draft.ts` | Applies each complete streamed operation to a display-only copy, using the same checks as the gate. |
 | Tools | `generation/tools.ts` | The three tools. The store is passed in and returned; results are plain JSON. |
@@ -83,6 +83,33 @@ Fixed after looking:
 - **Number quotes in European format fail the check.** "€1.200" is not read as 1200, so such a price would be left unknown rather than guessed (eval #3).
 - **The rate limit is per server instance**, so it is best effort on serverless.
 - **The preview is a full A4 page scaled to the card.** At 320 px it is small, and there is no zoom yet.
+
+## Real model through OpenRouter: smoke test (2026-10-15)
+
+Run against `anthropic/claude-opus-5.5`, pinned to Anthropic's own servers (D-65), from this Mac. The key is in `.env.local` only.
+
+**1. The first request failed: forced tool use (fixed, D-66).** Anthropic returned 400, `tool_choice: type "tool" and "any" are not supported for this model.`, with Anthropic's own request ID. The direct API rejects this the same way, as Anthropic's Opus 5.5 notes document, so it is a bug in the step-4 code that the local stand-in couldn't catch. It is not an OpenRouter difference. The fix uses `tool_choice: auto`, retries a reply with no tool call, sends no `thinking` field, raises `max_tokens` to 16,000 and sets effort to `medium`.
+
+**2. CLI, the real `ClaudeModel` (done prompt, generate only):** "invoice for Acme, $2,400" → v1 in 1 attempt and 4.5 s from the command line. The result: Bill to Acme; USD; one line, quantity 1, $2,400.00, description missing; subtotal $2,400.00; total unknown, with the reasons "Tax applicability not supplied — tax is unknown, not zero." and "Discount applicability not supplied." The follow-up was "What is the $2,400 charge for?".
+
+**3. Chat route, the browser client (`RemoteModel` → `/api/document-model` → OpenRouter), on the local dev server:** a 200 response in 3.6 s, with 12 partial proposals. The first partial arrived at 1.4 s, the last at 3.5 s, with a median gap of 164 ms. The route returned 3 operations and the follow-up "What is the $2,400 for?".
+
+**4. Tool-input streaming, raw SDK through OpenRouter (real schema and prompt, same request apart from the flag):**
+
+| `eager_input_streaming` | `input_json_delta` events | first at | last at | median size | largest |
+|---|---|---|---|---|---|
+| `true` (what the code sends) | 40 | 1.30 s | 3.55 s | 17 chars | 28 |
+| omitted | 39 | 1.16 s | 3.41 s | 17 chars | 34 |
+| `false` | 44 | 1.12 s | 3.52 s | 17 chars | 26 |
+
+Across all three, the pieces arrive every ~50 ms as the model writes. No `thinking` block appeared in any of these responses: adaptive thinking chose not to think for this prompt. Output was 381–413 tokens.
+
+**Differences from Anthropic's documented direct-API behavior (stopped here before the evals, per Chaitanya's instruction):**
+- **`eager_input_streaming` has no measurable effect through OpenRouter.** Anthropic's docs: "Without `eager_input_streaming`, the API buffers and validates each parameter value before streaming it back, so nothing prints for a large parameter until Claude has finished generating it." Through OpenRouter, omitted and `false` stream exactly like `true`: the `operations` parameter arrives in small pieces as it's written, never as one buffered block. The drafting preview gets the small pieces it needs either way. Without a direct key I can't tell whether OpenRouter adds the legacy fine-grained header, or whether the direct API on Opus 5.5 also streams this way.
+- **`strict: true` is silently dropped** unless the request sends `anthropic-beta: structured-outputs-2025-11-13`. The real schema with `strict: true` succeeded through OpenRouter. With that header, the same request got Anthropic's 400 for `maxItems`. The code doesn't use strict (D-66), so this has no effect today. If strict is adopted later, the header is needed on the OpenRouter path.
+- **Same as the direct API:** the forced-tool-use rejection (Anthropic's own error), `stop_reason: tool_use`, the `tool_use` content block, and `input_json_delta` events.
+
+Not compared side by side: no direct Anthropic key is available, so the differences are measured against Anthropic's documentation, not against a direct run.
 
 ## Needs a decision
 
