@@ -39,6 +39,7 @@ Plan: prompt in chat → validated document → refine in conversation → expor
 | 3b | `528d6e26` | Agent CLI (generate → revise → export with no UI), checked by hand: v1 → v2 → v3 → draft PDF |
 | 4 | `528d6e26` | Claude model and `/api/document-model` (tested with stand-in models; not yet run against the real API) |
 | 5 | `2c89554e` | `/document-chat` with inline preview, live drafting state, refine, export; report [reports/chat-s1.md](reports/chat-s1.md) |
+| 5b | `ac54180d` | Each document's conversation starts at "New document" (D-64); D-63 ("$" = USD) recorded as proposed; hosted-path checks |
 | 6 | | Real-model run and hosted preview run: waiting on the Anthropic key (`.env.local` for local, Vercel Preview env for hosted) |
 
 ## Next step
