@@ -182,7 +182,7 @@ export default async function proxy(request: NextRequest) {
   // — collapsed back to one copy while touching this.)
   if (
     process.env.NODE_ENV !== "production" &&
-    (pathname === "/reasoning-verify" || pathname === "/browser-verify")
+    (pathname === "/reasoning-verify" || pathname === "/browser-verify" || pathname === "/design-system-verify")
   ) {
     return NextResponse.next();
   }

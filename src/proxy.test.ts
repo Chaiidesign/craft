@@ -86,3 +86,35 @@ describe("proxy Slack Connect landing", () => {
     );
   });
 });
+
+describe("proxy dev-only demo routes", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.unstubAllEnvs();
+    auth0Mocks.getSession.mockResolvedValue(null);
+  });
+
+  it("lets /design-system-verify through without a session outside production", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    const response = await proxy(
+      new NextRequest("https://app.getsouvenir.com/design-system-verify"),
+    );
+
+    expect(response.headers.get("location")).toBeNull();
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+    expect(auth0Mocks.getSession).not.toHaveBeenCalled();
+  });
+
+  it("does not let /design-system-verify skip the auth gate in production", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    const response = await proxy(
+      new NextRequest("https://app.getsouvenir.com/design-system-verify"),
+    );
+    vi.unstubAllEnvs();
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get("location")).toBe(
+      "https://app.getsouvenir.com/auth/login?returnTo=%2Fdesign-system-verify",
+    );
+  });
+});

@@ -8,6 +8,61 @@ Decisions made while building the first vertical slice of the image-to-design-sy
 
 ---
 
+## Step 4: visible stages, review before apply, demo route
+
+### D-64 · 2026-10-15 · Two fixes from checking the flow in the browser
+1. **The apply bar hid focused rows.** "Apply" sits in a bar that stays stuck to the bottom of the review panel, and a row scrolled to the bottom edge (by keyboard Tab, for example) ended up underneath it. That's an accessibility failure (WCAG 2.4.11, focus not obscured). Token rows now carry `scroll-margin-bottom: 140px`, and a hit-test confirms every Confirm button is reachable.
+2. **A refused edit left its error behind.** After Escape the field reverted but the error message stayed. Escape now also clears the error (`clearError`, which keeps the value and status).
+
+On phone widths, the source image and preview move above the token list.
+Applied in: `DesignSystemWorkbench.tsx`, `review.ts`.
+
+### D-63 · 2026-10-15 · Demo route `/design-system-verify`, development only
+The demo lives at `src/app/design-system-verify`, outside the `(app)` group, following the existing `/reasoning-verify` pattern:
+- **Login.** `src/proxy.ts` lets it through without a session only when `NODE_ENV !== "production"`, using the same allowlist line as `/reasoning-verify`.
+- **Production.** The page calls `notFound()`. New proxy tests check that development passes it through and that production redirects to login.
+- **Unlike PR #1.** PR #1's D-05 opens `/document-verify` on Vercel previews. This route doesn't, because previews build with `NODE_ENV=production`.
+- **Merge note.** PR #1 edits the same allowlist line, so merging both branches gives a one-line conflict: keep every path.
+Applied in: `src/app/design-system-verify/page.tsx`, `src/proxy.ts`, `src/proxy.test.ts`.
+
+### D-62 · 2026-10-15 · A preview before apply, and a "before" card after it
+- **Preview while reviewing.** The review shows "Preview — not applied" once every token has a value and the values fit together. Flagged tokens may still be unconfirmed at that point; the label says it isn't applied. Seeing a value in context is how a designer judges it.
+- **Before and after.** Once applied, the chat turn renders twice: under `SOUVENIR_BASELINE` and under the extracted system. The baseline is today's light-theme card, transcribed by hand and labelled an approximation: Geist can't be named outside next/font, and the 1px ring is a border here, not a shadow layer.
+Applied in: `src/lib/design-system/baseline.ts`, `DesignSystemWorkbench.tsx`.
+
+### D-61 · 2026-10-15 · Low contrast is a warning, not a block
+`contrastWarnings` checks four pairs against WCAG AA for body text (4.5:1):
+- text on the page background;
+- text on cards;
+- muted text on cards;
+- text on primary.
+
+It lists any failures under the token list. It doesn't block apply, because the source design may be low-contrast on purpose, and the tool's job is to report the design faithfully and let the person decide. Alpha in 8-digit hex is ignored for these roles.
+Applied in: `src/lib/design-system/review.ts`.
+
+### D-60 · 2026-10-15 · Every token is edited as one line of text
+Each kind of token has a short text format, shown as a hint under its field:
+- **Color:** hex.
+- **Length:** px.
+- **Font stack:** a comma-separated list.
+- **Text style:** `body 15/1.5 400 0em`.
+- **Shadow:** `x y blur spread color`, comma-separated layers, or `none`.
+
+An edit is parsed and then checked against the token's own schema, so an edit can't produce anything an extractor couldn't return. Every proposed value survives format → parse unchanged (tested for all three samples).
+
+Colors also show a swatch. Dedicated controls (color picker, steppers, a shadow editor) are deferred; one uniform field kept the first slice small and keyboard-friendly.
+Applied in: `src/lib/design-system/token-format.ts`.
+
+### D-59 · 2026-10-15 · The pipeline is a pure reducer, and apply is the person's act
+`pipelineReducer` moves through `idle → analyzing → reviewing ⇄ applied`, with `analyzing → failed` on error.
+- **Token statuses.** Each token is `proposed` (high or medium confidence), `flagged` (low), `missing` (null), `confirmed` or `edited`.
+- **What blocks apply.** Apply is refused while any token is flagged or missing, and the refusal names each one. A missing token can't be "confirmed"; it needs a value, and an empty edit is refused. The complete set must then pass the applied schema, so an edit that breaks spacing order is accepted in its field but refused at apply, with the reason.
+- **Nothing applies itself.** High-confidence tokens aren't auto-applied either; the person presses Apply.
+- **Late results.** A result that arrives after Cancel or Start over is dropped.
+- **Edit tokens.** This returns to review with every edit kept.
+- **Visible stages.** Image → Analyzed → Review tokens → Applied are shown as a step rail. A polite live region announces each change, e.g. "Analysis done. 29 tokens proposed; 5 need your attention."
+Applied in: `src/lib/design-system/review.ts`, `DesignSystemWorkbench.tsx`.
+
 ## Step 3: the output interface
 
 ### D-58 · 2026-10-15 · The reskin test compares what a person would see
@@ -97,7 +152,7 @@ Converting a proposal into applied tokens is the review step's job (Step 4). Not
 Applied in: `src/lib/design-system/proposal.ts`, `tokens.ts`.
 
 ### D-49 · 2026-10-15 · Token schema: one registry, strict and canonical
-`TOKEN_GROUPS` in `tokens.ts` names all 31 tokens (29 at first; D-54 added two):
+`TOKEN_GROUPS` in `tokens.ts` names all 29 tokens (27 at first; D-54 added two):
 - 8 colors: background, surface, text, muted text, primary, text on primary, border, focus.
 - 2 font stacks: body and heading.
 - 4 text styles: caption, body, label, title.
