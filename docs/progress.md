@@ -35,7 +35,7 @@ Plan: prompt in chat → validated document → refine in conversation → expor
 
 | S1 step | Commit | What it delivered |
 |---|---|---|
-| 1–3 | (this commit) | Generation schema, three-layer gate, scripted model, bounded retries; `generate`, `revise`, `export` tools with JSON schemas; D-60 (missing descriptions), D-61 (unbranded documents), D-62 (deterministic PDF) |
+| 1–3 | `e8fc8952` | Generation schema, three-layer gate, scripted model, bounded retries; `generate`, `revise`, `export` tools with JSON schemas; D-60 (missing descriptions), D-61 (unbranded documents), D-62 (deterministic PDF) |
 | 3b | | Agent CLI (generate → revise → export with no UI) |
 | 4 | | Claude model and `/api/document-model` |
 | 5 | | `/document-chat` with inline preview, live drafting state, refine, export |
