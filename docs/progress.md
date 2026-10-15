@@ -26,13 +26,13 @@ Checks at Step 6: typecheck, lint and production build clean; 1,421 tests pass, 
 ## Unfinished
 
 - **Word and PowerPoint in Microsoft's own apps are unverified.** Neither is installed here. Word files were checked in Pages and PowerPoint files in Keynote; the differences are recorded in the feature README.
-- **`docs/decisions.md` and `docs/reports/step-1.md` … `step-6.md` don't exist yet.** The approved decisions and wording for Steps 1–6 are currently recorded in the feature README's "Approved working agreements" section and in commit messages.
+- **`docs/reports/step-1.md` … `step-6.md` don't exist yet.** The approved decisions for Steps 1–6 are in [decisions.md](decisions.md) (D-01 to D-44); the evidence from each step is in the feature README and commit messages.
 - **No draft pull request** has been opened for review.
 - **Known limitations:** listed in the feature README. They include: cancel only works while fonts and images load; two open tabs overwrite each other's saved session; the `ja-JP` locale is refused by the placeholder fonts; Pages moves long tables to the next page.
 
 ## Next step
 
-Backfill `docs/decisions.md` (Steps 1–6, numbered, dated, newest first) and `docs/reports/step-1.md` … `step-6.md` from the feature README and the commit history. Then open a draft pull request on the fork for Instinct's review. Proof: each recorded decision links to the commit or README section where it was applied.
+Backfill `docs/reports/step-1.md` … `step-6.md` from the feature README and the commit history. Then open a draft pull request on the fork for Instinct's review.
 
 ## Blockers
 

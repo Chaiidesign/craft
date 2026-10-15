@@ -7,7 +7,7 @@
 Before implementing anything in this build, read:
 - the spec: [docs/souvenir-document-generation-prd.md](docs/souvenir-document-generation-prd.md)
 - the current state and next step: [docs/progress.md](docs/progress.md)
-- approved decisions: `docs/decisions.md` (once it exists), plus the feature README [docs/documents/README.md](docs/documents/README.md)
+- approved decisions: [docs/decisions.md](docs/decisions.md), plus the feature README [docs/documents/README.md](docs/documents/README.md)
 
 Commands:
 - Dev / demo: `npx next dev -p 4010`, then http://localhost:4010/document-verify
