@@ -325,6 +325,18 @@ These are prototype requirements to test (PRD §2), not claims about what Souven
 
 Issuer-first: the letterhead shows the issuer's name, mark and accent colour; no Souvenir branding appears in documents. A missing logo, or one whose file fails to load, shows a dashed neutral box labelled "No logo supplied" / "Logo could not be loaded" — never an invented mark. Fixture logos are local files under `public/document-fixtures/` and are fictional.
 
+## Document model provider (D-65)
+
+The chat route and the agent CLI build their model with `claudeModelFromEnv()` in `src/lib/documents/generation/claude.ts`. The variables are listed in `.env.example`; real values go in `.env.local` (git-ignored) or in Vercel's Preview environment.
+
+| `MODEL_PROVIDER` | Key | Model variable (default) | Sent to |
+|---|---|---|---|
+| `openrouter` | `OPENROUTER_API_KEY`, as `Authorization: Bearer` | `OPENROUTER_MODEL` (`anthropic/claude-opus-5.5`) | `https://openrouter.ai/api/v1/messages`, routed only to Anthropic |
+| `anthropic` (fallback) | `ANTHROPIC_API_KEY`, as `x-api-key` | `ANTHROPIC_MODEL` (`claude-opus-5-5`) | `https://api.anthropic.com/v1/messages`, or `ANTHROPIC_BASE_URL` |
+| unset or blank | OpenRouter if its key is set, else Anthropic | | |
+
+To switch to the direct API, set `MODEL_PROVIDER=anthropic` and uncomment `ANTHROPIC_API_KEY`. A provider that is named but has no key fails with a message naming the variable; it never falls back to the other. Values already in the environment win over `.env.local`, which is how the local stand-in is run: `MODEL_PROVIDER=anthropic ANTHROPIC_API_KEY=mock ANTHROPIC_BASE_URL=http://localhost:4019`.
+
 ## Known caveats of the demo route
 
 - **Auth token request from the app shell.** The shared root layout (`src/app/layout.tsx`) wraps every page in the app's `AuthProvider`, which requests `GET /auth/access-token` on load. On `/document-verify` this returns an error locally (no Auth0 configuration) and is harmless. It is the app shell's session check, not a document service call; the document code makes no network requests other than loading its own font and fixture files. Left as is by decision.

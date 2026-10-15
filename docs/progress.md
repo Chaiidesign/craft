@@ -40,7 +40,8 @@ Plan: prompt in chat → validated document → refine in conversation → expor
 | 4 | `528d6e26` | Claude model and `/api/document-model` (tested with stand-in models; not yet run against the real API) |
 | 5 | `2c89554e` | `/document-chat` with inline preview, live drafting state, refine, export; report [reports/chat-s1.md](reports/chat-s1.md) |
 | 5b | `ac54180d` | Each document's conversation starts at "New document" (D-64); D-63 ("$" = USD) recorded as proposed; hosted-path checks |
-| 6 | | Real-model run and hosted preview run: waiting on the Anthropic key (`.env.local` for local, Vercel Preview env for hosted) |
+| 5c | see git log | Model provider switch: Souvenir's OpenRouter key, direct Anthropic API as fallback (D-65) |
+| 6 | | Real-model run and hosted preview run: waiting on the OpenRouter key (`.env.local` for local, Vercel Preview env for hosted) |
 
 ## Next step
 
@@ -48,4 +49,4 @@ S1 step 6: run the eval set and the done prompt against the real model, then the
 
 ## Blockers
 
-- **S1 step 6 needs the Anthropic API key:** in `.env.local` for the local run, and in Vercel's Preview environment for the hosted run. Only Chaitanya can add it. Everything up to step 5 is done and checked against stand-ins.
+- **S1 step 6 needs Souvenir's OpenRouter key (D-65):** `OPENROUTER_API_KEY` in `.env.local` for the local run (the file is in place with the key left blank), and in Vercel's Preview environment for the hosted run. Only Chaitanya can add it. Everything up to step 5 is done and checked against stand-ins.

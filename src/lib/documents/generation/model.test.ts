@@ -1,4 +1,4 @@
-import type Anthropic from '@anthropic-ai/sdk'
+import Anthropic from '@anthropic-ai/sdk'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { POST } from '@/app/api/document-model/route'
@@ -6,7 +6,7 @@ import { fixedEnv } from '@/lib/documents/fixtures/builders'
 import { INVOICE_FIELDS as F } from '@/lib/documents/invoice'
 import { emptyStore } from '@/lib/documents/revisions'
 
-import { ClaudeModel, claudeModelFromEnv, DEFAULT_MODEL, SYSTEM_PROMPT } from './claude'
+import { ClaudeModel, claudeModelFromEnv, DEFAULT_MODEL, DEFAULT_MODELS, providerFromEnv, SYSTEM_PROMPT, toModelError } from './claude'
 import { ModelError, ScriptedModel, type GenerationRequest } from './model'
 import { handleModelRequest, resetRateLimits, ROUTE_LIMITS, type ModelEvent } from './modelRoute'
 import { RemoteModel } from './remote'
@@ -76,6 +76,8 @@ describe('/api/document-model (D-56)', () => {
     vi.stubEnv('VERCEL_ENV', 'production')
     expect((await POST(post(request))).status).toBe(404)
     vi.stubEnv('VERCEL_ENV', 'preview')
+    vi.stubEnv('MODEL_PROVIDER', '')
+    vi.stubEnv('OPENROUTER_API_KEY', '')
     vi.stubEnv('ANTHROPIC_API_KEY', '')
     const preview = await POST(post(request))
     expect(preview.status).toBe(200)
@@ -124,7 +126,7 @@ describe('ClaudeModel (with a stand-in client; no network)', () => {
   it('forces the proposal tool with the generation schema and returns its input', async () => {
     const { client, calls } = fakeClient({ content: [{ type: 'tool_use', id: 't1', name: 'submit_proposal', input: proposal } as Anthropic.ToolUseBlock] }, [{ intent: proposal.intent }])
     const partials: unknown[] = []
-    const out = await new ClaudeModel({ apiKey: 'test', client }).propose(request, { onPartial: (p) => partials.push(p) })
+    const out = await new ClaudeModel({ key: 'test', client }).propose(request, { onPartial: (p) => partials.push(p) })
     expect(out).toEqual(proposal)
     expect(partials).toEqual([{ intent: proposal.intent }])
     const [params] = calls
@@ -136,15 +138,72 @@ describe('ClaudeModel (with a stand-in client; no network)', () => {
   })
 
   it('reports a refusal or a missing tool call as model-refused, and a cut-off as model-failed', async () => {
-    await expect(new ClaudeModel({ apiKey: 't', client: fakeClient({ stop_reason: 'refusal' }).client }).propose(request)).rejects.toMatchObject({ code: 'model-refused' })
-    await expect(new ClaudeModel({ apiKey: 't', client: fakeClient({ content: [{ type: 'text', text: 'hi' } as Anthropic.TextBlock] }).client }).propose(request)).rejects.toMatchObject({ code: 'model-refused' })
+    await expect(new ClaudeModel({ key: 't', client: fakeClient({ stop_reason: 'refusal' }).client }).propose(request)).rejects.toMatchObject({ code: 'model-refused' })
+    await expect(new ClaudeModel({ key: 't', client: fakeClient({ content: [{ type: 'text', text: 'hi' } as Anthropic.TextBlock] }).client }).propose(request)).rejects.toMatchObject({ code: 'model-refused' })
     const cut = fakeClient({ stop_reason: 'max_tokens', content: [{ type: 'tool_use', id: 't', name: 'submit_proposal', input: {} } as Anthropic.ToolUseBlock] })
-    await expect(new ClaudeModel({ apiKey: 't', client: cut.client }).propose(request)).rejects.toMatchObject({ code: 'model-failed', retryable: true })
+    await expect(new ClaudeModel({ key: 't', client: cut.client }).propose(request)).rejects.toMatchObject({ code: 'model-failed', retryable: true })
   })
 
-  it('uses DOCUMENT_MODEL when set, and never sends without a key', async () => {
-    expect(claudeModelFromEnv({ ANTHROPIC_API_KEY: 'k', DOCUMENT_MODEL: 'claude-sonnet-5-5' }).id).toBe('claude-sonnet-5-5')
-    expect(claudeModelFromEnv({ ANTHROPIC_API_KEY: 'k' }).id).toBe(DEFAULT_MODEL)
+  it('never sends without a key', async () => {
     await expect(claudeModelFromEnv({ ANTHROPIC_API_KEY: '  ' }).propose(request)).rejects.toMatchObject({ code: 'model-unavailable' })
+  })
+
+  it('sends OpenRouter the same request, at its /api root, with a bearer key, pinned to Anthropic', async () => {
+    const sent: { url: string; headers: Headers; body: Record<string, unknown> }[] = []
+    const fetch = (async (url: string, init: RequestInit) => {
+      sent.push({ url: String(url), headers: new Headers(init.headers), body: JSON.parse(String(init.body)) })
+      return new Response('{"type":"error","error":{"type":"authentication_error","message":"bad key"}}', { status: 401, headers: { 'content-type': 'application/json' } })
+    }) as unknown as typeof globalThis.fetch
+    vi.stubEnv('ANTHROPIC_API_KEY', 'direct-key-must-not-leak')
+    const model = new ClaudeModel({ key: 'or-key', provider: 'openrouter', fetch })
+    await expect(model.propose(request)).rejects.toMatchObject({ code: 'model-unavailable', message: 'The OpenRouter API key was rejected.' })
+    expect(sent[0].url).toBe('https://openrouter.ai/api/v1/messages')
+    expect(sent[0].headers.get('authorization')).toBe('Bearer or-key')
+    expect(sent[0].headers.get('x-api-key')).toBeNull()
+    expect(sent[0].body).toMatchObject({ model: 'anthropic/claude-opus-5.5', stream: true, tool_choice: { type: 'tool', name: 'submit_proposal' }, provider: { order: ['anthropic'], allow_fallbacks: false } })
+  })
+
+  it('sends the direct API its x-api-key and no OpenRouter routing', async () => {
+    const sent: { url: string; headers: Headers; body: Record<string, unknown> }[] = []
+    const fetch = (async (url: string, init: RequestInit) => {
+      sent.push({ url: String(url), headers: new Headers(init.headers), body: JSON.parse(String(init.body)) })
+      return new Response('{"type":"error","error":{"type":"authentication_error","message":"bad key"}}', { status: 401, headers: { 'content-type': 'application/json' } })
+    }) as unknown as typeof globalThis.fetch
+    vi.stubEnv('ANTHROPIC_BASE_URL', '')
+    await expect(new ClaudeModel({ key: 'a-key', fetch }).propose(request)).rejects.toMatchObject({ message: 'The Anthropic API key was rejected.' })
+    expect(sent[0].url).toBe('https://api.anthropic.com/v1/messages')
+    expect(sent[0].headers.get('x-api-key')).toBe('a-key')
+    expect(sent[0].body).toMatchObject({ model: DEFAULT_MODEL })
+    expect(sent[0].body).not.toHaveProperty('provider')
+  })
+
+  it('reports an account out of credits as unavailable', () => {
+    expect(toModelError(new Anthropic.APIError(402, { error: { message: 'Insufficient credits' } }, 'Insufficient credits', new Headers()), 'openrouter'))
+      .toMatchObject({ code: 'model-unavailable', message: 'The OpenRouter account has run out of credits.', retryable: false })
+  })
+})
+
+describe('choosing the provider from the environment (D-65)', () => {
+  it('uses MODEL_PROVIDER when set, with that provider\'s key and model', () => {
+    expect(providerFromEnv({ MODEL_PROVIDER: 'openrouter', OPENROUTER_API_KEY: 'or', ANTHROPIC_API_KEY: 'a' })).toEqual({ ok: true, provider: 'openrouter', key: 'or', model: DEFAULT_MODELS.openrouter })
+    expect(providerFromEnv({ MODEL_PROVIDER: 'anthropic', OPENROUTER_API_KEY: 'or', ANTHROPIC_API_KEY: 'a', ANTHROPIC_MODEL: 'claude-sonnet-5-5' })).toEqual({ ok: true, provider: 'anthropic', key: 'a', model: 'claude-sonnet-5-5' })
+    expect(providerFromEnv({ MODEL_PROVIDER: ' OpenRouter ', OPENROUTER_API_KEY: 'or', OPENROUTER_MODEL: 'anthropic/claude-sonnet-5.5' })).toMatchObject({ provider: 'openrouter', model: 'anthropic/claude-sonnet-5.5' })
+  })
+
+  it('unset or blank, prefers OpenRouter when its key exists, else Anthropic', () => {
+    expect(providerFromEnv({ OPENROUTER_API_KEY: 'or', ANTHROPIC_API_KEY: 'a' })).toMatchObject({ provider: 'openrouter', key: 'or' })
+    expect(providerFromEnv({ MODEL_PROVIDER: '', OPENROUTER_API_KEY: ' ', ANTHROPIC_API_KEY: 'a' })).toMatchObject({ provider: 'anthropic', key: 'a', model: DEFAULT_MODEL })
+  })
+
+  it('never falls back to the other provider when the named one has no key', () => {
+    const choice = providerFromEnv({ MODEL_PROVIDER: 'openrouter', OPENROUTER_API_KEY: '', ANTHROPIC_API_KEY: 'a' })
+    expect(choice).toMatchObject({ ok: false, error: { code: 'model-unavailable', message: expect.stringContaining('MODEL_PROVIDER is openrouter but OPENROUTER_API_KEY is not set') } })
+    expect(providerFromEnv({})).toMatchObject({ ok: false, error: { message: expect.stringContaining('Neither OPENROUTER_API_KEY nor ANTHROPIC_API_KEY is set') } })
+    expect(providerFromEnv({ MODEL_PROVIDER: 'bedrock', ANTHROPIC_API_KEY: 'a' })).toMatchObject({ ok: false, error: { message: 'MODEL_PROVIDER is "bedrock"; it must be "openrouter" or "anthropic".' } })
+  })
+
+  it('builds the model the choice names', () => {
+    expect(claudeModelFromEnv({ OPENROUTER_API_KEY: 'or' })).toMatchObject({ id: 'anthropic/claude-opus-5.5', provider: 'openrouter' })
+    expect(claudeModelFromEnv({ ANTHROPIC_API_KEY: 'a' })).toMatchObject({ id: DEFAULT_MODEL, provider: 'anthropic' })
   })
 })

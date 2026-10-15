@@ -5,7 +5,9 @@
 // the request text and are not model output. Development only.
 //
 //   npx vite-node scripts/documents/mock-anthropic.ts            # listens on :4019
-//   ANTHROPIC_API_KEY=mock ANTHROPIC_BASE_URL=http://localhost:4019 npx next dev -p 4010
+//   MODEL_PROVIDER=anthropic ANTHROPIC_API_KEY=mock ANTHROPIC_BASE_URL=http://localhost:4019 npx next dev -p 4010
+//
+// MODEL_PROVIDER=anthropic overrides .env.local, which selects OpenRouter (D-65).
 
 import { createServer } from 'node:http'
 

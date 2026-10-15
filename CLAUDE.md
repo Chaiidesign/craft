@@ -10,7 +10,7 @@ Before implementing anything in this build, read:
 - approved decisions: [docs/decisions.md](docs/decisions.md), plus the feature README [docs/documents/README.md](docs/documents/README.md)
 
 Commands:
-- Dev / demo: `npx next dev -p 4010`, then http://localhost:4010/document-verify (workbench) or http://localhost:4010/document-chat (chat; needs `ANTHROPIC_API_KEY`, or the local stand-in in `scripts/documents/mock-anthropic.ts`)
+- Dev / demo: `npx next dev -p 4010`, then http://localhost:4010/document-verify (workbench) or http://localhost:4010/document-chat (chat; needs a model key in `.env.local`, see `.env.example` and D-65, or the local stand-in in `scripts/documents/mock-anthropic.ts`, run with `MODEL_PROVIDER=anthropic`)
 - Agent CLI: `npx vite-node scripts/documents/agent.ts -- schemas` (see the file header)
 - Typecheck: `npx tsc --noEmit -p .`
 - Lint: `npx eslint src/lib/documents src/components/documents src/app/document-verify src/app/document-chat src/app/api/document-model scripts/documents next.config.ts src/proxy.ts`

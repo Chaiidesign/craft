@@ -2,6 +2,11 @@
 // the API key and is never imported by browser code (the chat page reaches it
 // through /api/document-model).
 //
+// Two providers, chosen from the environment (D-65): OpenRouter (Souvenir's
+// key, through OpenRouter's Anthropic-compatible Messages endpoint, pinned to
+// Anthropic's own servers) or the Anthropic API directly. Same SDK, same
+// request; only the base URL, the credential header and the model name differ.
+//
 // The model gets one tool, `submit_proposal`, whose input is the generation
 // schema, and is forced to call it. Its input streams as it is written, so the
 // chat can draft the document progressively; nothing it sends is trusted until
@@ -12,8 +17,23 @@ import Anthropic from '@anthropic-ai/sdk'
 import { ModelError, type GenerationModel, type GenerationRequest, type ProposeOptions } from './model'
 import { proposalJsonSchema } from './ops'
 
-/** Latest Opus for first-pass generation (D-59). */
-export const DEFAULT_MODEL = 'claude-opus-5-5'
+export type Provider = 'openrouter' | 'anthropic'
+
+/** Latest Opus for first-pass generation (D-59), named the way each provider names it. */
+export const DEFAULT_MODELS: Record<Provider, string> = {
+  anthropic: 'claude-opus-5-5',
+  openrouter: 'anthropic/claude-opus-5.5',
+}
+export const DEFAULT_MODEL = DEFAULT_MODELS.anthropic
+
+/** The SDK appends /v1/messages, so this is OpenRouter's /api root, not /api/v1. */
+export const OPENROUTER_BASE_URL = 'https://openrouter.ai/api'
+
+/** OpenRouter routes only to Anthropic itself, so behavior matches the direct API (no Bedrock or Vertex). */
+const OPENROUTER_ROUTING = { provider: { order: ['anthropic'], allow_fallbacks: false } }
+
+const KEY_NAMES: Record<Provider, string> = { openrouter: 'OPENROUTER_API_KEY', anthropic: 'ANTHROPIC_API_KEY' }
+const PROVIDER_NAMES: Record<Provider, string> = { openrouter: 'OpenRouter', anthropic: 'Anthropic' }
 
 export const LIMITS = {
   maxTokens: 4096,
@@ -68,12 +88,19 @@ function inputSchema() {
 
 export class ClaudeModel implements GenerationModel {
   readonly id: string
+  readonly provider: Provider
   private readonly client: Anthropic
 
-  constructor(options: { apiKey: string; model?: string; client?: Anthropic }) {
-    this.id = options.model ?? DEFAULT_MODEL
+  constructor(options: { key: string; provider?: Provider; model?: string; client?: Anthropic; fetch?: typeof fetch }) {
+    this.provider = options.provider ?? 'anthropic'
+    this.id = options.model ?? DEFAULT_MODELS[this.provider]
     // The SDK retries transient failures (429, 5xx, connection) itself, twice by default.
-    this.client = options.client ?? new Anthropic({ apiKey: options.apiKey, timeout: LIMITS.timeoutMs, maxRetries: 2 })
+    const common = { timeout: LIMITS.timeoutMs, maxRetries: 2, ...(options.fetch ? { fetch: options.fetch } : {}) }
+    this.client = options.client ?? (this.provider === 'openrouter'
+      // OpenRouter takes its key as a bearer token. apiKey is nulled so the SDK
+      // never sends an ANTHROPIC_API_KEY from the environment there as x-api-key.
+      ? new Anthropic({ ...common, baseURL: OPENROUTER_BASE_URL, authToken: options.key, apiKey: null })
+      : new Anthropic({ ...common, apiKey: options.key }))
   }
 
   async propose(request: GenerationRequest, options: ProposeOptions = {}): Promise<unknown> {
@@ -85,6 +112,8 @@ export class ClaudeModel implements GenerationModel {
         tools: [{ name: TOOL_NAME, description: 'Submit the operations that fill in or revise the document.', input_schema: inputSchema(), eager_input_streaming: true }],
         tool_choice: { type: 'tool', name: TOOL_NAME },
         messages: [{ role: 'user', content: userMessage(request) }],
+        // OpenRouter's own routing field; the SDK passes it through in the body.
+        ...(this.provider === 'openrouter' ? OPENROUTER_ROUTING : {}),
       }, { signal: options.signal })
       if (options.onPartial) stream.on('inputJson', (_delta, snapshot) => options.onPartial?.(snapshot))
       const message = await stream.finalMessage()
@@ -94,16 +123,19 @@ export class ClaudeModel implements GenerationModel {
       if (message.stop_reason === 'max_tokens') throw new ModelError('model-failed', 'The proposal was cut off at the output limit.', true)
       return call.input
     } catch (e) {
-      throw toModelError(e)
+      throw toModelError(e, this.provider)
     }
   }
 }
 
-export function toModelError(e: unknown): ModelError {
+export function toModelError(e: unknown, provider: Provider = 'anthropic'): ModelError {
   if (e instanceof ModelError) return e
   if (e instanceof Anthropic.APIUserAbortError) return new ModelError('model-failed', 'The request was cancelled.')
   if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) {
-    return new ModelError('model-unavailable', 'The Anthropic API key was rejected.')
+    return new ModelError('model-unavailable', `The ${PROVIDER_NAMES[provider]} API key was rejected.`)
+  }
+  if (e instanceof Anthropic.APIError && e.status === 402) {
+    return new ModelError('model-unavailable', `The ${PROVIDER_NAMES[provider]} account has run out of credits.`)
   }
   if (e instanceof Anthropic.APIConnectionTimeoutError) return new ModelError('model-failed', 'The model took too long to answer.', true)
   if (e instanceof Anthropic.RateLimitError) return new ModelError('model-failed', 'The model is rate-limited right now. Try again shortly.', true)
@@ -111,14 +143,35 @@ export function toModelError(e: unknown): ModelError {
   return new ModelError('model-failed', e instanceof Error ? e.message : String(e), true)
 }
 
-/** The Claude model when `ANTHROPIC_API_KEY` is set; otherwise a model that says so on every call. */
-export function claudeModelFromEnv(env: Record<string, string | undefined> = process.env): GenerationModel {
-  const apiKey = env.ANTHROPIC_API_KEY?.trim()
-  if (!apiKey) {
-    return {
-      id: 'unavailable',
-      propose: async () => { throw new ModelError('model-unavailable', 'ANTHROPIC_API_KEY is not set, so no model can generate. Set it in .env.local (development) or in the Vercel Preview environment.') },
-    }
+export type ProviderChoice =
+  | { ok: true; provider: Provider; key: string; model: string }
+  | { ok: false; error: ModelError }
+
+/**
+ * Which provider, key and model the environment asks for (D-65). MODEL_PROVIDER
+ * picks one; unset (or blank), OpenRouter is used when its key is set, else
+ * Anthropic. A provider that is named but has no key is an error: it never
+ * falls back to the other one.
+ */
+export function providerFromEnv(env: Record<string, string | undefined> = process.env): ProviderChoice {
+  const value = (name: string) => env[name]?.trim() || undefined
+  const named = value('MODEL_PROVIDER')?.toLowerCase()
+  if (named && named !== 'openrouter' && named !== 'anthropic') {
+    return { ok: false, error: new ModelError('model-unavailable', `MODEL_PROVIDER is "${named}"; it must be "openrouter" or "anthropic".`) }
   }
-  return new ClaudeModel({ apiKey, model: env.DOCUMENT_MODEL?.trim() || undefined })
+  const provider: Provider = (named as Provider | undefined) ?? (value('OPENROUTER_API_KEY') ? 'openrouter' : 'anthropic')
+  const key = value(KEY_NAMES[provider])
+  if (!key) {
+    const unset = named ? `MODEL_PROVIDER is ${provider} but ${KEY_NAMES[provider]} is not set` : 'Neither OPENROUTER_API_KEY nor ANTHROPIC_API_KEY is set'
+    return { ok: false, error: new ModelError('model-unavailable', `${unset}, so no model can generate. Set it in .env.local (development) or in the Vercel Preview environment.`) }
+  }
+  const model = value(provider === 'openrouter' ? 'OPENROUTER_MODEL' : 'ANTHROPIC_MODEL') ?? DEFAULT_MODELS[provider]
+  return { ok: true, provider, key, model }
+}
+
+/** The Claude model the environment configures; otherwise a model that says what is missing on every call. */
+export function claudeModelFromEnv(env: Record<string, string | undefined> = process.env): GenerationModel {
+  const choice = providerFromEnv(env)
+  if (!choice.ok) return { id: 'unavailable', propose: async () => { throw choice.error } }
+  return new ClaudeModel({ key: choice.key, provider: choice.provider, model: choice.model })
 }

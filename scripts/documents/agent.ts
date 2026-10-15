@@ -9,8 +9,8 @@
 //   npx vite-node scripts/documents/agent.ts -- show     --store s.json --input '{"revisionId":"rev-…"}'
 //
 // `--input-file f.json` reads the input from a file instead. Prompts and
-// instructions need ANTHROPIC_API_KEY (read from the environment or from
-// .env.local); `operations` inputs need no model. The exit code is 0 when the
+// instructions need a model key, OPENROUTER_API_KEY or ANTHROPIC_API_KEY (D-65;
+// read from the environment, then .env.local); `operations` inputs need no model. The exit code is 0 when the
 // result is ok, 1 when the tool refused, 2 for a usage error.
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -52,7 +52,8 @@ try {
   usage('The input is not valid JSON.')
 }
 
-if (existsSync('.env.local') && !process.env.ANTHROPIC_API_KEY) process.loadEnvFile('.env.local')
+// Variables already set in the environment win over .env.local.
+if (existsSync('.env.local')) process.loadEnvFile('.env.local')
 
 // IDs carry a per-run token, so revisions made by separate runs never collide.
 const run = Date.now().toString(36)

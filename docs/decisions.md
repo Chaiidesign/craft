@@ -12,6 +12,30 @@ Status is **approved** unless marked otherwise. When a later decision replaces a
 
 The plan for this work is the "chat → document → refine → export" plan approved on 2026-10-15: slice S1 (invoice end to end, real model, hosted) is this branch; S2–S6 follow on later branches. Decisions D-49 to D-58 were settled by Chaitanya and Instinct before building; D-59 onward were made during the build.
 
+### D-65 · 2026-10-15 · The model runs through Souvenir's OpenRouter key; the direct Anthropic API is the fallback
+**Status: approved in direction** (Chaitanya, 2026-10-15: use Souvenir's OpenRouter key instead of a direct Anthropic key, keep `ANTHROPIC_API_KEY` as an env-switched fallback). Two details below depart from the brief's wording, with evidence; they are listed in the S1 report for confirmation.
+
+**Rule.**
+- `MODEL_PROVIDER` picks the provider: `openrouter` or `anthropic`. Unset or blank: OpenRouter when `OPENROUTER_API_KEY` is set, otherwise Anthropic. Any other value is an error.
+- A named provider without its key is a `model-unavailable` error that names the missing variable. It never falls back to the other provider (D-52: no silent substitution).
+- Both use the same `@anthropic-ai/sdk` client, request, forced tool and streaming. OpenRouter differs only in base URL, credential header, model name and one routing field.
+- Models: `OPENROUTER_MODEL` (default `anthropic/claude-opus-5.5`) or `ANTHROPIC_MODEL` (default `claude-opus-5-5`). This is the D-59 tier, the latest Opus, which OpenRouter's public model list (`GET https://openrouter.ai/api/v1/models`, read 2026-10-15) lists with tool support and a 1M context. `DOCUMENT_MODEL` is replaced by `ANTHROPIC_MODEL`; it was never set anywhere outside this branch.
+- Variables are documented in `.env.example`, which `.gitignore` now lets through (`!.env.example`). `.env.local` stays ignored.
+
+**Departures from the brief, with evidence.**
+1. **Base URL `https://openrouter.ai/api`, not `https://openrouter.ai/api/v1`.** The SDK posts to `{baseURL}/v1/messages` (`node_modules/@anthropic-ai/sdk/resources/messages/messages.js`). With the brief's URL that is `/api/v1/v1/messages`, which OpenRouter answers with 404; `/api/v1/messages` answers 401 without a key, so it exists. OpenRouter's Claude Code guide gives the same base URL ("`https://openrouter.ai/api`").
+2. **The key is sent as a bearer token**, the SDK's `authToken`, with `apiKey` set to null. OpenRouter's guide: OpenRouter "authenticates requests with a bearer token"; `x-api-key` "is treated as a direct-Anthropic credential". Nulling `apiKey` also stops the SDK from sending an `ANTHROPIC_API_KEY` from the environment to OpenRouter.
+
+**Routing.** OpenRouter requests carry `provider: { order: ["anthropic"], allow_fallbacks: false }`, a field its Messages endpoint documents. This keeps requests on Anthropic's own servers rather than Bedrock or Vertex, so behavior should match the direct API. OpenRouter's guide says Claude Code "is only guaranteed to work with the Anthropic first-party provider". The trade-off: when Anthropic is down through OpenRouter, requests fail rather than move to another host.
+
+**Not covered by D-56's "no logging".** Whether OpenRouter keeps prompts is a setting on Souvenir's OpenRouter account, not something this code controls.
+
+**Where it's recorded.** The brief asked for this note in "design.md". In this build that name is reserved for the per-brand style artifact (D-53, slice S4), so the note lives here and in the feature README's "Document model provider" section instead.
+
+Research (primary sources, 2026-10-15): OpenRouter's Claude Code integration guide (openrouter.ai/docs/guides/guides/claude-code-integration); its Anthropic Messages reference (openrouter.ai/docs/api/api-reference/anthropic-messages/create-a-message); its public model list; and the installed SDK's source.
+
+Applied in: `generation/claude.ts` (`providerFromEnv`, `ClaudeModel`), `.env.example`, `.gitignore`, `scripts/documents/agent.ts`; tests in `model.test.ts`.
+
 ### D-64 · 2026-10-15 · Each document's conversation starts at "New document"
 **Problem.** The chat sent the model, and allowed quotes from, every message in the thread. A new invoice could therefore quote "$2,400" from an earlier document's conversation, and the quote check would pass because those words really were in the source text.
 

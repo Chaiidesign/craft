@@ -77,7 +77,7 @@ Fixed after looking:
 
 ## Not verified, stated plainly
 
-- **The real model has not been run.** Nothing in this report is Claude's output. The prompt, schema and streaming are tested against stand-ins only. The eval set in [../documents/evals/s1-invoice.md](../documents/evals/s1-invoice.md) is ready to run once `ANTHROPIC_API_KEY` is available.
+- **The real model has not been run.** Nothing in this report is Claude's output. The prompt, schema and streaming are tested against stand-ins only. The eval set in [../documents/evals/s1-invoice.md](../documents/evals/s1-invoice.md) is ready to run once the OpenRouter key is in `.env.local` (D-65).
 - **The schema has not been tried with `strict: true` tool use** (structured outputs). It is off until the real model has been tried, and the gate validates everything regardless.
 - **Word export is content-identical, not byte-identical (D-62).**
 - **Number quotes in European format fail the check.** "€1.200" is not read as 1200, so such a price would be left unknown rather than guessed (eval #3).
@@ -87,6 +87,7 @@ Fixed after looking:
 ## Needs a decision
 
 - **D-63:** "$" is read as US dollars unless another dollar is named. This is proposed, not approved; see decisions.md.
+- **D-65** (direction approved; two details to confirm): the model runs through Souvenir's OpenRouter key, with the direct Anthropic API as an env-switched fallback. Two departures from the brief: the base URL is `https://openrouter.ai/api`, because the brief's `/api/v1` gives 404 with this SDK; and the key goes as a bearer token. OpenRouter requests are pinned to Anthropic's own servers. The default model is `anthropic/claude-opus-5.5` (latest Opus, D-59), not the brief's example `anthropic/claude-sonnet-4.5`.
 - **D-64** (applied): each document's conversation starts at "New document", so a value from an earlier document can't be quoted into a new one. The divider's label is "New document".
 
 ## New user-facing text (for approval before merge)
@@ -133,8 +134,11 @@ Storage:
 Workbench (D-60): "Description not supplied", shown where a line has no description.
 
 Gate and tool messages are machine-facing; the most likely to reach people are listed in `generation/apply.ts` and `gate.ts`. Model error messages:
-- "ANTHROPIC_API_KEY is not set, so no model can generate. Set it in .env.local (development) or in the Vercel Preview environment."
-- "The Anthropic API key was rejected."
+- "Neither OPENROUTER_API_KEY nor ANTHROPIC_API_KEY is set, so no model can generate. Set it in .env.local (development) or in the Vercel Preview environment." *(replaces the earlier "ANTHROPIC_API_KEY is not set, …"; D-65)*
+- "MODEL_PROVIDER is {provider} but {KEY} is not set, so no model can generate. Set it in .env.local (development) or in the Vercel Preview environment." *(new, D-65)*
+- "MODEL_PROVIDER is "{value}"; it must be "openrouter" or "anthropic"." *(new, D-65)*
+- "The {OpenRouter | Anthropic} API key was rejected." *(was Anthropic only; D-65)*
+- "The {OpenRouter | Anthropic} account has run out of credits." *(new, for HTTP 402; D-65)*
 - "The model declined this request."
 - "The model took too long to answer."
 - "The model is rate-limited right now. Try again shortly."
@@ -144,8 +148,8 @@ The preview reuses the approved missing state ("Missing — Description") and th
 
 ## What's left for S1 (step 6) and what Chaitanya needs to do
 
-1. **Local real-model run:** put `ANTHROPIC_API_KEY=…` in `~/craft/.env.local` (git-ignored by `.env*`). I then run the eval set and the done prompt against Claude and record the results.
-2. **Hosted run (D-54):** add `ANTHROPIC_API_KEY` to the Vercel project's environment variables with **Preview** scope. Vercel builds this branch on push. Then, in a fresh browser on the preview URL: "invoice for Acme, $2,400" → two refinements → PDF. The preview sits behind Vercel's deployment protection, so the visitor needs Vercel access, or a protection-bypass link if I'm to drive it.
+1. **Local real-model run:** paste Souvenir's key after `OPENROUTER_API_KEY=` in `~/craft/.env.local`. The file is already in place and git-ignored by `.env*` (D-65). I then run the eval set and the done prompt against Claude and record the results.
+2. **Hosted run (D-54):** add `OPENROUTER_API_KEY` to the Vercel project's environment variables with **Preview** scope. `MODEL_PROVIDER` and `OPENROUTER_MODEL` are optional: OpenRouter is chosen whenever its key is set, and the model defaults to the latest Opus. Vercel builds this branch on push. Then, in a fresh browser on the preview URL: "invoice for Acme, $2,400" → two refinements → PDF. The preview sits behind Vercel's deployment protection, so the visitor needs Vercel access, or a protection-bypass link if I'm to drive it.
 3. **Before the hosted run, checked read-only on 2026-10-15:**
    - **Preview builds:** Vercel built this branch on every push. The build at `83a66c75` is READY at `craft-43c9gpnm5-chaiidesigns-projects.vercel.app`.
    - **Protection:** Vercel's login protection (SSO) is on for all deployments except custom domains, so the preview, and with it the key, can't be reached by strangers.

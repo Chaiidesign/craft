@@ -1,6 +1,6 @@
 # Eval set S1: invoices from a prompt
 
-Fixed prompts for checking the real model by hand (not run in CI, which uses the scripted model). Run each through `/document-chat` or the CLI with `ANTHROPIC_API_KEY` set, and record the result per commit at the bottom.
+Fixed prompts for checking the real model by hand (not run in CI, which uses the scripted model). Run each through `/document-chat` or the CLI with a model key set (`OPENROUTER_API_KEY`, or `ANTHROPIC_API_KEY`; D-65), and record the result per commit at the bottom.
 
 The bar for every prompt:
 - **Nothing invented.** Every value is in the prompt. The gate enforces the quote; this eval also checks the meaning is right (for example, the buyer isn't the issuer).
@@ -26,4 +26,4 @@ The bar for every prompt:
 
 | Date | Commit | Model | Results |
 |---|---|---|---|
-| — | — | — | Not run yet: needs `ANTHROPIC_API_KEY`. |
+| — | — | — | Not run yet: needs the OpenRouter key in `.env.local`. |
