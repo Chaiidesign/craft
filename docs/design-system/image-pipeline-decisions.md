@@ -8,6 +8,32 @@ Decisions made while building the first vertical slice of the image-to-design-sy
 
 ---
 
+## Step 3: the output interface
+
+### D-58 · 2026-10-15 · The reskin test compares what a person would see
+`reskin.test.tsx` renders `ArtifactBlock` under three token sets: Ledger, Soft Bloom, and Night Console with its two missing shadows filled in as "no shadow", as a reviewer would. For each one it resolves every `var()` to its token value and compares the properties a person notices: card background, corner radius, shadow, border, title font and title color.
+- Ledger and Soft Bloom differ on **every** one of them.
+- The flat system renders the card with `box-shadow: none`.
+- All three are pairwise distinct.
+- The whole chat turn (`ThreadPreview`) passes the tokens-only audit from D-55.
+Applied in: `src/components/design-system/reskin.test.tsx`.
+
+### D-57 · 2026-10-15 · What the rebuild drops or renames, and why
+`ArtifactBlock` keeps the original's content: icon, title, meta, the "Draft v{N}" badge, "See history" and the arrow when the card is clickable. These differences are deliberate:
+- **`onOpen: () => void` replaces `onClick: MouseEventHandler<HTMLButtonElement>`.** The open action is no longer the outer element, so a mouse event no longer describes it.
+- **No tap-scale animation.** The original uses framer-motion `whileTap`. The token set has no motion tokens, and a hardcoded `0.98` scale or `0.1s` duration would break "tokens only". Adding motion tokens is a follow-up.
+- **The icon slot is a token-sized frame.** The default glyph is an outline document drawn with the border-width token, replacing the `@strange-huge/icons` file icon, whose size and color were literals.
+- **Title weight.** The title uses the body style with the label style's weight (`Text emphasis`), because the token set has no "body strong" style. This mirrors the original's medium-weight title without inventing a weight.
+Applied in: `src/components/design-system/ArtifactBlock.tsx`, `primitives.tsx`.
+
+### D-56 · 2026-10-15 · The clickable card uses a stretched title button, not a button around everything
+The production `ArtifactCard` wraps the whole card in a `<button>` and puts the "See history" `<button>` inside it. Nested interactive elements are invalid HTML and confuse screen readers.
+- In `ArtifactBlock`, the **title** is the button (`.ds-stretched`). Its `::after` covers the card, so the whole card is still the click target, and the focus ring is drawn on that overlay around the whole card.
+- "See history" is a sibling, raised above the overlay.
+- The `<article>` is named by its title.
+- Tests assert that no button is ever nested and that the card has exactly two buttons.
+Applied in: `src/components/design-system/ArtifactBlock.tsx`, `PRIMITIVE_STATE_CSS`.
+
 ## Step 2: token application (primitives)
 
 ### D-55 · 2026-10-15 · "Tokens only" is proven by an audit with a control, not by comparing snapshots

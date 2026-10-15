@@ -28,9 +28,10 @@ export const SENTINEL_TOKENS: DesignTokens = {
   size: { icon: 41, control: 42, border: 4, focusRing: 5 },
 }
 
-/** A sample's canned reading with every proposed value accepted as is.
- *  Throws for samples with missing tokens: those need a person to fill them. */
-export async function acceptedSampleTokens(id: string): Promise<DesignTokens> {
+/** A sample's canned reading with every proposed value accepted as is, plus
+ *  `fills`: the values a person would supply in review. Throws if a token is
+ *  still missing or the result breaks a rule. */
+export async function acceptedSampleTokens(id: string, fills: Partial<Record<TokenPath, unknown>> = {}): Promise<DesignTokens> {
   const sample = SAMPLE_IMAGES.find((s) => s.id === id)
   if (!sample) throw new Error(`No sample ${id}`)
   const result = await runExtraction(createMockExtractor(), {
@@ -39,7 +40,7 @@ export async function acceptedSampleTokens(id: string): Promise<DesignTokens> {
     bytes: new Uint8Array(readFileSync(sample.file)),
   })
   if (!result.ok) throw new Error(result.error.message)
-  const values = Object.fromEntries(TOKEN_PATHS.map((p) => [p, result.proposal.tokens[p].value])) as Record<TokenPath, unknown>
+  const values = Object.fromEntries(TOKEN_PATHS.map((p) => [p, p in fills ? fills[p] : result.proposal.tokens[p].value])) as Record<TokenPath, unknown>
   const parsed = parseDesignTokens(nestTokens(values))
   if (!parsed.ok) throw new Error(`${id}: ${parsed.issues.join('; ')}`)
   return parsed.value

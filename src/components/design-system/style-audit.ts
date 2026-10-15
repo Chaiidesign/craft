@@ -6,7 +6,8 @@ const STRUCTURAL = new Set([
   '0', '1', '100%', 'auto', 'none', 'solid', 'currentColor',
   'flex', 'inline-flex', 'row', 'column', 'wrap', 'center', 'stretch', 'flex-start', 'flex-end',
   'pointer', 'not-allowed', 'nowrap', 'hidden', 'ellipsis', 'uppercase', 'border-box', 'round',
-  'non-scaling-stroke',
+  'non-scaling-stroke', 'inline', 'block', 'grid', '1fr', 'relative', 'absolute', 'inherit', 'left',
+  'underline', '""',
 ])
 
 const VAR_REF = /^var\((--ds-[a-z0-9-]+)\)$/

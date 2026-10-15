@@ -23,6 +23,31 @@ export const PRIMITIVE_STATE_CSS = `
   background: var(--ds-color-border);
   color: var(--ds-color-text-muted);
 }
+[data-ds-scope] .ds-stretched {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+  max-width: 100%;
+}
+[data-ds-scope] .ds-stretched::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--ds-radius-lg);
+}
+[data-ds-scope] .ds-stretched:focus-visible {
+  outline: none;
+}
+[data-ds-scope] .ds-stretched:focus-visible::after {
+  outline: var(--ds-size-focus-ring) solid var(--ds-color-focus);
+  outline-offset: var(--ds-size-focus-ring);
+}
 `
 
 const border = `${dsVar('size-border')} solid ${dsVar('color-border')}`
@@ -68,20 +93,23 @@ export interface TextProps {
   /** One line, clipped with an ellipsis. */
   truncate?: boolean
   uppercase?: boolean
+  /** Heavier weight, taken from the label style's weight token. */
+  emphasis?: boolean
   children: React.ReactNode
   id?: string
 }
 
-export function Text({ variant = 'body', tone = 'default', as: Tag = 'p', truncate, uppercase, children, id }: TextProps) {
+export function Text({ variant = 'body', tone = 'default', as: Tag = 'p', truncate, uppercase, emphasis, children, id }: TextProps) {
   return (
     <Tag
       id={id}
       style={{
         ...textStyleVars(variant),
+        ...(emphasis ? { fontWeight: dsVar('type-label-weight') } : null),
         color: TONE[tone],
         margin: 0,
         textTransform: uppercase ? 'uppercase' : undefined,
-        ...(truncate ? { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } : null),
+        ...(truncate ? { display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } : null),
       }}
     >
       {children}
@@ -92,36 +120,49 @@ export function Text({ variant = 'body', tone = 'default', as: Tag = 'p', trunca
 // ── Button ────────────────────────────────────────────────────────────────────
 
 export interface ButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'style' | 'className'> {
-  variant?: 'primary' | 'secondary'
+  /** primary: filled action. secondary: outlined. link: inline text action. */
+  variant?: 'primary' | 'secondary' | 'link'
 }
 
+const BUTTON_FILL = {
+  primary: { border: 'none', background: dsVar('color-primary'), color: dsVar('color-on-primary') },
+  secondary: { border: `${dsVar('size-border')} solid ${dsVar('color-border')}`, background: dsVar('color-surface'), color: dsVar('color-text') },
+} as const
+
 export function Button({ variant = 'primary', type = 'button', children, ...rest }: ButtonProps) {
-  const primary = variant === 'primary'
+  const style: React.CSSProperties =
+    variant === 'link'
+      ? {
+          display: 'inline',
+          padding: 0,
+          border: 'none',
+          background: 'none',
+          color: dsVar('color-primary'),
+          ...textStyleVars('caption'),
+          textDecoration: 'underline',
+          cursor: 'pointer',
+          position: 'relative',
+          zIndex: 1,
+        }
+      : {
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: dsVar('space-sm'),
+          height: dsVar('size-control'),
+          padding: `0 ${dsVar('space-lg')}`,
+          borderRadius: dsVar('radius-md'),
+          ...BUTTON_FILL[variant],
+          fontFamily: dsVar('type-body-family'),
+          fontSize: dsVar('type-body-size'),
+          lineHeight: dsVar('type-body-line-height'),
+          fontWeight: dsVar('type-label-weight'),
+          cursor: 'pointer',
+          whiteSpace: 'nowrap',
+          flexShrink: 0,
+        }
   return (
-    <button
-      type={type}
-      className="ds-button ds-focusable"
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: dsVar('space-sm'),
-        height: dsVar('size-control'),
-        padding: `0 ${dsVar('space-lg')}`,
-        borderRadius: dsVar('radius-md'),
-        border: primary ? 'none' : border,
-        background: primary ? dsVar('color-primary') : dsVar('color-surface'),
-        color: primary ? dsVar('color-on-primary') : dsVar('color-text'),
-        fontFamily: dsVar('type-body-family'),
-        fontSize: dsVar('type-body-size'),
-        lineHeight: dsVar('type-body-line-height'),
-        fontWeight: dsVar('type-label-weight'),
-        cursor: 'pointer',
-        whiteSpace: 'nowrap',
-        flexShrink: 0,
-      }}
-      {...rest}
-    >
+    <button type={type} className="ds-button ds-focusable" style={style} {...rest}>
       {children}
     </button>
   )
@@ -186,6 +227,7 @@ export function Card({ elevation = 'card', padding = 'lg', children, as: Tag = '
         background: dsVar('color-surface'),
         boxShadow: dsVar(elevation === 'raised' ? 'shadow-raised' : 'shadow-card'),
         boxSizing: 'border-box',
+        position: 'relative',
         minWidth: 0,
       }}
     >
@@ -242,6 +284,15 @@ export function DocumentGlyph() {
     <svg viewBox="0 0 20 24" width="100%" height="100%" fill="none" stroke="currentColor" style={{ strokeWidth: dsVar('size-border') }}>
       <path vectorEffect="non-scaling-stroke" strokeLinejoin="round" d="M3 1h9l5 5v16a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z" />
       <path vectorEffect="non-scaling-stroke" strokeLinejoin="round" d="M12 1v5h5M6 12h8M6 16h8M6 20h5" />
+    </svg>
+  )
+}
+
+/** Right chevron for "opens something". */
+export function ArrowGlyph() {
+  return (
+    <svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" style={{ strokeWidth: dsVar('size-border') }}>
+      <path vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
     </svg>
   )
 }
