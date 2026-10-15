@@ -1,6 +1,6 @@
 # Report: chat → document, slice S1 (invoice end to end)
 
-Branch `feat/chat-document-flow`, off `main` at `6e2d2978`. The plan is in [decisions.md](../decisions.md) (D-49 to D-62). This report covers S1 steps 1–5. Step 6, the hosted run with the real model, waits on the Anthropic key; see "What's left for S1".
+Branch `feat/chat-document-flow` (step 5 at `2c89554e`), off `main` at `6e2d2978`. The plan is in [decisions.md](../decisions.md) (D-49 to D-62). This report covers S1 steps 1–5. Step 6, the hosted run with the real model, waits on the Anthropic key; see "What's left for S1".
 
 ## What it does
 

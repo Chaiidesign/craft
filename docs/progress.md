@@ -38,7 +38,7 @@ Plan: prompt in chat → validated document → refine in conversation → expor
 | 1–3 | `e8fc8952` | Generation schema, three-layer gate, scripted model, bounded retries; `generate`, `revise`, `export` tools with JSON schemas; D-60 (missing descriptions), D-61 (unbranded documents), D-62 (deterministic PDF) |
 | 3b | `528d6e26` | Agent CLI (generate → revise → export with no UI), checked by hand: v1 → v2 → v3 → draft PDF |
 | 4 | `528d6e26` | Claude model and `/api/document-model` (tested with stand-in models; not yet run against the real API) |
-| 5 | (this commit) | `/document-chat` with inline preview, live drafting state, refine, export; report [reports/chat-s1.md](reports/chat-s1.md) |
+| 5 | `2c89554e` | `/document-chat` with inline preview, live drafting state, refine, export; report [reports/chat-s1.md](reports/chat-s1.md) |
 | 6 | | Real-model run and hosted preview run: waiting on the Anthropic key (`.env.local` for local, Vercel Preview env for hosted) |
 
 ## Next step
