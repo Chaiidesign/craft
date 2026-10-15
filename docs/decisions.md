@@ -10,10 +10,14 @@ Status is **approved** unless marked otherwise. When a later decision replaces a
 
 ## Review of PR #1
 
+### D-48 · 2026-10-15 · Merge PR #1; release stays unapproved
+On D-47's approval, Chaitanya had PR #1 marked ready and merged into the fork's `main` with a merge commit (not a squash), so every step commit cited in these docs stays in `main`'s history. Release is a separate verdict from Instinct and is **not approved**. `feat/document-quality` is kept until the release verdict, then deleted.
+Applied in: merge commit `b1025a93` (PR #1, merged 2026-10-15 15:02 UTC); this record via PR #2.
+
 ### D-47 · 2026-10-15 · Instinct's re-review of PR #1: approved
 Verdict on PR #1 at `06763bb1`: **approved to merge.** Conditions 1–3 of D-45 were verified by direct code inspection at `06763bb1`, with their regression tests present; CI is green (React Doctor 0 errors / 50 warnings; Vercel deployed). Instinct did not independently re-run the test suite or re-inspect the slide images; the approval rests on code inspection and CI.
 Non-blocking cleanup, applied: the PR body's test count (1,421 → 1,425) and decision range (D-01 to D-44 → D-01 to D-47); the React Doctor summary's tally (47 accepted / 2 debt → 48 accepted / 1 debt, matching the tables); the Step 7 report's original "(continued)" finding marked superseded by D-46.
-Applied in: the commit after `06763bb1`.
+Applied in: `a0e2c3ad`.
 
 ### D-46 · 2026-10-15 · "(continued)" is tracked per section
 Every slide after the first that repeats a section's heading carries the approved "(continued)", whether the section overflowed onto the next slide or was deliberately split (text, then its chart on its own slide, then more text). In the sample deck, slides 4 (chart) and 5 (text) now read "Evidence: … (continued)". A one-slide continuation may still share a slide with the next short section (D-26); a section that overflowed onto several slides never shares.
