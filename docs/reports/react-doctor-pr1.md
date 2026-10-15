@@ -2,7 +2,7 @@
 
 React Doctor (the repo's advisory CI check, `.github/workflows/react-doctor.yml`) reported **51 new findings** on commit `874fb039`: 1 error and 50 warnings, score 49/100. The check is advisory and passed. This file records what was done with each finding, as Instinct's review asked (D-45, condition 4).
 
-**Summary:** 1 fixed (the error); 1 false positive; 2 recorded as known debt; 47 accepted with the reason given per rule below. None is a correctness or security defect in the demo. Re-scan: CI runs React Doctor again on every push to the PR; this file reflects the scan of `874fb039`.
+**Summary:** 1 fixed (the error); 1 false positive; 1 recorded as known debt (described in two rows below); 48 accepted with the reason given per rule below. None is a correctness or security defect in the demo. Re-scan: CI runs React Doctor again on every push to the PR; this file reflects the scan of `874fb039`. CI's re-scan of `06763bb1` reports 0 errors and 50 warnings.
 
 ## Fixed
 

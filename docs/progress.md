@@ -5,7 +5,7 @@ Updated 2026-10-15. Update this file and push before ending every session.
 ## Where the work is
 
 - **Repo:** `Chaiidesign/craft` (a fork; never push upstream).
-- **Branch:** `feat/document-quality`, pushed to `origin`. Not merged. A draft pull request into the fork's `main` is open for review.
+- **Branch:** `feat/document-quality`, pushed to `origin`. Not merged. Pull request #1 into the fork's `main` is approved to merge (D-47).
 - **Spec:** [souvenir-document-generation-prd.md](souvenir-document-generation-prd.md).
 - **Feature docs:** [documents/README.md](documents/README.md) (run commands, design rules, approved wording, limitations).
 - **Demo:** `npx next dev -p 4010`, then http://localhost:4010/document-verify.
@@ -22,7 +22,7 @@ Updated 2026-10-15. Update this file and push before ending every session.
 | 6 | `0cca21d6` | Browser-session storage and malformed-session recovery, export cancel with late results discarded, renderer vs viewer errors, section error screens, duplicate-filename fixture |
 | 7 | see [reports/step-7.md](reports/step-7.md) | Full re-checks, phone and desktop screenshots, page-by-page export inspection, README completion, final report |
 
-Checks at Step 7 (final code): typecheck, lint and production build clean; 1,421 tests pass, 2 skipped. One known failure, `src/lib/theme.test.tsx`, predates this work and is unrelated.
+Checks at Step 7 (final code): typecheck, lint and production build clean; 1,421 tests pass, 2 skipped. After the review follow-up (`06763bb1`): 1,425 pass, 2 skipped. One known failure, `src/lib/theme.test.tsx`, predates this work and is unrelated.
 
 ## Unfinished
 
@@ -31,8 +31,8 @@ Checks at Step 7 (final code): typecheck, lint and production build clean; 1,421
 
 ## Next step
 
-Instinct's review of PR #1 (D-45: ready with conditions) is applied — see the "Review follow-up" in [reports/step-7.md](reports/step-7.md). Next: Instinct re-reviews the pushed follow-up. Merge only after that approval.
+Instinct re-reviewed the follow-up at `06763bb1` and approved PR #1 to merge (D-47); the non-blocking cleanup it listed is applied. Next: Chaitanya merges PR #1 into the fork's `main`.
 
 ## Blockers
 
-None for saving work. Merge and release wait for Instinct's verdicts.
+None. Merge is approved (D-47); release still waits for Instinct's verdict.
