@@ -5,6 +5,9 @@ Mock-data prototype of Souvenir's document design system: invoice and brief temp
 - **Workbench:** `/document-verify` — run `npx next dev -p 4010`, open http://localhost:4010/document-verify. Available in development and on Vercel preview deployments; 404 in production.
 - **Tests:** `npx vitest run src/lib/documents src/components/documents src/app/document-verify`
 - **Sample exports:** `npx vite-node scripts/documents/export-samples.ts`, then `scripts/documents/render-sample-pages.sh` for page images (see [Exports](#exports-step-5)).
+- **Checks:** typecheck `npx tsc --noEmit -p .`; lint `npx eslint src/lib/documents src/components/documents src/app/document-verify scripts/documents next.config.ts`; full suite `npx vitest run`; build `npx next build --webpack`. Use `npx next …` directly: the repo's `npm run dev` / `npm run build` first load secrets from AWS, which fails without credentials.
+- **Before you rely on it:** read [Unsupported and unverified](#unsupported-and-unverified) — in particular, Word and PowerPoint files were checked only in Apple's Pages and Keynote, which substitute Helvetica for the document fonts.
+- **Build record:** spec [../souvenir-document-generation-prd.md](../souvenir-document-generation-prd.md), decisions [../decisions.md](../decisions.md), step reports [../reports/](../reports/).
 
 This README grows with each build step; a section heading names the step that built it.
 
@@ -187,7 +190,7 @@ The workbench exports the revision being viewed: invoices and briefs as **PDF** 
 
 **Rules (`export/jobs.ts`, `export/adapters.ts`).**
 - One export = one frozen revision, chosen when it starts. The snapshot is taken from the revision store at that moment, so later edits never retarget it. Fixture 7 exports v1 while v2 is current and reads the PDF back to prove it is v1.
-- Each adapter has `capabilities`, `validate(snapshot)` and `render(snapshot, options)` with a typed result. Records are `pending`, `succeeded` (filename, MIME type, byte size, local URL), `failed` or `unsupported`, each with a typed error (`unsupported-format`, `validation-blocked`, `renderer-failed`, `font-missing-glyph`). Events: `exportStarted`, `exportSucceeded`, `exportFailed`.
+- Each adapter has `capabilities`, `validate(snapshot)` and `render(snapshot, options)` with a typed result. Records are `pending`, `succeeded` (filename, MIME type, byte size, local URL), `failed`, `unsupported` or `expired` (reloaded from browser storage: the record is kept, the file is not), with a typed error where one applies (`unsupported-format`, `validation-blocked`, `renderer-failed`, `font-missing-glyph`, `cancelled`). Events: `exportStarted`, `exportSucceeded`, `exportFailed`, `exportCancelled`.
 - Formats succeed or fail independently; there is no blanket success. A second export of the same revision and format is refused while one is pending. A retry is a new record (`retryOf`) with the same revision and format. Approval is not export success, and export is not sending.
 - A revision with missing required facts exports only after the draft warning ("This revision is a draft: {n} required facts are missing. The file will carry the draft marker." — "Export draft" / "Cancel"); the file carries "Draft — incomplete" in the title block and running header. An **invalid** revision is refused with its validation messages; the **empty** document is refused ("This invoice has no fields and no content blocks, so there is nothing to export."). Layout refusals (missing glyphs, a block taller than a page) refuse the export with the engine's message.
 - Exports always use the recipient view (internal notes left out) and the snapshot's own page size, never the preview's A4/Letter or audience toggles.
@@ -275,12 +278,47 @@ Approved Step 6 follow-ups: the `expired` export status (PRD §5 updated to five
 
 New values and new document wording are proposed for approval before they are used.
 
+## Proposed defaults
+
+These are prototype requirements to test (PRD §2), not claims about what Souvenir already does. Each lives in one place and can be changed there.
+
+| Default | Value | Where |
+|---|---|---|
+| Page sizes | A4 portrait (595.28 × 841.89pt) for the fixtures; Letter portrait (612 × 792pt) available | `PAGE_SIZES` in `tokens.ts`; each snapshot's `layoutPreset` |
+| Page margins | 51pt (18mm) all round; footer clearance 24pt; running-header clearance 20pt | `PAGE` in `tokens.ts` |
+| Slides | 16:9, 960 × 540pt, safe area and type floors (18pt body, 12pt captions) | `SLIDE`, `SLIDE_TYPE`, `SLIDE_FLOORS` in `tokens.ts` |
+| Type scales and font roles | Print and slide scales; Voice / Display / Function / Money roles with placeholder families | `tokens.ts`, `theme.ts` (see [Typography](#typography)) |
+| Rounding | Half-up away from zero, per line; discount and tax once on the summed amounts | `DOCUMENT_DEFAULTS` in `defaults.ts` |
+| Currencies | USD, EUR, GBP, INR, JPY with their minor-unit digits | `CURRENCIES` in `defaults.ts` |
+| Field schemas | Invoice and brief field IDs, labels and which are required | `INVOICE_FIELDS` (`invoice.ts`), `BRIEF_FIELDS` (`brief.ts`), `TEMPLATE_CORE_FIELDS` (`validation.ts`) |
+| Brand fallback | No logo or a broken logo → labelled dashed box; logo at most 140 × 40pt; 2pt accent rule | `BRAND` in `tokens.ts`; [Brand](#brand) |
+| Pagination | 2-line minimum each side of a break; 2 rows kept with the totals; preferred section break under 120pt | `KEEP`, `FLOW` in `tokens.ts` |
+| Revision operations | Bounded edit (one field, one line item property, one sentence or list item), accept/reject proposal, restore as a new revision, derive deck; no deleting history | `revisions.ts` |
+| Export gates | Supported format for the kind; not invalid; not empty; drafts need the warning confirmed; every character drawable; no block taller than a page; one pending job per revision and format | `export/capabilities.ts`, `export/adapters.ts`, `export/jobs.ts` |
+| Demo storage | One browser-storage key, `souvenir-doc-workbench:v1`, plus a backup key; files never stored | `session.ts` |
+
+## Unsupported and unverified
+
+**Not supported (honest disabled or refused states, never a substitute format):**
+- PowerPoint for invoices and briefs ("Invoices and briefs have no slide format."), and Word for decks ("Decks export as PowerPoint or PDF.").
+- The `ja-JP` locale and other non-Latin scripts: refused with "characters the fonts can't draw"; no Noto fallback is committed.
+- Fonts in PowerPoint files: named, not embedded (pptxgenjs can't embed fonts), so any viewer without them substitutes.
+- Native Word charts: the `docx` library can't make them. Word files carry the chart as a picture plus an editable data table; the picture is image-based and is identified as such.
+- Tagged / accessible PDF: the PDFs are not tagged, and no accessibility claim is made for exported files. The workbench's structured view is the screen-reader-readable view.
+- Cancelling a renderer once it has started (see [Known limitations](#known-limitations)).
+
+**Unverified:**
+- **Microsoft Word and Microsoft PowerPoint have never opened these files** — neither is installed on the build machine.
+- **Word files were checked only in Apple Pages, and PowerPoint files only in Apple Keynote. Both substitute Helvetica for the document fonts** (Pages ignores the fonts embedded in the Word file; PowerPoint files don't embed them). So the Pages and Keynote renders show the right content but not the intended typography, and their line and page breaks differ from the PDF.
+- What Pages and Keynote got wrong, beyond the font: Pages won't start a long table partway down a page, so the long invoice's "Amounts in INR" caption sits alone on page 2 and its table starts on page 3; Pages drew one line-item row (row 11 of the long invoice, whose text wraps right at the cell edge) one line short, hiding its last word "11" — the Word file holds the full text; Keynote 14.1 drops every pptxgenjs chart, so the chart slide shows its title, axes line and data summary but no bars; and with Helvetica, long slide headings wrap to two lines and crowd the text below, and on slide 5 a wrapped list item runs into the callout. Whether Word and PowerPoint share any of these is unverified.
+
 ## Known limitations
 
 - **`ja-JP` locale is unsupported** by the placeholder fonts: its dates use 年, 月 and 日 and its currency the full-width ￥, which no committed face can draw. Layout stops with a clear "characters the fonts can't draw" error; nothing is substituted. (Approved behaviour.)
 - Other non-Latin scripts are likewise refused until a face that covers them is added to a theme.
 - **Two tabs overwrite each other.** Each tab writes the whole session; the last write wins, so one tab's revisions can replace another's. No cross-tab syncing is built.
 - **Edits while the malformed-session banner shows are not saved** (saving is paused so the unreadable data isn't overwritten); the banner says so: "Changes won’t be saved while this banner is showing." The workbench is deliberately not made read-only.
+- **Deck headings repeated across a split section don't say "(continued)".** The deck gives a section's chart its own slide, so the evidence section spans slides 3–5 of the sample deck; slides 4 and 5 repeat its heading without "(continued)", which is only added when one slide's content overflows onto the next. Found in the Step 7 inspection; awaiting a decision.
 - **Cancel only works while fonts and images load.** Once the renderer starts it can't respond until it finishes; its result is then discarded. No artificial slow render is built to widen the window.
 
 ## Brand
