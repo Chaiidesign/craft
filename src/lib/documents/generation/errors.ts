@@ -5,6 +5,7 @@
 export type GateErrorCode =
   | 'schema'
   | 'wrong-kind'
+  | 'unsupported-type'
   | 'unknown-target'
   | 'missing-digest'
   | 'stale-target'

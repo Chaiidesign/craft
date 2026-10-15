@@ -109,19 +109,28 @@ function revisionError<R>(store: RevisionStore, e: unknown): ToolOutcome<R> {
   throw e
 }
 
-/** "Bill to, Invoice date and line 2" — what a revision changed, from its target keys. */
-function describeChanges(snapshot: DocumentSnapshot, before: DocumentSnapshot | null, targets: readonly string[]): string {
-  const items = (s: DocumentSnapshot | null) => (s?.blocks.find((b) => b.type === 'line-items') as Extract<DocumentSnapshot['blocks'][number], { type: 'line-items' }> | undefined)?.items ?? []
-  const names = targets.map((t) => {
-    if (t.startsWith('field:')) return snapshot.fields[t.slice(6)]?.label ?? t.slice(6)
+/** "Added line 2 and set Payment terms": what a revision did, from its target keys. */
+export function describeChanges(snapshot: DocumentSnapshot, before: DocumentSnapshot, targets: readonly string[]): string {
+  const items = (s: DocumentSnapshot) => s.blocks.flatMap((b) => (b.type === 'line-items' ? b.items : []))
+  const phrases = targets.map((t) => {
+    if (t.startsWith('field:')) {
+      const id = t.slice(6)
+      const label = snapshot.fields[id]?.label ?? id
+      const was = before.fields[id]?.state.status
+      const now = snapshot.fields[id]?.state.status
+      if (now === 'missing') return `cleared ${label}`
+      if (now === 'not-applicable') return `marked ${label} not applicable`
+      return was === 'provided' ? `changed ${label}` : `set ${label}`
+    }
     const id = t.slice(5)
     const index = items(snapshot).findIndex((i) => i.id === id)
-    if (index >= 0) return `line ${index + 1}`
     const was = items(before).findIndex((i) => i.id === id)
-    return was >= 0 ? `removed line ${was + 1}` : 'a line item'
+    if (index < 0) return `removed line ${was + 1}`
+    return was < 0 ? `added line ${index + 1}` : `changed line ${index + 1}`
   })
-  if (names.length === 0) return 'no values'
-  return names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`
+  if (phrases.length === 0) return 'No values changed'
+  const text = phrases.length === 1 ? phrases[0] : `${phrases.slice(0, -1).join(', ')} and ${phrases[phrases.length - 1]}`
+  return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
 function documentResult(store: RevisionStore, outputId: string, revisionId: RevisionId, changed: string[], followUp: string | null, attempts: number): DocumentResult {
@@ -158,7 +167,7 @@ export async function generateDocument(raw: unknown, ctx: ToolContext): Promise<
       task: 'generate', docType: 'invoice', request: input.prompt, conversation: history, document: documentView(base), today: today(ctx.env),
     }, (proposal) => gateProposal(base, proposal, { env: ctx.env, caller, sourceText, revising: false }), ctx.propose)
     if (!loop.ok) return fail(ctx.store, loop.code === 'gate-failed'
-      ? { code: 'gate-failed', message: `No valid document after ${loop.attempts} attempts; nothing was saved.`, retryable: true, errors: loop.errors }
+      ? { code: 'gate-failed', message: loop.errors.every((e) => !e.retryable) ? `${loop.errors[0]?.message ?? 'The request cannot be generated.'} Nothing was saved.` : `No valid document after ${loop.attempts} attempts; nothing was saved.`, retryable: loop.errors.some((e) => e.retryable), errors: loop.errors }
       : { code: loop.code, message: loop.message, retryable: loop.retryable })
     gated = loop.gated
     followUp = loop.proposal.followUp
@@ -223,7 +232,7 @@ export async function reviseDocument(raw: unknown, ctx: ToolContext): Promise<To
 
   try {
     const saved = saveGenerated(ctx.store, ctx.env, outputId, input.revisionId, gated.snapshot, {
-      changeSummary: `Revised ${describeChanges(gated.snapshot, invoice, gated.targets)}`,
+      changeSummary: describeChanges(gated.snapshot, invoice, gated.targets),
       operation: { type: 'generate', caller, targets: gated.targets },
       author: caller === 'model' ? GENERATOR_AUTHOR : DIRECT_AUTHOR,
     })
@@ -240,7 +249,7 @@ export async function reviseDocument(raw: unknown, ctx: ToolContext): Promise<To
  * time is the revision's own, nothing is regenerated or summarised, so the same revision and
  * format always give the same bytes.
  */
-export async function exportDocument(raw: unknown, ctx: ToolContext & { resources: (snapshot: DocumentSnapshot) => ExportResources }): Promise<ToolOutcome<ExportResult>> {
+export async function exportDocument(raw: unknown, ctx: ToolContext & { resources: (snapshot: DocumentSnapshot) => ExportResources | Promise<ExportResources> }): Promise<ToolOutcome<ExportResult>> {
   const parsed = ExportInputSchema.safeParse(raw)
   if (!parsed.success) return inputError(ctx.store, parsed.error)
   const { revisionId, format } = parsed.data
@@ -256,8 +265,14 @@ export async function exportDocument(raw: unknown, ctx: ToolContext & { resource
   const version = versionNumber(ctx.store, revisionId)
   const adapter = ADAPTERS[format]
   const checked = adapter.validate(snapshot)
+  let resources: ExportResources
+  try {
+    resources = await ctx.resources(snapshot)
+  } catch (e) {
+    return fail(ctx.store, { code: 'export-failed', message: e instanceof Error ? e.message : String(e), retryable: true })
+  }
   const outcome = await adapter.render(snapshot, {
-    resources: ctx.resources(snapshot),
+    resources,
     title: getDocument(ctx.store, revision.outputId).title,
     subject: `Revision ${revisionId} (v${version})`,
     createdAt: revision.createdAt,

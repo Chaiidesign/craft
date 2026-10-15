@@ -233,7 +233,7 @@ describe('revise', () => {
     const doc = getDocument(store, v1.result.outputId)
     expect(doc.revisionIds).toHaveLength(3)
     const summaries = history(store, v1.result.outputId).map((r) => r.changeSummary)
-    expect(summaries).toEqual(['Created', 'Revised line 2', 'Revised Payment terms'])
+    expect(summaries).toEqual(['Created', 'Added line 2', 'Set Payment terms'])
     expect(getRevision(store, r3.out.result.revisionId).operation).toEqual({ type: 'generate', caller: 'model', targets: [`field:${F.paymentTerms}`] })
     // v1 is unchanged: history is never rewritten.
     expect(getRevision(store, v1.result.revisionId).snapshot).toBe(getRevision(v1.store, v1.result.revisionId).snapshot)
@@ -322,10 +322,27 @@ describe('export: deterministic files from the pinned revision', () => {
     expect(body(docA)).toContain('Acme')
   })
 
+  it('reports resources that fail to load as export-failed', async () => {
+    const v1 = await generated()
+    const out = await exportDocument({ revisionId: v1.result.revisionId, format: 'pdf' }, { store: v1.store, env: v1.env, resources: () => Promise.reject(new Error('Font file could not be fetched.')) })
+    expect(out).toMatchObject({ ok: false, error: { code: 'export-failed', message: 'Font file could not be fetched.', retryable: true } })
+  })
+
   it('refuses a format the kind does not support, and an unknown revision', async () => {
     const v1 = await generated()
     const ctx = { store: v1.store, env: v1.env, resources: nodeResources }
     expect(await exportDocument({ revisionId: v1.result.revisionId, format: 'pptx' }, ctx)).toMatchObject({ ok: false, error: { code: 'unsupported' } })
     expect(await exportDocument({ revisionId: 'rev-nope', format: 'pdf' }, ctx)).toMatchObject({ ok: false, error: { code: 'not-found' } })
+  })
+})
+
+describe('requests for a type the generator cannot make yet', () => {
+  it('stop at once with unsupported-type, without retrying or saving', async () => {
+    const memo = { intent: { docType: 'other', audience: 'internal', summary: 'A memo for the team' }, statedAmount: null, operations: [], followUp: null }
+    const model = new ScriptedModel([memo, memo, memo])
+    const out = await generateDocument({ prompt: 'memo for the team about the offsite' }, context(model))
+    expect(model.requests).toHaveLength(1)
+    expect(out).toMatchObject({ ok: false, error: { code: 'gate-failed', retryable: false, errors: [expect.objectContaining({ code: 'unsupported-type', retryable: false })] } })
+    expect(out.store.revisions.size).toBe(0)
   })
 })

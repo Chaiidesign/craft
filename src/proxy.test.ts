@@ -98,37 +98,40 @@ describe("proxy document-quality demo", () => {
     vi.unstubAllEnvs();
   });
 
-  it("opens /document-verify without a session outside production", async () => {
+  it.each(["/document-verify", "/document-chat"])("opens %s without a session outside production", async (path) => {
     vi.stubEnv("NODE_ENV", "development");
-    const response = await proxy(new NextRequest("https://app.getsouvenir.com/document-verify"));
+    const response = await proxy(new NextRequest(`https://app.getsouvenir.com${path}`));
 
     expect(response.status).toBe(200);
     expect(auth0Mocks.getSession).not.toHaveBeenCalled();
   });
 
-  it("opens /document-verify on a Vercel preview deployment", async () => {
+  it.each(["/document-verify", "/document-chat"])("opens %s on a Vercel preview deployment", async (path) => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("VERCEL_ENV", "preview");
-    const response = await proxy(new NextRequest("https://craft-git-feat.vercel.app/document-verify"));
+    const response = await proxy(new NextRequest(`https://craft-git-feat.vercel.app${path}`));
 
     expect(response.status).toBe(200);
     expect(auth0Mocks.getSession).not.toHaveBeenCalled();
   });
 
-  it.each([undefined, "production"])("keeps /document-verify behind login in production (VERCEL_ENV=%s)", async (vercelEnv) => {
+  it.each([
+    ["/document-verify", undefined], ["/document-verify", "production"],
+    ["/document-chat", undefined], ["/document-chat", "production"],
+  ])("keeps %s behind login in production (VERCEL_ENV=%s)", async (path, vercelEnv) => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("VERCEL_ENV", vercelEnv);
-    const response = await proxy(new NextRequest("https://app.getsouvenir.com/document-verify"));
+    const response = await proxy(new NextRequest(`https://app.getsouvenir.com${path}`));
 
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe(
-      `https://app.getsouvenir.com/auth/login?returnTo=${encodeURIComponent("/document-verify")}`,
+      `https://app.getsouvenir.com/auth/login?returnTo=${encodeURIComponent(path)}`,
     );
   });
 
-  it("does not open anything beneath it", async () => {
+  it.each(["/document-verify/other", "/document-chat/other"])("does not open anything beneath it (%s)", async (path) => {
     vi.stubEnv("NODE_ENV", "development");
-    const response = await proxy(new NextRequest("https://app.getsouvenir.com/document-verify/other"));
+    const response = await proxy(new NextRequest(`https://app.getsouvenir.com${path}`));
 
     expect(response.status).toBe(302);
   });

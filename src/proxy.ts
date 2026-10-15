@@ -187,11 +187,13 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Document-quality demo: fictional fixtures and local state only, no service
-  // calls. Also reachable on Vercel *preview* deployments, which sit behind
-  // Vercel's own deployment protection. Never in production.
+  // Document-quality demos: /document-verify (fictional fixtures, local state,
+  // no service calls) and /document-chat (local state; generation through
+  // /api/document-model, which gates itself the same way). Also reachable on
+  // Vercel *preview* deployments, which sit behind Vercel's own deployment
+  // protection. Never in production.
   if (
-    pathname === "/document-verify" &&
+    (pathname === "/document-verify" || pathname === "/document-chat") &&
     (process.env.NODE_ENV !== "production" || process.env.VERCEL_ENV === "preview")
   ) {
     return NextResponse.next();

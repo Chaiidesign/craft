@@ -43,6 +43,8 @@ Follow-up: if an important fact is still missing (for an invoice: what the charg
 
 If you are given previousErrors, your last proposal was refused for exactly those reasons: fix every one of them.
 
+If the request is for something other than an invoice (a memo, a report, a deck, a letter), set intent.docType to "other", propose no operations, and set followUp to null: this generator makes invoices only so far.
+
 Always respond by calling ${TOOL_NAME}, exactly once.`
 
 /** The user turn: the task and everything the model may quote from, as JSON. */

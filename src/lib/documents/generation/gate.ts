@@ -13,7 +13,7 @@ import { validateSnapshot, type ValidationReport } from '../validation'
 import { applyOperations, normaliseQuote, type ApplyContext } from './apply'
 import { digest } from './digest'
 import { gateError, type GateError } from './errors'
-import { OperationSchema, ProposalSchema, type Operation, type Proposal } from './ops'
+import { GENERATABLE_KINDS, OperationSchema, ProposalSchema, type Operation, type Proposal } from './ops'
 import { moneyToDecimal } from './view'
 
 export type GateResult =
@@ -72,6 +72,9 @@ export function gateProposal(base: InvoiceSnapshot, raw: unknown, ctx: ApplyCont
   const parsed = ProposalSchema.safeParse(raw)
   if (!parsed.success) return { ok: false, errors: schemaErrors(parsed.error) }
   const proposal = parsed.data
+  if (proposal.intent.docType === 'other') {
+    return { ok: false, errors: [gateError('unsupported-type', 'intent.docType', `This generator makes ${GENERATABLE_KINDS.join(', ')}s only so far; “${proposal.intent.summary}” is not one.`, undefined, false)], proposal }
+  }
   if (proposal.intent.docType !== base.kind) {
     return { ok: false, errors: [gateError('wrong-kind', 'intent.docType', `This is a ${base.kind}; the proposal is for a ${proposal.intent.docType}.`)] }
   }

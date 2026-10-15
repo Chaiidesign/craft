@@ -38,13 +38,13 @@ Plan: prompt in chat → validated document → refine in conversation → expor
 | 1–3 | `e8fc8952` | Generation schema, three-layer gate, scripted model, bounded retries; `generate`, `revise`, `export` tools with JSON schemas; D-60 (missing descriptions), D-61 (unbranded documents), D-62 (deterministic PDF) |
 | 3b | `528d6e26` | Agent CLI (generate → revise → export with no UI), checked by hand: v1 → v2 → v3 → draft PDF |
 | 4 | `528d6e26` | Claude model and `/api/document-model` (tested with stand-in models; not yet run against the real API) |
-| 5 | | `/document-chat` with inline preview, live drafting state, refine, export |
-| 6 | | Hosted preview run (needs the Anthropic key in Vercel's Preview environment) |
+| 5 | (this commit) | `/document-chat` with inline preview, live drafting state, refine, export; report [reports/chat-s1.md](reports/chat-s1.md) |
+| 6 | | Real-model run and hosted preview run: waiting on the Anthropic key (`.env.local` for local, Vercel Preview env for hosted) |
 
 ## Next step
 
-S1 step 3b: the agent CLI, then the Claude model and its route. Separately, PR #1's release verdict from Instinct is still open (D-48).
+S1 step 6: run the eval set and the done prompt against the real model, then the hosted preview run (D-54), then open the PR and stop. Separately, PR #1's release verdict from Instinct is still open (D-48).
 
 ## Blockers
 
-None. Release waits for Instinct's verdict.
+- **S1 step 6 needs the Anthropic API key:** in `.env.local` for the local run, and in Vercel's Preview environment for the hosted run. Only Chaitanya can add it. Everything up to step 5 is done and checked against stand-ins.

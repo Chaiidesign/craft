@@ -32,7 +32,11 @@ export async function proposeUntilValid(
     }
     const result = gate(raw)
     if (result.ok && result.proposal) return { ok: true, gated: result, proposal: result.proposal, attempts: attempt }
-    if (!result.ok) previousErrors = result.errors
+    if (!result.ok) {
+      previousErrors = result.errors
+      // Nothing a retry could fix (e.g. a document type the generator can't make): stop asking.
+      if (result.errors.every((e) => !e.retryable)) return { ok: false, code: 'gate-failed', errors: result.errors, attempts: attempt }
+    }
   }
   return { ok: false, code: 'gate-failed', errors: previousErrors ?? [], attempts: maxRetries + 1 }
 }

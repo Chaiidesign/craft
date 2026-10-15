@@ -99,7 +99,7 @@ export const StatedAmountSchema = z.object({
 
 /** The intent, compiled from the request (pipeline step 1). Audience and detail are separate choices. */
 export const IntentSchema = z.object({
-  docType: z.enum(GENERATABLE_KINDS),
+  docType: z.enum([...GENERATABLE_KINDS, 'other']).describe('"other" when the request is for a kind of document this generator cannot make yet; then propose no operations.'),
   audience: z.enum(['recipient', 'internal']),
   summary: z.string().min(1).max(200).describe('One line: what this document is.'),
 }).strict()
