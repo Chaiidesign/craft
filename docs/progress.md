@@ -1,0 +1,39 @@
+# Progress — document-generation build
+
+Updated 2026-10-14. Update this file and push before ending every session.
+
+## Where the work is
+
+- **Repo:** `Chaiidesign/craft` (a fork; never push upstream).
+- **Branch:** `feat/document-quality`, pushed to `origin`. Not merged; no pull request opened yet.
+- **Spec:** [souvenir-document-generation-prd.md](souvenir-document-generation-prd.md).
+- **Feature docs:** [documents/README.md](documents/README.md) (run commands, design rules, approved wording, limitations).
+- **Demo:** `npx next dev -p 4010`, then http://localhost:4010/document-verify.
+
+## What works (Steps 1–6, all committed and pushed)
+
+| Step | Commit | What it delivered |
+|---|---|---|
+| 1 | `13265b24` | Document model, integer money, validation, fictional fixtures, workbench shell |
+| 2 | `87b61b53` | Typography theme, document tokens, layout primitives, invoice and brief templates |
+| 3 | `a6e5e0e5` | Layout with real font metrics, pagination by meaning, brief → deck |
+| 4 | `cf6c9884`, `0e031c76` | Immutable revisions, bounded edits, proposals, restore, mock approval markers, deck ancestry |
+| 5 | `8a05e154` | Real PDF, Word and PowerPoint exports of one frozen revision; per-format status, retry, generated-PDF preview |
+| 6 | `0cca21d6` | Browser-session storage and malformed-session recovery, export cancel with late results discarded, renderer vs viewer errors, section error screens, duplicate-filename fixture |
+
+Checks at Step 6: typecheck, lint and production build clean; 1,421 tests pass, 2 skipped. One known failure, `src/lib/theme.test.tsx`, predates this work and is unrelated.
+
+## Unfinished
+
+- **Word and PowerPoint in Microsoft's own apps are unverified.** Neither is installed here. Word files were checked in Pages and PowerPoint files in Keynote; the differences are recorded in the feature README.
+- **`docs/decisions.md` and `docs/reports/step-1.md` … `step-6.md` don't exist yet.** The approved decisions and wording for Steps 1–6 are currently recorded in the feature README's "Approved working agreements" section and in commit messages.
+- **No draft pull request** has been opened for review.
+- **Known limitations:** listed in the feature README. They include: cancel only works while fonts and images load; two open tabs overwrite each other's saved session; the `ja-JP` locale is refused by the placeholder fonts; Pages moves long tables to the next page.
+
+## Next step
+
+Backfill `docs/decisions.md` (Steps 1–6, numbered, dated, newest first) and `docs/reports/step-1.md` … `step-6.md` from the feature README and the commit history. Then open a draft pull request on the fork for Instinct's review. Proof: each recorded decision links to the commit or README section where it was applied.
+
+## Blockers
+
+None for saving work. Merge and release wait for Instinct's verdicts.
