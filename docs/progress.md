@@ -40,7 +40,7 @@ Plan: prompt in chat → validated document → refine in conversation → expor
 | 4 | `528d6e26` | Claude model and `/api/document-model` (tested with stand-in models; not yet run against the real API) |
 | 5 | `2c89554e` | `/document-chat` with inline preview, live drafting state, refine, export; report [reports/chat-s1.md](reports/chat-s1.md) |
 | 5b | `ac54180d` | Each document's conversation starts at "New document" (D-64); D-63 ("$" = USD) recorded as proposed; hosted-path checks |
-| 5c | see git log | Model provider switch: Souvenir's OpenRouter key, direct Anthropic API as fallback (D-65) |
+| 5c | `64ce87cc` | Model provider switch: Souvenir's OpenRouter key, direct Anthropic API as fallback (D-65) |
 | 6 | | Real-model run and hosted preview run: waiting on the OpenRouter key (`.env.local` for local, Vercel Preview env for hosted) |
 
 ## Next step
