@@ -1,0 +1,366 @@
+/* Paginated document preview. Positions and heights come from the layout
+   engine (inline styles in points); sizes, spacing and colours read --doc-*
+   variables generated from src/lib/documents/tokens.ts and the issuer palette.
+   This file sets no font family and no font size. Kerning and ligatures are
+   off so the browser draws text exactly as wide as the engine measured it. */
+
+.frame {
+  width: 100%;
+  min-width: 0;
+}
+
+.pages {
+  display: grid;
+  justify-content: center;
+  gap: 24px;
+}
+
+.sheet {
+  position: relative;
+  box-sizing: border-box;
+  background: var(--doc-paper);
+  color: var(--doc-ink);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08), 0 4px 16px rgb(0 0 0 / 0.06);
+  font-family: var(--doc-type-body-family);
+  font-size: var(--doc-type-body-size);
+  line-height: var(--doc-type-body-leading);
+  font-synthesis: none;
+  font-kerning: none;
+  font-variant-ligatures: none;
+  font-feature-settings: "kern" 0, "liga" 0, "clig" 0, "calt" 0;
+}
+
+/* Zero-specificity reset so primitive styles below always win. */
+:where(.sheet) :where(p, dl, dt, dd, ol, ul, li, figure, figcaption, blockquote, h1, h2, h3, table, caption) {
+  margin: 0;
+  padding: 0;
+}
+
+.content,
+.fragment,
+.abs,
+.cell,
+.runningHeader,
+.footer {
+  position: absolute;
+}
+
+.content {
+  overflow: visible;
+}
+
+.fragment {
+  left: 0;
+  width: 100%;
+}
+
+.fill {
+  position: relative;
+  height: 100%;
+}
+
+.abs {
+  left: 0;
+  width: 100%;
+}
+
+.line {
+  display: block;
+  white-space: pre;
+}
+
+.muted {
+  color: var(--doc-muted);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.citation {
+  color: var(--doc-muted);
+}
+
+/* ── Values ────────────────────────────────────────────────────────────────── */
+
+.value,
+.unknown,
+.unknownReasons {
+  display: block;
+}
+
+.sheet [data-align='end'] {
+  text-align: right;
+}
+
+.missing {
+  display: block;
+  box-sizing: content-box;
+  border-style: dashed;
+  border-color: var(--doc-missing-rule);
+  background: var(--doc-missing-fill);
+  color: var(--doc-missing-ink);
+  text-align: left;
+}
+
+.sheet [data-align='end'] > .missing {
+  margin-left: auto;
+}
+
+.unknown {
+  color: var(--doc-unknown-ink);
+}
+
+.unknownReasons {
+  color: var(--doc-muted);
+}
+
+/* ── Letterhead and title ──────────────────────────────────────────────────── */
+
+.letterhead {
+  box-sizing: border-box;
+  height: 100%;
+  border-bottom: 0 solid var(--doc-accent);
+}
+
+.letterheadRow {
+  display: flex;
+  align-items: flex-start;
+}
+
+.logo {
+  display: block;
+  flex: none;
+  object-fit: contain;
+}
+
+.logoFallback {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 0.5pt dashed var(--doc-rule-colour);
+  color: var(--doc-muted);
+  text-align: center;
+}
+
+.issuerName {
+  min-width: 0;
+}
+
+.draftMarker {
+  position: absolute;
+  left: 0;
+  box-sizing: content-box;
+  border-style: solid;
+  border-color: var(--doc-missing-rule);
+  background: var(--doc-missing-fill);
+  color: var(--doc-missing-ink);
+}
+
+/* ── Text blocks ───────────────────────────────────────────────────────────── */
+
+.summary {
+  box-sizing: border-box;
+  height: 100%;
+  border-left: 0 solid var(--doc-accent);
+}
+
+.callout {
+  box-sizing: border-box;
+  height: 100%;
+  border-left: 0 solid var(--doc-rule-colour);
+}
+
+.callout[data-tone='warning'] {
+  border-left-color: var(--doc-missing-rule);
+}
+
+/* Outline, not border: it marks internal notes without changing measured size. */
+.callout[data-audience='internal'] {
+  background: var(--doc-internal-fill);
+  outline: 0.5pt dashed var(--doc-muted);
+  outline-offset: -0.5pt;
+}
+
+.list {
+  list-style: none;
+}
+
+.list li {
+  position: relative;
+}
+
+.marker {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+/* ── Tables ────────────────────────────────────────────────────────────────── */
+
+.table,
+.totals {
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table {
+  width: 100%;
+}
+
+.table th,
+.table td,
+.totals th,
+.totals td {
+  box-sizing: border-box;
+  text-align: left;
+  vertical-align: top;
+}
+
+.table th {
+  border-bottom: 0 solid var(--doc-ink);
+}
+
+.table td {
+  border-bottom: 0 solid var(--doc-rule-colour);
+}
+
+.table [data-align='end'],
+.totals [data-align='end'] {
+  text-align: right;
+}
+
+.totals th,
+.totals td {
+  border-top: 0 solid var(--doc-ink);
+}
+
+/* ── Charts ────────────────────────────────────────────────────────────────── */
+
+.chart {
+  display: block;
+}
+
+.chartAxis {
+  stroke: var(--doc-ink);
+}
+
+.chartBar {
+  fill: var(--doc-accent);
+}
+
+.chartText {
+  fill: var(--doc-ink);
+}
+
+/* ── Slides ────────────────────────────────────────────────────────────────── */
+
+/* Caveat rule sits in the safe margin so it never narrows the measured text. */
+.slideCaveat::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(-1 * var(--doc-space-lg));
+  width: 2pt;
+  background: var(--doc-missing-rule);
+}
+
+/* ── Page furniture ────────────────────────────────────────────────────────── */
+
+.runningHeader {
+  box-sizing: border-box;
+  padding-bottom: var(--doc-space-sm);
+  border-bottom: 0.5pt solid var(--doc-rule-colour);
+  color: var(--doc-muted);
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--doc-space-lg);
+}
+
+.breakHint {
+  position: absolute;
+  top: var(--doc-space-xl);
+  left: var(--doc-margin-left);
+  right: var(--doc-margin-right);
+  color: var(--doc-accent);
+}
+
+/* ── Workbench-side states (not part of the document) ──────────────────────── */
+
+.emptyState,
+.layoutError,
+.status {
+  display: grid;
+  gap: 8px;
+  max-width: 60ch;
+  margin: 24px auto;
+  padding: 16px;
+  border-radius: 8px;
+  background: var(--color-surface-default);
+  color: var(--color-text-default);
+}
+
+.emptyState {
+  border: 1px dashed var(--neutral-300);
+}
+
+.layoutError {
+  border: 1px solid var(--red-100);
+  background: var(--red-50);
+  color: var(--red-700);
+}
+
+.emptyState p,
+.layoutError p {
+  margin: 0;
+}
+
+/* ── Generated-PDF preview (pdf.js canvases) ───────────────────────────────── */
+
+.pdfPreviewTitle {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pdfToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.pdfFrame {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.pdfFrame[data-zoom='fit'] {
+  overflow-x: hidden;
+}
+
+.pdfPage {
+  display: block;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08), 0 4px 16px rgb(0 0 0 / 0.06);
+}
