@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420">
+  <!-- Sample design image "Soft Bloom": pastel and rounded. Fictional, for the offline extraction demo. -->
+  <defs>
+    <filter id="card" x="-15%" y="-15%" width="130%" height="150%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#C2417A" flood-opacity="0.14"/>
+    </filter>
+  </defs>
+  <rect width="640" height="420" fill="#FFF5F7"/>
+  <text x="56" y="72" font-family="Avenir Next, sans-serif" font-size="30" font-weight="700" fill="#3A2240">Your moodboard</text>
+  <text x="56" y="102" font-family="Avenir Next, sans-serif" font-size="16" fill="#8A6F8F">Shared with the studio · 12 pins</text>
+  <rect x="56" y="132" width="528" height="128" rx="22" fill="#FFFFFF" stroke="#F3D5E0" filter="url(#card)"/>
+  <circle cx="98" cy="176" r="14" fill="#FFF5F7" stroke="#C2417A" stroke-width="1.5"/>
+  <text x="128" y="172" font-family="Avenir Next, sans-serif" font-size="16" font-weight="600" fill="#3A2240">Spring Campaign Brief</text>
+  <text x="128" y="194" font-family="Avenir Next, sans-serif" font-size="13" fill="#8A6F8F">Brief · Edited this morning</text>
+  <rect x="128" y="212" width="78" height="26" rx="13" fill="#FFF5F7" stroke="#F3D5E0"/>
+  <text x="142" y="230" font-family="Avenir Next, sans-serif" font-size="12" font-weight="600" fill="#C2417A">Draft 3</text>
+  <rect x="56" y="296" width="356" height="48" rx="24" fill="#FFFFFF" stroke="#F3D5E0"/>
+  <text x="80" y="326" font-family="Avenir Next, sans-serif" font-size="16" fill="#8A6F8F">Ask for changes…</text>
+  <rect x="428" y="296" width="156" height="48" rx="24" fill="#C2417A"/>
+  <text x="466" y="326" font-family="Avenir Next, sans-serif" font-size="16" font-weight="600" fill="#FFFFFF">Open brief</text>
+</svg>

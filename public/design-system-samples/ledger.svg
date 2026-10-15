@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420">
+  <!-- Sample design image "Ledger": warm editorial. Fictional, for the offline extraction demo. -->
+  <defs>
+    <filter id="card" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="#2B2118" flood-opacity="0.08"/>
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#2B2118" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+  <rect width="640" height="420" fill="#F6F1E7"/>
+  <text x="48" y="64" font-family="Georgia, serif" font-size="28" font-weight="600" fill="#2B2118">Quarterly letter</text>
+  <text x="48" y="92" font-family="Helvetica Neue, Arial, sans-serif" font-size="15" fill="#75685A">Drafted for the partners · 6 pages</text>
+  <rect x="48" y="120" width="544" height="120" rx="6" fill="#FFFDF8" stroke="#E3D8C6" filter="url(#card)"/>
+  <rect x="72" y="146" width="20" height="24" rx="2" fill="none" stroke="#75685A" stroke-width="1.5"/>
+  <text x="108" y="160" font-family="Helvetica Neue, Arial, sans-serif" font-size="15" font-weight="500" fill="#2B2118">Q3 Letter to Partners</text>
+  <text x="108" y="180" font-family="Helvetica Neue, Arial, sans-serif" font-size="12" fill="#75685A">Document · Saved 2 min ago</text>
+  <rect x="72" y="198" width="72" height="22" rx="999" fill="#F6F1E7" stroke="#E3D8C6"/>
+  <text x="84" y="213" font-family="Helvetica Neue, Arial, sans-serif" font-size="11" font-weight="500" letter-spacing="0.6" fill="#75685A">DRAFT 2</text>
+  <rect x="48" y="272" width="380" height="40" rx="4" fill="#FFFDF8" stroke="#E3D8C6"/>
+  <text x="64" y="297" font-family="Helvetica Neue, Arial, sans-serif" font-size="15" fill="#75685A">Ask for a revision…</text>
+  <rect x="444" y="272" width="148" height="40" rx="4" fill="#8C3B1F"/>
+  <text x="482" y="297" font-family="Helvetica Neue, Arial, sans-serif" font-size="15" font-weight="500" fill="#FFF8F0">Open draft</text>
+</svg>
