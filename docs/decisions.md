@@ -12,6 +12,22 @@ Status is **approved** unless marked otherwise. When a later decision replaces a
 
 The plan for this work is the "chat → document → refine → export" plan approved on 2026-10-15: slice S1 (invoice end to end, real model, hosted) is this branch; S2–S6 follow on later branches. Decisions D-49 to D-58 were settled by Chaitanya and Instinct before building; D-59 onward were made during the build.
 
+### D-64 · 2026-10-15 · Each document's conversation starts at "New document"
+**Problem.** The chat sent the model, and allowed quotes from, every message in the thread. A new invoice could therefore quote "$2,400" from an earlier document's conversation, and the quote check would pass because those words really were in the source text.
+
+**Rule.** "New document" now adds a divider to the thread. Only the person's messages since the last divider go to the model as conversation, and only those can be quoted. This applies D-49: nothing from another document is carried in.
+
+Applied in: `src/app/document-chat/DocumentChat.tsx`, `chatSession.ts`; test in `chat-ui.test.tsx`.
+
+### D-63 · 2026-10-15 · "$" is read as US dollars — awaiting Chaitanya's confirmation
+**Status: proposed, not approved.**
+
+The model's instructions (`generation/claude.ts`) say a "$" amount means USD unless another dollar currency is named, and the model sets the invoice currency quoting the amount. This is an inference, not a stated fact. It decides how the done prompt, "invoice for Acme, $2,400", is read.
+
+The alternative is to leave the currency missing for a bare "$". Then every amount on the invoice is unknown until the person names the currency, and the line items can't be checked against $2,400.
+
+Listed in the S1 report for approval.
+
 ### D-62 · 2026-10-15 · What "deterministic export" guarantees
 The brief: "Export is deterministic; never re-summarize at export time." The `export_document` tool renders the pinned revision with the existing adapters and nothing else, and stamps the file with the **revision's** creation time, not the export time.
 - **PDF: byte-identical** for the same revision. jsPDF chose a random file ID on every export; `pdf.ts` now derives it from the title, subject and creation time.

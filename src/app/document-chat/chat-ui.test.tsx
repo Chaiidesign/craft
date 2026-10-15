@@ -119,6 +119,21 @@ describe('document chat', () => {
     expect(text()).toContain('Updated to v2: added line 2.')
   })
 
+  it('starts a new document from scratch: nothing said before "New document" is sent or quotable', async () => {
+    const quotesOldAmount = { ...generate, operations: [generate.operations[1], generate.operations[2]] }
+    const model = new ScriptedModel([generate, quotesOldAmount, quotesOldAmount, quotesOldAmount])
+    await mount(model)
+    await send('invoice for Acme, $2,400')
+    await act(async () => { [...host.querySelectorAll('button')].find((b) => b.textContent === 'New document')!.click() })
+    expect(host.querySelector('[role="separator"]')?.textContent).toBe('New document')
+    expect(host.querySelector('textarea')!.getAttribute('placeholder')).toBe('Describe the document you need…')
+    await send('an invoice for Initech')
+    expect(model.requests[1]).toMatchObject({ task: 'generate', request: 'an invoice for Initech', conversation: [] })
+    // "$2,400" is only in the earlier document's conversation, so quoting it is refused.
+    expect(host.querySelector('details')?.textContent).toContain('“$2,400” is not in the request.')
+    expect(cards()).toHaveLength(1)
+  })
+
   it('says what went wrong when the gate refuses, and saves nothing', async () => {
     const bad = { ...generate, operations: [{ ...generate.operations[0], provenance: { source: 'prompt', evidence: 'Globex' } }] }
     await mount(new ScriptedModel([bad, bad, bad]))

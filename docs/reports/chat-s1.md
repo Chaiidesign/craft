@@ -84,6 +84,11 @@ Fixed after looking:
 - **The rate limit is per server instance**, so it is best effort on serverless.
 - **The preview is a full A4 page scaled to the card.** At 320 px it is small, and there is no zoom yet.
 
+## Needs a decision
+
+- **D-63:** "$" is read as US dollars unless another dollar is named. This is proposed, not approved; see decisions.md.
+- **D-64** (applied): each document's conversation starts at "New document", so a value from an earlier document can't be quoted into a new one. The divider's label is "New document".
+
 ## New user-facing text (for approval before merge)
 
 Page and empty state:
@@ -141,4 +146,10 @@ The preview reuses the approved missing state ("Missing — Description") and th
 
 1. **Local real-model run:** put `ANTHROPIC_API_KEY=…` in `~/craft/.env.local` (git-ignored by `.env*`). I then run the eval set and the done prompt against Claude and record the results.
 2. **Hosted run (D-54):** add `ANTHROPIC_API_KEY` to the Vercel project's environment variables with **Preview** scope. Vercel builds this branch on push. Then, in a fresh browser on the preview URL: "invoice for Acme, $2,400" → two refinements → PDF. The preview sits behind Vercel's deployment protection, so the visitor needs Vercel access, or a protection-bypass link if I'm to drive it.
-3. **Then:** screenshots of the hosted run go in this folder, I open the PR from `feat/chat-document-flow` to `main` and stop. Merge and release are Instinct's verdicts.
+3. **Before the hosted run, checked read-only on 2026-10-15:**
+   - **Preview builds:** Vercel built this branch on every push. The build at `83a66c75` is READY at `craft-43c9gpnm5-chaiidesigns-projects.vercel.app`.
+   - **Protection:** Vercel's login protection (SSO) is on for all deployments except custom domains, so the preview, and with it the key, can't be reached by strangers.
+   - **Not verified: the Auth0 settings in Preview.** I don't have permission to list the project's environment variables. Every `/api/*` request passes the existing Auth0 middleware, so if `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`, `AUTH0_SECRET` and `APP_BASE_URL` are missing from Preview, the model route will fail with 500 there even with the key.
+   - **New variables need a redeploy:** they reach only deployments built after they're added, so redeploy, or push, once the key is in.
+   - **CI:** React Doctor runs only on pull requests and on `main`, so it hasn't scanned this branch yet. It will when the PR opens.
+4. **Then:** screenshots of the hosted run go in this folder, I open the PR from `feat/chat-document-flow` to `main` and stop. Merge and release are Instinct's verdicts.

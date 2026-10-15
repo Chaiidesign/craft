@@ -113,6 +113,23 @@
 
 /* ── Messages ── */
 
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--neutral-600);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--neutral-200);
+}
+
 .userRow {
   display: flex;
   justify-content: flex-end;

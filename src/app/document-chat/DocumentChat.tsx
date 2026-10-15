@@ -116,7 +116,15 @@ export function DocumentChat({ model: modelProp, storage: storageProp, resources
     threadEnd.current?.scrollIntoView?.({ block: 'end', behavior: 'smooth' })
   }, [chat.messages.length, pending?.draft.applied])
 
-  const userHistory = (messages: readonly ChatMessage[]) => messages.flatMap((m) => (m.role === 'user' ? [m.text] : [])).slice(-40)
+  /**
+   * What the person has said about the current document: their messages since the last
+   * "New document". Only these go to the model and only these can be quoted, so a value from
+   * an earlier document can never be carried into a new one (D-49).
+   */
+  const userHistory = (messages: readonly ChatMessage[]) => {
+    const start = messages.map((m) => m.role).lastIndexOf('divider') + 1
+    return messages.slice(start).flatMap((m) => (m.role === 'user' ? [m.text] : [])).slice(-40)
+  }
 
   async function send(text: string) {
     const prompt = text.trim()
@@ -177,7 +185,7 @@ export function DocumentChat({ model: modelProp, storage: storageProp, resources
 
   function startNew() {
     if (pending) return
-    save({ ...chat, activeOutputId: null })
+    save({ ...chat, messages: [...chat.messages, { id: env.nextId('msg'), role: 'divider' }], activeOutputId: null })
     textarea.current?.focus()
   }
 
@@ -210,6 +218,9 @@ export function DocumentChat({ model: modelProp, storage: storageProp, resources
         )}
 
         {chat.messages.map((m) => {
+          if (m.role === 'divider') {
+            return <div key={m.id} className={styles.divider} role="separator"><span>New document</span></div>
+          }
           if (m.role === 'user') {
             return <div key={m.id} className={styles.userRow}><MessageBubble role="user" content={m.text} hideActions maxWidth={520} /></div>
           }

@@ -12,6 +12,8 @@ export const CHAT_BACKUP_KEY = 'souvenir-doc-chat:v1:backup'
 
 export type ChatMessage =
   | { id: string; role: 'user'; text: string }
+  /** "New document": the next message starts a new document, and nothing before this line is quoted for it. */
+  | { id: string; role: 'divider' }
   /** A saved revision, shown as a document card. */
   | { id: string; role: 'assistant'; kind: 'document'; outputId: string; revisionId: string; created: boolean; reply: string }
   /** Nothing was saved: why, in words, and the gate's details. */
@@ -41,6 +43,7 @@ const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object
 function messageProblem(m: unknown, store: RevisionStore): string | null {
   if (!isObj(m) || typeof m.id !== 'string') return 'a message has no ID'
   if (m.role === 'user') return typeof m.text === 'string' ? null : `message ${m.id} has no text`
+  if (m.role === 'divider') return null
   if (m.role !== 'assistant') return `message ${m.id} has an unknown role`
   if (m.kind === 'document') {
     if (typeof m.revisionId !== 'string' || !store.revisions.has(m.revisionId)) return `message ${m.id} refers to a revision that isn’t saved`
