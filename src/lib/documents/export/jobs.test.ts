@@ -227,6 +227,16 @@ describe('export jobs', () => {
     expect(startExport(late, env, s2, { outputId, revisionId: v1.revisionId, format: 'pdf' }).record.status).toBe('pending')
   })
 
+  it('settling a job whose record is gone (workbench reset) changes nothing', async () => {
+    const { env, store, outputId, v1 } = setup()
+    const started = startExport(emptyExports(), env, store, { outputId, revisionId: v1.revisionId, format: 'pdf' })
+    const outcome = await renderJob(started.job!, { resources: nodeResources(started.job!.snapshot), title: 't', subject: 's', createdAt: '2026-10-14T09:00:00.000Z' })
+    const afterReset = emptyExports()
+    let urls = 0
+    expect(settleExport(afterReset, env, started.job!, outcome, () => { urls++; return 'blob:x' })).toBe(afterReset)
+    expect(urls).toBe(0)
+  })
+
   it('only a pending job can be cancelled', async () => {
     const { env, store, outputId, v1 } = setup()
     const started = startExport(emptyExports(), env, store, { outputId, revisionId: v1.revisionId, format: 'pdf' })

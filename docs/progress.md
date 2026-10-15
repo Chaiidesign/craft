@@ -27,12 +27,11 @@ Checks at Step 7 (final code): typecheck, lint and production build clean; 1,421
 ## Unfinished
 
 - **Word and PowerPoint in Microsoft's own apps are unverified.** Neither is installed here. Word files were checked only in Apple Pages and PowerPoint files only in Apple Keynote, which both substitute Helvetica; differences are in the feature README's "Unsupported and unverified".
-- **Deck "(continued)" finding** from the Step 7 inspection: repeated headings across a deliberately split section don't say "(continued)". Awaiting a decision (see [reports/step-7.md](reports/step-7.md)).
-- **Known limitations:** listed in the feature README.
+- **Known limitations and debt:** listed in the feature README (including generated files kept in memory until the page closes).
 
 ## Next step
 
-Instinct reviews the draft pull request. Record the verdicts in [decisions.md](decisions.md), apply them (including the "(continued)" decision), commit and push; merge only after approval.
+Instinct's review of PR #1 (D-45: ready with conditions) is applied — see the "Review follow-up" in [reports/step-7.md](reports/step-7.md). Next: Instinct re-reviews the pushed follow-up. Merge only after that approval.
 
 ## Blockers
 

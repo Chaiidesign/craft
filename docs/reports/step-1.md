@@ -15,6 +15,7 @@ PRD §5 (types and contracts) and §11 (fixtures), as the base for everything el
 - **Missing facts** are shown as missing beside the field, never filled in or treated as zero. Without tax, the total reads "Unknown — tax is unknown, not zero" instead of a final amount.
 - **Fixtures** (`src/lib/documents/fixtures/`): all 11 PRD fixtures, all fictional and labelled "Sample data — fictional". The eight plain documents are fully built; the five scenarios (deck, edit, approval, restore, export and error cases) are listed with the step that makes them runnable, and say they can't run yet.
 - **Demo page:** `/document-verify`. `src/proxy.ts` lets it open without a login in development and on Vercel previews; in production it stays behind login (D-05).
+  > **Correction (2026-10-15, Instinct review D-45):** "behind login" is only half of it. In production `src/proxy.ts` doesn't allow the route through, so a visitor who isn't signed in is sent to log in; a signed-in user then gets a **404**, because `page.tsx` calls `notFound()` outside development and Vercel previews. The README's "404 in production" describes the signed-in case; both are true.
 
 ## How to see it
 

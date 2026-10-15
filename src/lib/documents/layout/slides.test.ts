@@ -88,6 +88,18 @@ describe('brief → deck', () => {
     for (let i = 1; i <= 14; i++) expect(text).toContain(`Point ${i}:`)
   })
 
+  it('marks every repeat of a section heading "(continued)", including a deliberate split around the chart', () => {
+    const { slides } = laidOut()
+    const headingsOf = (s: (typeof slides)[number]) => [...(s.heading ? [s.heading] : []), ...s.items.filter((i) => i.kind === 'heading').map((i) => i.lines)].map((ls) => ls.map(lineText).join(' '))
+    const evidenceHeadings = slides.flatMap((s) => headingsOf(s).filter((t) => t.startsWith('Evidence:')).map((t) => ({ slide: s.number, t })))
+    expect(evidenceHeadings.length).toBe(3)
+    expect(evidenceHeadings[0].t.endsWith('(continued)')).toBe(false)
+    for (const h of evidenceHeadings.slice(1)) expect(h.t.endsWith('(continued)'), `slide ${h.slide}`).toBe(true)
+    // No other heading is marked: each other section appears once.
+    const others = slides.flatMap(headingsOf).filter((t) => !t.startsWith('Evidence:'))
+    expect(others.some((t) => t.endsWith('(continued)'))).toBe(false)
+  })
+
   it('lets at most two short consecutive sections share a slide, each with its own heading', () => {
     const { slides, derived } = laidOut()
     const shared = slides.filter((s) => s.planIds.length > 1)
@@ -101,8 +113,13 @@ describe('brief → deck', () => {
     // Every section heading still appears exactly once (continuations aside).
     const headingTexts = slides.flatMap((s) => [...(s.heading ? [s.heading] : []), ...s.items.filter((i) => i.kind === 'heading').map((i) => i.lines)]).map((ls) => ls.map(lineText).join(' '))
     for (const b of derived.snapshot.blocks) if (b.type === 'heading') expect(headingTexts.filter((t) => t === b.text).length, b.text).toBeGreaterThanOrEqual(1)
-    // Split sections and chart slides never share.
-    for (const s of shared) expect(s.continued || s.layout !== 'content').toBe(false)
+    // Only content slides share, and a section that overflowed onto several slides never does.
+    const slidesPerPlan = new Map<string, number>()
+    for (const s of slides) for (const id of s.planIds) slidesPerPlan.set(id, (slidesPerPlan.get(id) ?? 0) + 1)
+    for (const s of shared) {
+      expect(s.layout).toBe('content')
+      for (const id of s.planIds) expect(slidesPerPlan.get(id), id).toBe(1)
+    }
   })
 
   it('does not combine sections that would not fit together', () => {

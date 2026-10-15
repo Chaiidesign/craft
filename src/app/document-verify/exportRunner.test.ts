@@ -64,6 +64,28 @@ describe('runExport: reports follow the stored record', () => {
     expect(c.state().events.map((e) => e.type)).toEqual(['exportStarted', 'exportCancelled'])
   })
 
+  it('reset while rendering: the late result is discarded silently — no file, record, event, announcement or preview, and no rejection', async () => {
+    const { env, store, outputId, v1 } = setup()
+    const c = controls()
+    const said: string[] = []
+    const previews: string[] = []
+    let urls = 0
+    let release!: () => void
+    const gate = new Promise<void>((r) => { release = r })
+    const resources = async (s: Parameters<typeof nodeResources>[0]): Promise<ExportResources> => { await gate; return nodeResources(s) }
+    const running = runExport({ controls: c, env, store, req: { outputId, revisionId: v1.revisionId, format: 'pdf' }, resources, localUrl: () => { urls++; return 'blob:late' }, announce: (m) => said.push(m), onPdfReady: (id) => previews.push(id) })
+    expect(c.state().records[0].status).toBe('pending')
+    // Reset (or Start again) replaces every export record while the render is held.
+    const fresh = emptyExports()
+    c.updateExports(() => fresh)
+    release()
+    await expect(running).resolves.toEqual({ discarded: true })
+    expect(c.state()).toBe(fresh)
+    expect(said).toEqual(['Preparing PDF of v1…'])
+    expect(previews).toEqual([])
+    expect(urls).toBe(0)
+  })
+
   it('a renderer failure announces the failure; a refusal comes back as text', async () => {
     const { env, store, outputId, v1 } = setup()
     const c = controls()

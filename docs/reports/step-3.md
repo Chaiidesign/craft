@@ -22,7 +22,9 @@ PRD §8 (pagination by meaning) and fixture 5 (brief → deck with meaningful sl
 - "Show page-break reasons" shows why each page started.
 - Nothing is clipped or shrunk: anything too big for an empty page shows an explicit error.
 - A4 and Letter are both available in the preview.
-- **Brief → deck** (`deck.ts`, `layout/slides.ts`): 9 slides at 16:9 from the evidence brief. Every fact and all 4 citations carry over, nothing is summarised, the chart gets its own slide, the internal note is left out, and dense sections split across slides instead of shrinking below 18pt (body) or 12pt (captions). The ancestry check showed "Deferred to Step 4".
+- **Brief → deck** (`deck.ts`, `layout/slides.ts`): 9 slides at 16:9 *(as reported before D-26)* from the evidence brief. Every fact and all 4 citations carry over, nothing is summarised, the chart gets its own slide, the internal note is left out, and dense sections split across slides instead of shrinking below 18pt (body) or 12pt (captions). The ancestry check showed "Deferred to Step 4".
+
+> **Correction (2026-10-15, Instinct review D-45):** the sample deck has **6 slides**, not 9. The report counted slides before the verdict D-26 (up to two short sections may share a slide), which was applied in the Step 3 commit `a6e5e0e5` itself, so the committed deck — and every later sample — has 6. The "9 slides" in the browser check below is likewise the pre-D-26 count.
 
 ## Checks
 

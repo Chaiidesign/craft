@@ -2,7 +2,7 @@
 
 - **Reported:** 2026-10-15 (UTC). Branch `feat/document-quality` on `Chaiidesign/craft`.
 - **Spec:** [../souvenir-document-generation-prd.md](../souvenir-document-generation-prd.md). **Decisions:** [../decisions.md](../decisions.md). **Feature README:** [../documents/README.md](../documents/README.md).
-- **Status:** built and checked; awaiting Instinct's review. Nothing in this build is approved for merge or release yet.
+- **Status:** Instinct reviewed PR #1 at `874fb039`: ready with conditions (D-45). The conditions are applied below under "Review follow-up". **No merge until Instinct re-reviews.**
 
 ## Scope
 
@@ -22,6 +22,7 @@ PRD §12: run the actual checks, inspect actual pixels (phone and desktop previe
 ## Changed files
 
 Against `main` (`7b8d94f3`): **171 files, +15,419 / −12.**
+> **Correction (D-45):** that count was taken before this report itself was committed. At the reviewed commit `874fb039` it is **172 files, +15,515 / −12** (the extra file is this report). The review follow-up below adds more.
 - **New feature code:** `src/lib/documents/` (70 files: model, money, validation, fixtures, fonts, theme and tokens, layout engine, deck, revisions, session, export renderers, tests), `src/components/documents/` (10: previews, primitives, PDF viewer, browser export resources), `src/app/document-verify/` (13: the workbench, scenarios, tests), `scripts/documents/` (2: sample export and page-render scripts), `public/document-fixtures/halden-rowe-mark.png` (fictional logo).
 - **Existing files changed:** `src/proxy.ts` and `src/proxy.test.ts` (the demo route opens without login outside production — D-05), `next.config.ts` (client-only webpack rule for pptxgenjs; `turbopack` always declared — D-37, D-38), `package.json` / `package-lock.json` (`docx` 9.11.0, `pptxgenjs` 4.0.1, devDependency `sharp` 0.34.5). Nothing else outside the feature area changed; no API routes, auth guards, env values or remotes.
 - **Docs:** `docs/documents/` (README, samples and page images), `docs/reports/`, `docs/decisions.md`, `docs/progress.md`, `docs/workflow.md`, `docs/ai-build-playbook.md`, the PRD, and the root `CLAUDE.md`.
@@ -70,7 +71,7 @@ Sample files are in [../documents/samples/](../documents/samples/); page images 
 
 ## Findings from this inspection
 
-1. **Deck "(continued)" (needs a decision).** The deck gives the evidence section's chart its own slide, so the section spans slides 3–5, and slides 4 and 5 repeat its heading **without** the approved "(continued)" (D-28). "(continued)" is only added when one slide's content overflows onto the next, not when a section is deliberately split into text, chart and text slides. This has been true since Step 3. Fixing it changes the deck's output, samples and tests, so it is recorded, not changed. Options: add "(continued)" to every repeated section heading after the first; or keep the chart slide's heading unmarked as a deliberate split and mark only the text continuation (slide 5).
+1. **Deck "(continued)" — resolved by D-46 (see Review follow-up).** The deck gives the evidence section's chart its own slide, so the section spans slides 3–5, and slides 4 and 5 repeat its heading **without** the approved "(continued)" (D-28). "(continued)" is only added when one slide's content overflows onto the next, not when a section is deliberately split into text, chart and text slides. This has been true since Step 3. Fixing it changes the deck's output, samples and tests, so it is recorded, not changed. Options: add "(continued)" to every repeated section heading after the first; or keep the chart slide's heading unmarked as a deliberate split and mark only the text continuation (slide 5).
 2. **Pages clips a row** that wraps exactly at the cell edge (long invoice row 11). The Word file is correct; recorded as a Pages limitation; Word unverified.
 3. **Scenario checkboxes render in uppercase** ("FORCE A VIEWER FAILURE (SCENARIO 11 ONLY)") because they use the workbench's label style, as scenario 9's did. The approved wording is unchanged; only its display case differs. Mentioned for awareness; no change made.
 
@@ -92,5 +93,18 @@ None. The README and reports are documentation; no workbench or document wording
 
 ## Decisions needed
 
-1. The deck "(continued)" finding above.
-2. Merge and release of `feat/document-quality`, after review of the draft pull request.
+- Merge and release of `feat/document-quality`, after Instinct re-reviews the follow-up.
+
+## Review follow-up (Instinct, D-45)
+
+Instinct reviewed draft PR #1 at `874fb039`: **ready with conditions.** Each condition and what was done:
+
+1. **"(continued)" on slides 4 and 5 — done (D-46).** `layout/slides.ts` now tracks continuation per section: a section heading already shown on an earlier slide is marked "(continued)" wherever it repeats, whether the section overflowed or was split around its chart. The deck PDF and PowerPoint samples and their page images were regenerated; only slides 4 and 5 changed (the other slide images are byte-identical). Rechecked visually: in the PDF, slide 4 reads "Evidence: … (continued)" over the chart and slide 5 the same over the text and Recommendations, the heading wraps to two lines and nothing reaches the footer; in Keynote the same headings, with the already-recorded Helvetica overlap on slide 5 (a wrapped list item runs into the callout). New test: every repeat of the Evidence heading after the first ends "(continued)" and no other heading does. The Step 3 rule "split sections never share a slide" is restated precisely: a section that overflowed onto several slides never shares; a one-slide continuation may share (as slide 5 always has, under D-26). Stale "awaiting a decision" entries removed from the README, progress and this report.
+2. **Reset during an export — done.** `settleExport` now discards a job whose record no longer exists (Reset or Start again replaced the records) exactly as it discards a cancelled one: no file, no object URL, no event. `runExport` returns `{ discarded: true }` without announcing or switching the preview, and nothing throws. Tests: a held-resource test (the render is held, Reset replaces the records, the render is released) asserting no late file, record, event, announcement or preview and that the promise resolves; and a `settleExport` test against an emptied state.
+3. **Malformed-session recovery — done.** Start again (and Reset, which takes the same path on a malformed session) now returns early when the backup copy can't be written: the unreadable data, its banner and both actions stay, the workbench isn't replaced, saving stays paused, and the save-failure warning gives the browser's reason. Test: `setItem` throws a quota error; the banner and both buttons remain, the stored session is unchanged, no backup was written, the fixture view is unchanged, and Reset changes nothing either.
+4. **React Doctor — done.** Disposition of all 51 findings in [react-doctor-pr1.md](react-doctor-pr1.md): the one error (a `try … finally` the React Compiler can't compile) is fixed; one false positive; one known debt (item 6); 48 accepted with a reason per rule. CI re-scans on each push.
+5. **Report inconsistencies — annotated** where they appear: [step-1.md](step-1.md) (login and 404 are both true in production), [step-3.md](step-3.md) (6 slides; 9 was the pre-D-26 count), and this report's file count (172 at `874fb039`).
+6. **Export-bytes memory — recorded as known debt** in the README's Known limitations: generated files' bytes stay in memory and their object URLs are never revoked until the page closes; Reset doesn't release them.
+
+**Checks on the follow-up's final commit:** see the commit message and PR comment for the exact results of typecheck, lint, tests and build.
+

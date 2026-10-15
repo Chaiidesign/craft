@@ -8,6 +8,24 @@ Status is **approved** unless marked otherwise. When a later decision replaces a
 
 ---
 
+## Review of PR #1
+
+### D-46 · 2026-10-15 · "(continued)" is tracked per section
+Every slide after the first that repeats a section's heading carries the approved "(continued)", whether the section overflowed onto the next slide or was deliberately split (text, then its chart on its own slide, then more text). In the sample deck, slides 4 (chart) and 5 (text) now read "Evidence: … (continued)". A one-slide continuation may still share a slide with the next short section (D-26); a section that overflowed onto several slides never shares.
+Resolves the Step 7 finding. Refines D-28.
+Applied in: `src/lib/documents/layout/slides.ts`, deck PDF/PowerPoint samples and page images regenerated.
+
+### D-45 · 2026-10-15 · Instinct's review of PR #1: ready, with conditions
+Verdict on draft PR #1 at `874fb039`: ready with conditions, to be applied before merge; **no merge until Instinct re-reviews.**
+1. Mark both slide 4 (chart) and slide 5 (text) with "(continued)" via section-level continuation tracking; regenerate the deck PDF/PowerPoint and page images; recheck visually; record the decision (D-46); remove stale "awaiting a decision" entries.
+2. Reset during an export: a late completion after Reset or Start again is discarded silently — no late file, status, announcement or preview, and no unhandled rejection — with a held-resource regression test.
+3. Malformed-session recovery returns early when the backup can't be written, keeping the raw-data banner and its actions, with a test where `setItem` fails.
+4. Document the disposition of the 51 advisory React Doctor findings.
+5. Annotate the report inconsistencies: Step 1 "behind login" vs "404" in production; Step 3 "9 slides" vs the sample deck's 6; "171 files" vs 172 at the reviewed commit.
+6. Record the export-bytes memory retention as known debt.
+- Rerun lint, typecheck, tests and build on the final commit.
+Applied in: see [reports/step-7.md](reports/step-7.md), "Review follow-up".
+
 ## After Step 6
 
 ### D-44 · 2026-10-15 · Push the docs to the public repo

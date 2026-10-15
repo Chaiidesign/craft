@@ -214,9 +214,13 @@ export function DocumentWorkbench() {
   const startAgainFromFixtures = (focusTitle: unknown = true) => {
     if (!malformed || !storageRef.current) return
     const result = startAgain(storageRef.current, malformed.raw)
+    // If the backup (or clearing) failed, nothing has changed: keep the unreadable data, its banner
+    // and both actions, and say why. The workbench is not replaced and saving stays paused.
+    if (!result.ok) { setSaveError(result.reason); return }
     fresh()
     setMalformed(null)
-    if (result.ok) { setPersist(true); setSaveError(null) } else setSaveError(result.reason)
+    setPersist(true)
+    setSaveError(null)
     setAnnouncement('Started again from the sample fixtures.')
     // The banner (and the button that had focus) is gone: focus moves to the fixture heading.
     if (focusTitle !== false) window.setTimeout(() => document.getElementById('fixture-title')?.focus(), 0)
@@ -845,7 +849,9 @@ function ScenarioInspector({ fixture, wb, onOpenFixture }: { fixture: Extract<Fi
     if (!runner) return
     setRunning(true)
     setRunError(null)
-    try { setResults(await runner()) } catch (e) { setRunError(e instanceof Error ? e.message : String(e)) } finally { setRunning(false) }
+    // No `finally`: the React Compiler can't compile it and would skip this component.
+    try { setResults(await runner()) } catch (e) { setRunError(e instanceof Error ? e.message : String(e)) }
+    setRunning(false)
   }
   return (
     <section className={styles.panel} aria-labelledby="fixture-title">

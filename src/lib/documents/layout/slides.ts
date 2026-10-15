@@ -143,6 +143,10 @@ function layoutSlides(deck: DeckSnapshot, fonts: FontSet, track: { nodeId: strin
   const deckTitle = value(BRIEF_FIELDS.title) ?? 'Untitled deck'
   const out: Omit<SlideLayout, 'number' | 'footer'>[] = []
 
+  // Section-level continuation: a section heading already shown on an earlier slide is marked
+  // "(continued)" wherever it repeats — whether the section overflowed onto the next slide or was
+  // deliberately split (text, then its chart on its own slide, then more text).
+  const shownHeadings = new Set<string>()
   for (const plan of deck.slides) {
     track.nodeId = plan.id
     if (plan.layout === 'title') {
@@ -173,7 +177,8 @@ function layoutSlides(deck: DeckSnapshot, fonts: FontSet, track: { nodeId: strin
       if (node) queue.push(...unitsFor(fonts, node))
     }
 
-    let continued = false
+    let continued = headingBlock ? shownHeadings.has(headingBlock.id) : false
+    if (headingBlock) shownHeadings.add(headingBlock.id)
     while (queue.length) {
       const heading = headingText ? breakLines(fonts, [{ text: continued ? `${headingText} (continued)` : headingText, style: SLIDE_TYPE.heading }], W) : null
       const top = heading ? heading.length * lh(SLIDE_TYPE.heading) + SLIDE_FLOW.headingGap : 0

@@ -116,10 +116,14 @@ export function startExport(state: ExportState, env: DocumentEnv, store: Revisio
   }
 }
 
-/** Records a job's outcome. Only a pending record can settle; anything else is left as it is. */
+/**
+ * Records a job's outcome. Only a pending record can settle; anything else is left as it is. A job
+ * whose record no longer exists (the workbench was reset, or started again, while it rendered) is
+ * discarded the same way: no file, no event.
+ */
 export function settleExport(state: ExportState, env: DocumentEnv, job: ExportJob, outcome: RenderOutcome, localUrl: (bytes: Uint8Array, mimeType: string, filename: string) => string): ExportState {
-  const record = getExport(state, job.exportId)
-  if (record.status !== 'pending') return state
+  const record = state.records.find((r) => r.exportId === job.exportId)
+  if (!record || record.status !== 'pending') return state
   let next: ExportRecord
   let event: ExportEvent
   if (outcome.ok) {

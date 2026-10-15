@@ -2,10 +2,11 @@
 // render, settle, then report — announcements and the PDF-preview switch are
 // based on the record as stored after settling, never on the render outcome.
 // A job cancelled while it rendered settles to nothing, so its late result
-// can't announce "ready" or open a preview. Pure enough to test in Node.
+// can't announce "ready" or open a preview; nor can one that finishes after
+// Reset or Start again replaced the export records. Pure enough to test in Node.
 
 import { FORMAT_LABEL } from '@/lib/documents/export/capabilities'
-import { ExportJobError, formatSize, getExport, renderJob, settleExport, startExport, type ExportState, type StartRequest } from '@/lib/documents/export/jobs'
+import { ExportJobError, formatSize, renderJob, settleExport, startExport, type ExportState, type StartRequest } from '@/lib/documents/export/jobs'
 import type { ExportResources } from '@/lib/documents/export/resources'
 import type { DocumentEnv, DocumentSnapshot, ExportRecord } from '@/lib/documents/model'
 import { getDocument, versionLabel, type RevisionStore } from '@/lib/documents/revisions'
@@ -45,7 +46,8 @@ export interface RunExport {
   onPdfReady?: (exportId: string) => void
 }
 
-export type RunResult = { refusal: string } | { record: ExportRecord }
+/** `discarded`: the workbench was reset while the job ran; its result was dropped silently. */
+export type RunResult = { refusal: string } | { record: ExportRecord } | { discarded: true }
 
 export async function runExport(a: RunExport): Promise<RunResult> {
   let started
@@ -74,7 +76,8 @@ export async function runExport(a: RunExport): Promise<RunResult> {
     outcome = { ok: false as const, error: { code: 'renderer-failed' as const, message: e instanceof Error ? e.message : String(e) } }
   }
   a.controls.updateExports((s) => settleExport(s, a.env, job, outcome, a.localUrl))
-  const settled = getExport(a.controls.readExports(), job.exportId)
+  const settled = a.controls.readExports().records.find((r) => r.exportId === job.exportId)
+  if (!settled) return { discarded: true }
   if (settled.status === 'succeeded') {
     if (settled.format === 'pdf') a.onPdfReady?.(settled.exportId)
     a.announce?.(`${FORMAT_LABEL[settled.format]} of ${v} ready.`)

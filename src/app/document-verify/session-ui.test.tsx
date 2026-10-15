@@ -60,6 +60,28 @@ describe('workbench browser session', () => {
     expect(document.activeElement?.id).toBe('fixture-title')
   })
 
+  it('when the backup copy can\u2019t be written, Start again changes nothing: the banner, its actions and the raw data stay', async () => {
+    const bad = malformedSessions(serializeSession(sampleSession(fixedEnv())))[1] // unknown version
+    localStorage.setItem(SESSION_KEY, bad.raw)
+    await mount()
+    const setItem = vi.spyOn(localStorage, 'setItem').mockImplementation(() => { const e = new Error('The quota has been exceeded.'); e.name = 'QuotaExceededError'; throw e })
+    const before = host.querySelector('#fixture-title')?.textContent
+    await act(async () => { button('Start again from the sample fixtures')!.click() })
+    expect(setItem).toHaveBeenCalledWith(SESSION_BACKUP_KEY, bad.raw)
+    expect(host.querySelector('[data-session="malformed"]')?.textContent).toContain(bad.reason)
+    expect(button('Download the unreadable data')).toBeDefined()
+    expect(button('Start again from the sample fixtures')).toBeDefined()
+    expect(host.querySelector('[data-session="save-failed"]')?.textContent).toBe('Changes can\u2019t be saved in this browser (The quota has been exceeded). They will be lost on reload.')
+    expect(localStorage.getItem(SESSION_KEY)).toBe(bad.raw)
+    expect(localStorage.getItem(SESSION_BACKUP_KEY)).toBeNull()
+    expect(host.querySelector('#fixture-title')?.textContent).toBe(before)
+    // Reset takes the same path: still nothing changes.
+    await act(async () => { button('Reset workbench')!.click() })
+    await act(async () => { button('Reset')!.click() })
+    expect(host.querySelector('[data-session="malformed"]')).not.toBeNull()
+    expect(localStorage.getItem(SESSION_KEY)).toBe(bad.raw)
+  })
+
   it('a valid saved session is restored; Reset asks first, then clears it', async () => {
     const session = sampleSession(fixedEnv())
     localStorage.setItem(SESSION_KEY, serializeSession(session))

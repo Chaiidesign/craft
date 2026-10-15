@@ -2,7 +2,7 @@
 
 Mock-data prototype of Souvenir's document design system: invoice and brief templates, document tokens and layout primitives, pagination, revisions, real PDF, Word and PowerPoint exports, and browser-session storage with recovery. Fixtures are fictional. Nothing here calls a backend, AI service, auth provider or sending channel.
 
-- **Workbench:** `/document-verify` — run `npx next dev -p 4010`, open http://localhost:4010/document-verify. Available in development and on Vercel preview deployments; 404 in production.
+- **Workbench:** `/document-verify` — run `npx next dev -p 4010`, open http://localhost:4010/document-verify. Available in development and on Vercel preview deployments. In production the route isn't allowed through `src/proxy.ts`, so a signed-out visitor is sent to log in, and a signed-in user gets a 404 from the page.
 - **Tests:** `npx vitest run src/lib/documents src/components/documents src/app/document-verify`
 - **Sample exports:** `npx vite-node scripts/documents/export-samples.ts`, then `scripts/documents/render-sample-pages.sh` for page images (see [Exports](#exports-step-5)).
 - **Checks:** typecheck `npx tsc --noEmit -p .`; lint `npx eslint src/lib/documents src/components/documents src/app/document-verify scripts/documents next.config.ts`; full suite `npx vitest run`; build `npx next build --webpack`. Use `npx next …` directly: the repo's `npm run dev` / `npm run build` first load secrets from AWS, which fails without credentials.
@@ -82,7 +82,7 @@ In the browser (desktop width, the page's own zoom accounted for), every drawn l
 - Hierarchy changes, facts do not: every recipient block keeps its words, numbers and citations. Nothing is summarised, so no slide sets `summaryOf`. The internal note is left out.
 - Slides: a title slide (the brief's own field labels and values), content slides per section, the chart on its own slide with its units and data summary, and a closing sources slide.
 - At most two short consecutive sections share a slide, each keeping its own heading (a heading gap apart). Sections are only combined when each fits a slide alone and both fit together; split sections and chart slides never share.
-- Dense content splits across slides by block, then list item, then sentence; continuation slides repeat the heading with "(continued)". Text never goes below 18pt (body) or 12pt (captions, citations, chart summaries). One sentence too large for an empty slide is an explicit error.
+- Dense content splits across slides by block, then list item, then sentence; continuation slides repeat the heading with "(continued)". Continuation is tracked per section: every slide after the first that repeats a section's heading says "(continued)", whether the section overflowed or was deliberately split around its chart (D-46). Text never goes below 18pt (body) or 12pt (captions, citations, chart summaries). One sentence too large for an empty slide is an explicit error.
 - Slides use the same font metrics and line breaking as print.
 - In the workbench, scenario 5 derives the deck from the workbench's own brief and checks its ancestry against real revisions: current, stale after the brief is edited, or a failed check.
 
@@ -318,7 +318,7 @@ These are prototype requirements to test (PRD §2), not claims about what Souven
 - Other non-Latin scripts are likewise refused until a face that covers them is added to a theme.
 - **Two tabs overwrite each other.** Each tab writes the whole session; the last write wins, so one tab's revisions can replace another's. No cross-tab syncing is built.
 - **Edits while the malformed-session banner shows are not saved** (saving is paused so the unreadable data isn't overwritten); the banner says so: "Changes won’t be saved while this banner is showing." The workbench is deliberately not made read-only.
-- **Deck headings repeated across a split section don't say "(continued)".** The deck gives a section's chart its own slide, so the evidence section spans slides 3–5 of the sample deck; slides 4 and 5 repeat its heading without "(continued)", which is only added when one slide's content overflows onto the next. Found in the Step 7 inspection; awaiting a decision.
+- **Generated files stay in memory until the page is closed (known debt).** Each export's bytes are kept in a module-level map so the PDF preview can read them (the app's security policy blocks fetching `blob:` URLs), and their object URLs are never revoked. Reset and Start again drop the records but not the bytes. Harmless for a demo session; production needs the bytes released and URLs revoked when a record is replaced, reset or the session ends.
 - **Cancel only works while fonts and images load.** Once the renderer starts it can't respond until it finishes; its result is then discarded. No artificial slow render is built to widen the window.
 
 ## Brand
