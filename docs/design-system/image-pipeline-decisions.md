@@ -8,6 +8,36 @@ Decisions made while building the first vertical slice of the image-to-design-sy
 
 ---
 
+## Step 2: token application (primitives)
+
+### D-55 · 2026-10-15 · "Tokens only" is proven by an audit with a control, not by comparing snapshots
+`tokens-only.test.tsx` renders every primitive in every variant (`PrimitiveGallery`) with a **sentinel** token set, in which every value is unique (`#010101`, `21px`, weight 100…). It then parses every inline `style`, the pseudo-state stylesheet and the SVG presentation attributes. Every value has to be one of two things:
+- a `var(--ds-*)` that the token set defines, with no fallback;
+- a structural keyword from a short allowlist (`flex`, `none`, `0`, `100%`, `solid`, `pointer`…).
+
+A control test plants a hex color, a px length, a `var()` with a fallback and an undefined variable, and checks that the audit catches all four.
+
+The swap tests add:
+- two sample token sets render different markup (both snapshotted);
+- with the scope's variable values removed, the two renders are **identical**, so every visual difference comes from tokens;
+- editing one token changes exactly one variable.
+
+Two tokens are defined but not yet used by any primitive, `radius.sm` and `space.xl`. They are kept because the extractor reads them and a later surface will need them.
+Applied in: `src/components/design-system/tokens-only.test.tsx`, `style-audit.ts`, `PrimitiveGallery.tsx`.
+
+### D-54 · 2026-10-15 · Border and focus-ring widths are tokens
+A `1px` border or a `2px` focus outline in a primitive would be a hardcoded value, so `size.border` and `size.focusRing` were added to the registry. The icon's stroke uses `size.border` (non-scaling). Since no sample shows a focused element, every sample reports `size.focusRing` at medium confidence and states the assumption.
+
+There is no hover color, because no token describes one and inventing a darker primary would be an invented value. Disabled buttons use the border and muted-text colors.
+Applied in: `tokens.ts`, `mock-extractor.ts`, `primitives.tsx`.
+
+### D-53 · 2026-10-15 · Primitives read CSS variables written by one scope
+`ThemeScope` turns a token set into `--ds-*` custom properties (`tokensToCssVars`) on a wrapper `div`. The primitives, `Text`, `Button`, `Input`, `Card`, `Badge`, `IconFrame` and `Stack`, reference those variables by typed name (`dsVar('color-primary')`) and never hold a value.
+- **Why variables, not a React context of resolved values.** One token edit updates the whole subtree without re-rendering it, and a scope can be nested or placed side by side to compare systems.
+- **Pseudo-states.** Focus-visible, placeholder and disabled can't be inline styles. They live in one stylesheet, `PRIMITIVE_STATE_CSS`, scoped to `[data-ds-scope]` and deduped by React 19's `<style precedence>`.
+- **Isolation.** The app's own `globals.css` and `theme.css` aren't touched.
+Applied in: `src/lib/design-system/css-vars.ts`, `src/components/design-system/primitives.tsx`.
+
 ## Step 1: the token-extraction boundary
 
 ### D-52 · 2026-10-15 · The offline mock recognizes images by content hash and never invents a reading
@@ -41,14 +71,14 @@ Converting a proposal into applied tokens is the review step's job (Step 4). Not
 Applied in: `src/lib/design-system/proposal.ts`, `tokens.ts`.
 
 ### D-49 · 2026-10-15 · Token schema: one registry, strict and canonical
-`TOKEN_GROUPS` in `tokens.ts` names all 29 tokens:
+`TOKEN_GROUPS` in `tokens.ts` names all 31 tokens (29 at first; D-54 added two):
 - 8 colors: background, surface, text, muted text, primary, text on primary, border, focus.
 - 2 font stacks: body and heading.
 - 4 text styles: caption, body, label, title.
 - 5 spacing steps.
 - 4 radii.
 - 2 shadows: card and raised.
-- 2 sizes: icon and control height.
+- 4 sizes: icon, control height, border width and focus-ring width.
 
 The proposal schema, applied schema, review list and CSS variables all derive from that registry. The rules:
 - All objects are strict, so unknown keys are rejected.

@@ -87,6 +87,8 @@ const LEDGER: CannedTokens = {
   ),
   'size.icon': t(24, 'high', 'Document icon is 20×24px; using its larger side.'),
   'size.control': t(40, 'high', 'Height of the text field and the button.'),
+  'size.border': t(1, 'high', 'Hairline strokes on the card, badge and text field.'),
+  'size.focusRing': t(2, 'medium', 'No focused element is shown; assumed twice the border width.'),
 }
 
 const NIGHT_CONSOLE: CannedTokens = {
@@ -117,6 +119,8 @@ const NIGHT_CONSOLE: CannedTokens = {
   'shadow.raised': t(null, 'low', 'No raised element (menu, dialog) is shown.'),
   'size.icon': t(20, 'high', 'Document icon is 16×20px; using its larger side.'),
   'size.control': t(36, 'high', 'Height of the command field and the button.'),
+  'size.border': t(1, 'high', 'Hairline strokes on the card, badge and command field.'),
+  'size.focusRing': t(2, 'medium', 'No focused element is shown; assumed twice the border width.'),
 }
 
 const SOFT_BLOOM: CannedTokens = {
@@ -147,6 +151,8 @@ const SOFT_BLOOM: CannedTokens = {
   'shadow.raised': t([{ x: 0, y: 16, blur: 40, spread: 0, color: '#C2417A2E' }], 'low', 'No raised element is shown; extrapolated from the card shadow. Confirm or replace.'),
   'size.icon': t(28, 'high', 'Circular icon is 28px across.'),
   'size.control': t(48, 'high', 'Height of the text field and the button.'),
+  'size.border': t(1, 'high', 'Hairline strokes on the card, badge and text field.'),
+  'size.focusRing': t(3, 'medium', 'No focused element is shown; assumed a heavier ring to match the soft, large controls.'),
 }
 
 const CANNED: Record<string, { summary: string; assumptions: string[]; tokens: CannedTokens }> = {

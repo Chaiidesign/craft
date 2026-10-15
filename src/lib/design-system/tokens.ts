@@ -118,6 +118,8 @@ export const TOKEN_GROUPS = {
   size: {
     icon: { label: 'Icon size', schema: px(64) },
     control: { label: 'Control height', schema: z.number().min(24).max(96) },
+    border: { label: 'Border width', schema: px(8) },
+    focusRing: { label: 'Focus ring width', schema: px(8) },
   },
 } as const satisfies Record<string, Record<string, FieldSpec>>
 
