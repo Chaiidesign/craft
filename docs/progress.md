@@ -5,7 +5,7 @@ Updated 2026-10-15. Update this file and push before ending every session.
 ## Where the work is
 
 - **Repo:** `Chaiidesign/craft` (a fork; never push upstream).
-- **Branch:** `feat/document-quality`, pushed to `origin`. Not merged. Pull request #1 into the fork's `main` is approved to merge (D-47).
+- **Branch:** merged into the fork's `main` as `b1025a93` (PR #1, D-48). `feat/document-quality` is kept on `origin` until the release verdict, then deleted.
 - **Spec:** [souvenir-document-generation-prd.md](souvenir-document-generation-prd.md).
 - **Feature docs:** [documents/README.md](documents/README.md) (run commands, design rules, approved wording, limitations).
 - **Demo:** `npx next dev -p 4010`, then http://localhost:4010/document-verify.
@@ -31,8 +31,8 @@ Checks at Step 7 (final code): typecheck, lint and production build clean; 1,421
 
 ## Next step
 
-Instinct re-reviewed the follow-up at `06763bb1` and approved PR #1 to merge (D-47); the non-blocking cleanup it listed is applied. Next: Chaitanya merges PR #1 into the fork's `main`.
+Release verdict from Instinct. PR #1 was approved (D-47) and merged into the fork's `main` as `b1025a93` (D-48); release is not approved. After the verdict, record it in [decisions.md](decisions.md) and delete `feat/document-quality`.
 
 ## Blockers
 
-None. Merge is approved (D-47); release still waits for Instinct's verdict.
+None. Release waits for Instinct's verdict.
