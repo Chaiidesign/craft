@@ -14,6 +14,9 @@ Decisions made while building the first vertical slice of the image-to-design-sy
 1. **The apply bar hid focused rows.** "Apply" sits in a bar that stays stuck to the bottom of the review panel, and a row scrolled to the bottom edge (by keyboard Tab, for example) ended up underneath it. That's an accessibility failure (WCAG 2.4.11, focus not obscured). Token rows now carry `scroll-margin-bottom: 140px`, and a hit-test confirms every Confirm button is reachable.
 2. **A refused edit left its error behind.** After Escape the field reverted but the error message stayed. Escape now also clears the error (`clearError`, which keeps the value and status).
 
+3. **The demo page's CSS leaked into themed scopes.** The page's `h3 { text-transform: uppercase }` reached `ArtifactBlock`'s `<h3>` title, so the preview read "Q3 LETTER TO PARTNERS". Inline token styles only override the properties they set. The page's element selectors now end in `:not([data-ds-scope] *)`.
+4. **A stale "Not applied" announcement** stayed next to "Ready to apply". Any review action now clears the live region. "1 token still need attention" now reads "still needs".
+
 On phone widths, the source image and preview move above the token list.
 Applied in: `DesignSystemWorkbench.tsx`, `review.ts`.
 
