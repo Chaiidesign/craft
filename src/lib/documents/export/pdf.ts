@@ -68,9 +68,23 @@ async function newPdf(width: number, height: number, fonts: FontSet, fontBytes: 
   return doc
 }
 
+/** 32 hex digits from four salted FNV-1a hashes of `text`: stable, not secret. */
+function fileId(text: string): string {
+  let out = ''
+  for (let salt = 0; salt < 4; salt++) {
+    let hash = (0x811c9dc5 ^ salt) >>> 0
+    for (let i = 0; i < text.length; i++) hash = Math.imul(hash ^ text.charCodeAt(i), 0x01000193) >>> 0
+    out += hash.toString(16).padStart(8, '0')
+  }
+  return out.toUpperCase()
+}
+
 function finish(doc: JsPdf, meta: PdfMetadata): Uint8Array {
   doc.setProperties({ title: meta.title, subject: meta.subject, creator: 'Document-quality prototype (sample data)' })
   doc.setCreationDate(new Date(meta.createdAt))
+  // jsPDF picks a random file ID per call; derive it from the metadata instead, so one revision
+  // exported twice gives byte-identical files.
+  doc.setFileId(fileId(`${meta.title}\u0000${meta.subject}\u0000${meta.createdAt}`))
   return new Uint8Array(doc.output('arraybuffer'))
 }
 

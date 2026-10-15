@@ -787,7 +787,7 @@ function InvoiceAmounts({ snapshot, canEdit, onSave }: { snapshot: InvoiceSnapsh
               const amount = amountById.get(li.id)
               return (
                 <tr key={li.id}>
-                  <td><span className={styles.cell}>{li.description}</span></td>
+                  <td><span className={styles.cell}>{li.description ?? 'Description not supplied'}</span></td>
                   <td className={styles.num} data-label="Qty"><span className={styles.cell}>{formatQuantity(li.quantityMilli, locale)}{li.unit ? ` ${li.unit}` : ''}</span></td>
                   <td className={styles.num} data-label="Unit price"><span className={styles.cell}>{li.unitPrice ? formatMoney(li.unitPrice, locale) : <span className={styles.unknownAmount}>Missing</span>}</span></td>
                   <td className={styles.num} data-label="Amount"><span className={styles.cell}>{amount && show(amount) ? show(amount) : <span className={styles.unknownAmount}>Unknown</span>}</span></td>

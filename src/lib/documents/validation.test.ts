@@ -110,4 +110,19 @@ describe('validateSnapshot', () => {
     const fields: Field[] = Object.values(snapshot.fields)
     expect(fields.filter((f) => f.state.status === 'missing').map((f) => f.id)).toEqual([F.buyerAddress, F.dueDate, F.poNumber, F.taxApplicability, F.taxRate])
   })
+
+  it('D-60: an unstated line description is missing (an unknown); a blank one is malformed', () => {
+    const base = completeInvoice()
+    const withItems = (items: { id: string; description: string | null }[]): DocumentSnapshot => ({
+      ...base,
+      blocks: base.blocks.map((b) => (b.type === 'line-items' ? { ...b, items: items.map((i) => ({ ...i, quantityMilli: 1_000, unitPrice: { amountMinor: 240_000, currency: 'USD' as const } })) } : b)),
+    })
+    const unstated = validateSnapshot(withItems([{ id: 'li-a', description: null }]))
+    expect(unstated.readiness).toBe('incomplete')
+    expect(unstated.issues).toContainEqual(expect.objectContaining({ id: 'line:li-a:description', severity: 'missing', message: 'Description for line 1 has not been supplied.' }))
+
+    const blank = validateSnapshot(withItems([{ id: 'li-b', description: '   ' }]))
+    expect(blank.readiness).toBe('invalid')
+    expect(blank.issues).toContainEqual(expect.objectContaining({ id: 'line:li-b:description', severity: 'error' }))
+  })
 })

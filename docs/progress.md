@@ -29,9 +29,21 @@ Checks at Step 7 (final code): typecheck, lint and production build clean; 1,421
 - **Word and PowerPoint in Microsoft's own apps are unverified.** Neither is installed here. Word files were checked only in Apple Pages and PowerPoint files only in Apple Keynote, which both substitute Helvetica; differences are in the feature README's "Unsupported and unverified".
 - **Known limitations and debt:** listed in the feature README (including generated files kept in memory until the page closes).
 
+## In progress: chat → document flow (S1), branch `feat/chat-document-flow`
+
+Plan: prompt in chat → validated document → refine in conversation → export, agent-first (decisions D-49 to D-62). S1 is the invoice end to end with the real model on a hosted preview (D-54).
+
+| S1 step | Commit | What it delivered |
+|---|---|---|
+| 1–3 | (this commit) | Generation schema, three-layer gate, scripted model, bounded retries; `generate`, `revise`, `export` tools with JSON schemas; D-60 (missing descriptions), D-61 (unbranded documents), D-62 (deterministic PDF) |
+| 3b | | Agent CLI (generate → revise → export with no UI) |
+| 4 | | Claude model and `/api/document-model` |
+| 5 | | `/document-chat` with inline preview, live drafting state, refine, export |
+| 6 | | Hosted preview run (needs the Anthropic key in Vercel's Preview environment) |
+
 ## Next step
 
-Release verdict from Instinct. PR #1 was approved (D-47) and merged into the fork's `main` as `b1025a93` (D-48); release is not approved. After the verdict, record it in [decisions.md](decisions.md) and delete `feat/document-quality`.
+S1 step 3b: the agent CLI, then the Claude model and its route. Separately, PR #1's release verdict from Instinct is still open (D-48).
 
 ## Blockers
 

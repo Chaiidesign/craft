@@ -276,7 +276,7 @@ export async function renderDocx(snapshot: Exclude<DocumentSnapshot, DeckSnapsho
         const headers = node.primitive === 'table' ? node.columns.map((c) => c.label) : [node.headers.description, node.headers.quantity, node.headers.unitPrice, node.headers.amount]
         const values: { id: string; cells: PlanValue[] }[] = node.primitive === 'table'
           ? node.rows.map((r) => ({ id: r.id, cells: r.cells.map((c, k) => ({ kind: 'text', text: c, style: cols[k].numeric ? 'amount' : 'tableText' }) as PlanValue) }))
-          : node.rows.map((r) => ({ id: r.id, cells: [{ kind: 'text', text: r.description, style: 'tableText' }, { kind: 'text', text: r.quantity, style: 'amount' }, r.unitPrice, r.amount] }))
+          : node.rows.map((r) => ({ id: r.id, cells: [r.description, { kind: 'text', text: r.quantity, style: 'amount' }, r.unitPrice, r.amount] }))
         // The last rows keep with the totals that follow (as many as the engine kept: KEEP.rowsWithTotals).
         const keepTail = node.primitive === 'invoice-line-items' && next?.primitive === 'totals' ? 2 : 0
         const rows = [

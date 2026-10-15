@@ -33,6 +33,7 @@ import type {
   TextRun,
 } from './model'
 import { BRIEF_FIELDS } from './brief'
+import { isUnbranded } from './templates/brand'
 
 // ── Authors (approved display names) ─────────────────────────────────────────
 
@@ -171,7 +172,7 @@ export const BRAND_OWNED_FIELDS: Readonly<Record<FieldId, string>> = {
 }
 
 /** A real calendar date in YYYY-MM-DD form (2026-13-45 is refused). */
-function isCalendarDate(iso: string): boolean {
+export function isCalendarDate(iso: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false
   const d = new Date(`${iso}T00:00:00Z`)
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === iso
@@ -225,7 +226,8 @@ export function applyBoundedEdit(snapshot: DocumentSnapshot, edit: BoundedEdit):
   if (edit.kind === 'field') {
     const field = snapshot.fields[edit.fieldId]
     if (!field) throw new RevisionError('invalid-edit', `This document has no field ${edit.fieldId}.`)
-    if (BRAND_OWNED_FIELDS[edit.fieldId]) throw new RevisionError('unsupported', BRAND_OWNED_FIELDS[edit.fieldId])
+    // An unbranded document (D-61) has no profile that owns the issuer name, so it is an ordinary field there.
+    if (BRAND_OWNED_FIELDS[edit.fieldId] && !isUnbranded(snapshot.brand)) throw new RevisionError('unsupported', BRAND_OWNED_FIELDS[edit.fieldId])
     if (edit.value.type !== field.valueType) throw new RevisionError('invalid-edit', `${field.label} takes a ${field.valueType} value, not ${edit.value.type}.`)
     const value = normaliseValue(edit.value)
     if (value.type === 'date' && !isCalendarDate(value.iso)) throw new RevisionError('invalid-edit', `“${value.iso}” is not a real calendar date.`)
@@ -313,6 +315,21 @@ export function saveEdit(store: RevisionStore, env: DocumentEnv, outputId: Outpu
   if (base.snapshot.kind === 'deck') throw new RevisionError('unsupported', 'Decks are not edited directly; edit the brief and derive again.')
   const result = applyBoundedEdit(base.snapshot, edit)
   return addRevision(store, env, outputId, { parent: base.revisionId, author, changeSummary: result.changeSummary, operation: { type: 'edit', target: result.target }, snapshot: result.snapshot })
+}
+
+/**
+ * Save a snapshot the generation pipeline already gated (D-49) as the next revision. Like
+ * `saveEdit`, it must be based on the current revision; unlike it, the change may span several
+ * targets, which `operation.targets` records.
+ */
+export function saveGenerated(
+  store: RevisionStore, env: DocumentEnv, outputId: OutputId, baseRevisionId: RevisionId, snapshot: DocumentSnapshot,
+  input: { changeSummary: string; operation: Extract<RevisionOperation, { type: 'generate' }>; author: RevisionAuthor },
+) {
+  const base = requireCurrent(store, outputId, baseRevisionId)
+  if (base.snapshot.kind !== snapshot.kind) throw new RevisionError('invalid-edit', `${outputId} is a ${base.snapshot.kind}; a ${snapshot.kind} cannot replace it.`)
+  if (base.snapshot.kind === 'deck') throw new RevisionError('unsupported', 'Decks are not edited directly; edit the brief and derive again.')
+  return addRevision(store, env, outputId, { parent: base.revisionId, author: input.author, changeSummary: input.changeSummary, operation: input.operation, snapshot })
 }
 
 // ── Proposals ────────────────────────────────────────────────────────────────

@@ -43,7 +43,7 @@ export function fieldMap(fields: readonly Field[]): { fields: Record<FieldId, Fi
 
 export const m = (amountMinor: number, code: CurrencyCode): Money => ({ amountMinor, currency: code })
 
-export function item(id: string, description: string, quantityMilli: number, unitPrice: Money | null, unit?: string): InvoiceLineItem {
+export function item(id: string, description: string | null, quantityMilli: number, unitPrice: Money | null, unit?: string): InvoiceLineItem {
   return { id, description, quantityMilli, unitPrice, ...(unit ? { unit } : {}) }
 }
 

@@ -89,7 +89,7 @@ const KINDS = ['invoice', 'brief', 'deck'] as const
 const FORMATS = ['pdf', 'docx', 'pptx'] as const
 const STATUSES = ['pending', 'succeeded', 'failed', 'unsupported', 'expired'] as const
 const ERROR_CODES = ['unsupported-format', 'validation-blocked', 'renderer-failed', 'font-missing-glyph', 'cancelled'] as const
-const OPERATIONS = ['create', 'edit', 'accept-proposal', 'restore', 'derive'] as const
+const OPERATIONS = ['create', 'edit', 'accept-proposal', 'restore', 'derive', 'generate'] as const
 
 function checkDocument(v: unknown, path: string): DocumentRecord {
   const d = obj(v, path)
@@ -168,7 +168,7 @@ export function snapshotProblem(v: Obj): string | null {
     if (b.type !== 'line-items') continue
     if (!Array.isArray(b.items)) return `block “${b.id}” has no line items`
     for (const li of b.items) {
-      if (!isObj(li) || typeof li.id !== 'string' || typeof li.description !== 'string') return `block “${b.id}” has a line item with no ID or description`
+      if (!isObj(li) || typeof li.id !== 'string' || (typeof li.description !== 'string' && li.description !== null)) return `block “${b.id}” has a line item with no ID or description`
       if (!Number.isSafeInteger(li.quantityMilli)) return `line item “${li.id}” has a quantity that is not whole thousandths`
       const price = li.unitPrice
       if (price !== null && (!isObj(price) || !Number.isSafeInteger(price.amountMinor) || typeof price.currency !== 'string')) return `line item “${li.id}” has a unit price that is not whole minor units`

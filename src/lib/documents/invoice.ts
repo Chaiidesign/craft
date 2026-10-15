@@ -107,9 +107,9 @@ export function computeInvoiceTotals(
     }
   }
 
-  const lines = items.map((item): { itemId: string; amount: Amount } => {
+  const lines = items.map((item, index): { itemId: string; amount: Amount } => {
     if (!item.unitPrice) {
-      return { itemId: item.id, amount: unknown({ lineItemId: item.id, message: `Unit price missing for “${item.description}”.` }) }
+      return { itemId: item.id, amount: unknown({ lineItemId: item.id, message: `Unit price missing for ${item.description !== null ? `“${item.description}”` : `line ${index + 1}`}.` }) }
     }
     if (item.unitPrice.currency !== currency) {
       return { itemId: item.id, amount: unknown({ lineItemId: item.id, message: `Line priced in ${item.unitPrice.currency}, invoice is in ${currency}.` }) }

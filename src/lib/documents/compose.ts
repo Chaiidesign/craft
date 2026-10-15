@@ -15,6 +15,7 @@ import { computeInvoiceTotals, INVOICE_FIELDS as F, type Amount } from './invoic
 import type { Block, BriefSnapshot, CalloutTone, ChartSeries, Citation, DocumentSnapshot, Field, FieldId, ImageAsset, InvoiceSnapshot, Money, TableColumn, TextRun } from './model'
 import { formatMoney, formatPercent, formatQuantity } from './money'
 import { contentWidthPt, type PrintTypeKey } from './tokens'
+import { isUnbranded } from './templates/brand'
 import { validateSnapshot, type Readiness } from './validation'
 
 // ── Plan types ───────────────────────────────────────────────────────────────
@@ -49,7 +50,7 @@ export type PlanNode =
   /** `pageLabel` is a template; pagination fills {n} and {total}. */
   | { primitive: 'page-footer'; id: string; identification: string; pageLabel: string }
 
-export type InvoiceRow = { id: string; description: string; quantity: string; unitPrice: PlanValue; amount: PlanValue }
+export type InvoiceRow = { id: string; description: PlanValue; quantity: string; unitPrice: PlanValue; amount: PlanValue }
 export type TotalsRow = { id: string; label: string; value: PlanValue; negative?: boolean }
 export type SourceEntry = { number: number; citationId: string; text: string; fictional: true }
 
@@ -121,9 +122,18 @@ function entries(snapshot: DocumentSnapshot, fieldIds: readonly FieldId[], style
   return out
 }
 
-function letterhead(snapshot: DocumentSnapshot): PlanNode {
+/** The issuer's name for the letterhead and footer: the brand's, or for an unbranded document (D-61) the issuer field's, or nothing. */
+function issuerLabel(snapshot: DocumentSnapshot): string {
+  if (!isUnbranded(snapshot.brand)) return snapshot.brand.issuerDisplayName
+  const issuer = snapshot.fields[F.issuerName]
+  return issuer?.state.status === 'provided' ? formatFieldValue(issuer.state.value, snapshot.locale) : ''
+}
+
+/** No letterhead without a brand: an unbranded document (D-61) starts at its title, rather than showing an empty mark. */
+function letterhead(snapshot: DocumentSnapshot): PlanNode[] {
   const { brand } = snapshot
-  return {
+  if (isUnbranded(brand)) return []
+  return [{
     primitive: 'letterhead',
     id: 'letterhead',
     issuerName: brand.issuerDisplayName,
@@ -131,7 +141,7 @@ function letterhead(snapshot: DocumentSnapshot): PlanNode {
     logo: brand.logo
       ? { kind: 'image', asset: brand.logo, brokenNote: 'Logo could not be loaded' }
       : { kind: 'none', note: 'No logo supplied' },
-  }
+  }]
 }
 
 function sourceText(c: Citation, locale: string): string {
@@ -183,7 +193,7 @@ function withoutReasons(v: PlanValue): PlanValue {
 function composeInvoice(snapshot: InvoiceSnapshot, audience: Audience, readiness: Readiness): Pick<DocumentPlan, 'nodes' | 'placedBlockIds' | 'excludedBlocks'> {
   const { locale, fields } = snapshot
   const totals = computeInvoiceTotals(snapshot)
-  const nodes: PlanNode[] = [letterhead(snapshot)]
+  const nodes: PlanNode[] = [...letterhead(snapshot)]
   const placed: string[] = []
   const excluded: { blockId: string; reason: string }[] = []
 
@@ -229,7 +239,7 @@ function composeInvoice(snapshot: InvoiceSnapshot, audience: Audience, readiness
           currencyNote: totals.currency ? `Amounts in ${totals.currency}` : null,
           rows: block.items.map((li) => ({
             id: li.id,
-            description: li.description,
+            description: li.description !== null ? { kind: 'text', text: li.description, style: 'tableText' } : { kind: 'missing', label: 'Description', required: true },
             // No-break space: a quantity never wraps away from its unit.
             quantity: `${formatQuantity(li.quantityMilli, locale)}${li.unit ? `\u00a0${li.unit}` : ''}`,
             unitPrice: li.unitPrice ? { kind: 'text', text: formatMoney(li.unitPrice, locale), style: 'amount' } : { kind: 'missing', label: 'Unit price', required: true },
@@ -250,7 +260,7 @@ function composeInvoice(snapshot: InvoiceSnapshot, audience: Audience, readiness
   }
 
   const number = numberField?.state.status === 'provided' ? formatFieldValue(numberField.state.value, locale) : 'Invoice (number missing)'
-  nodes.push(footer(`${snapshot.brand.issuerDisplayName} · ${number}`))
+  nodes.push(footer([issuerLabel(snapshot), number].filter(Boolean).join(' · ')))
   return { nodes, placedBlockIds: placed, excludedBlocks: excluded }
 }
 
@@ -291,7 +301,7 @@ function composeBrief(snapshot: BriefSnapshot, audience: Audience, readiness: Re
   const numbers = citationNumbers(snapshot)
   const titleField = snapshot.fields[BRIEF_FIELDS.title]
   const nodes: PlanNode[] = [
-    letterhead(snapshot),
+    ...letterhead(snapshot),
     {
       primitive: 'title-block',
       id: 'title',
@@ -327,8 +337,8 @@ function composeBrief(snapshot: BriefSnapshot, audience: Audience, readiness: Re
 
   const title = titleField?.state.status === 'provided' ? formatFieldValue(titleField.state.value, snapshot.locale) : 'Untitled brief'
   const reference = snapshot.fields[BRIEF_FIELDS.reference]
-  const refText = reference?.state.status === 'provided' ? ` · ${formatFieldValue(reference.state.value, snapshot.locale)}` : ''
-  nodes.push(footer(`${snapshot.brand.issuerDisplayName}${refText} · ${truncateForFooter(title)}`))
+  const refText = reference?.state.status === 'provided' ? formatFieldValue(reference.state.value, snapshot.locale) : ''
+  nodes.push(footer([issuerLabel(snapshot), refText, truncateForFooter(title)].filter(Boolean).join(' · ')))
   return { nodes, placedBlockIds: placed, excludedBlocks: excluded }
 }
 
@@ -444,7 +454,7 @@ export function collectStyledText(plan: DocumentPlan): StyledText[] {
       case 'invoice-line-items':
         Object.values(node.headers).forEach((h) => add('tableHeader', h))
         if (node.currencyNote) add('label', node.currencyNote)
-        node.rows.forEach((r) => { add('tableText', r.description); add('amount', r.quantity); value(r.unitPrice); value(r.amount) })
+        node.rows.forEach((r) => { value(r.description); add('amount', r.quantity); value(r.unitPrice); value(r.amount) })
         break
       case 'totals': node.rows.forEach((r) => { add('tableText', r.label); value(r.value) }); add('tableHeader', node.grand.label); value(node.grand.value); break
       case 'callout': if (node.label) add('label', node.label); runs('body', node.runs); break

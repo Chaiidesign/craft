@@ -91,7 +91,8 @@ export interface TextRun {
 
 export interface InvoiceLineItem {
   id: string
-  description: string
+  /** `null` when the description was not supplied (D-60): an unknown, never invented. */
+  description: string | null
   /** Quantity in thousandths (1.5 hours = 1500), so arithmetic stays integral. */
   quantityMilli: number
   unit?: string
@@ -194,7 +195,21 @@ interface SnapshotBase {
   blocks: readonly Block[]
   citations: readonly Citation[]
   layoutPreset: LayoutPreset
+  /**
+   * Where each generated value came from (D-49), keyed by target: `field:<fieldId>` or `line:<itemId>`.
+   * Absent on hand-made snapshots. A value with no entry was not generated.
+   */
+  provenance?: Readonly<Record<string, Provenance>>
 }
+
+/**
+ * The origin of one generated value. `prompt`: stated by the person, quoted in `evidence`
+ * (the gate checks the quote is really in what they wrote). `caller`: supplied directly by an
+ * agent or script through the tool surface, which vouches for it.
+ */
+export type Provenance =
+  | { source: 'prompt'; evidence: string }
+  | { source: 'caller' }
 
 export interface InvoiceSnapshot extends SnapshotBase {
   kind: 'invoice'
@@ -239,6 +254,8 @@ export type RevisionOperation =
   | { type: 'accept-proposal'; proposalId: string }
   | { type: 'restore'; fromRevisionId: RevisionId }
   | { type: 'derive'; from: { outputId: OutputId; revisionId: RevisionId } }
+  /** Operations from the generation pipeline (a model or a direct caller), applied together and gated (D-49). `targets` uses the provenance keys. */
+  | { type: 'generate'; caller: 'model' | 'direct'; targets: readonly string[] }
 
 export interface Revision {
   revisionId: RevisionId

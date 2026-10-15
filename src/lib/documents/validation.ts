@@ -128,6 +128,9 @@ export const TEMPLATE_CORE_FIELDS: Readonly<Record<DocumentSnapshot['kind'], rea
   deck: [],
 }
 
+/** “Design review” or, when the description is unknown, “line 2”. */
+const lineName = (item: { description: string | null }, index: number) => (item.description !== null ? `“${item.description}”` : `line ${index + 1}`)
+
 export function validateSnapshot(snapshot: DocumentSnapshot): ValidationReport {
   const issues: ValidationIssue[] = []
 
@@ -246,11 +249,13 @@ export function validateSnapshot(snapshot: DocumentSnapshot): ValidationReport {
         if (!block.dataSummary.trim()) issues.push({ id: `block:${block.id}:summary`, severity: 'error', target: { kind: 'block', blockId: block.id }, message: 'Chart has no data summary; colour alone cannot carry the data.' })
         break
       case 'line-items':
-        for (const item of block.items) {
+        for (const [index, item] of block.items.entries()) {
           const target = { kind: 'line-item' as const, blockId: block.id, itemId: item.id }
-          if (!item.description.trim()) issues.push({ id: `line:${item.id}:description`, severity: 'error', target, message: 'Line item has no description.' })
+          // D-60: an unstated description is an unknown (missing); a supplied but blank one is malformed (error).
+          if (item.description === null) issues.push({ id: `line:${item.id}:description`, severity: 'missing', target, message: `Description for line ${index + 1} has not been supplied.` })
+          else if (!item.description.trim()) issues.push({ id: `line:${item.id}:description`, severity: 'error', target, message: 'Line item has no description.' })
           if (!Number.isSafeInteger(item.quantityMilli) || item.quantityMilli <= 0) issues.push({ id: `line:${item.id}:quantity`, severity: 'error', target, message: 'Quantity must be greater than zero.' })
-          if (item.unitPrice === null) issues.push({ id: `line:${item.id}:price`, severity: 'missing', target, message: `Unit price for “${item.description}” has not been supplied.` })
+          if (item.unitPrice === null) issues.push({ id: `line:${item.id}:price`, severity: 'missing', target, message: `Unit price for ${lineName(item, index)} has not been supplied.` })
           else if (snapshot.kind === 'invoice' && choiceCurrency(snapshot) && item.unitPrice.currency !== choiceCurrency(snapshot)) {
             issues.push({ id: `line:${item.id}:currency`, severity: 'error', target, message: `Priced in ${item.unitPrice.currency}; this invoice is in ${choiceCurrency(snapshot)}.` })
           }

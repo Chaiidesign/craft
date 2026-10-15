@@ -143,7 +143,7 @@ type LineProperty = 'description' | 'quantity' | 'unitPrice'
 export function LineItemEditor({ blockId, item, index, snapshot, onSave, onClose }: { blockId: string; item: InvoiceLineItem; index: number; snapshot: DocumentSnapshot; onSave: SaveEdit; onClose: () => void }) {
   const currency = snapshot.kind === 'invoice' ? invoiceCurrency(snapshot) : null
   const [property, setProperty] = useState<LineProperty>('quantity')
-  const initial = (p: LineProperty) => (p === 'description' ? item.description : p === 'quantity' ? milliToInput(item.quantityMilli) : item.unitPrice ? minorToInput(item.unitPrice.amountMinor, item.unitPrice.currency) : '')
+  const initial = (p: LineProperty) => (p === 'description' ? item.description ?? '' : p === 'quantity' ? milliToInput(item.quantityMilli) : item.unitPrice ? minorToInput(item.unitPrice.amountMinor, item.unitPrice.currency) : '')
   const [input, setInput] = useState(() => initial('quantity'))
   const [error, setError] = useState<string | null>(null)
   const propId = useId()
@@ -167,7 +167,7 @@ export function LineItemEditor({ blockId, item, index, snapshot, onSave, onClose
   }
   return (
     <EditForm title={`Edit line ${index + 1}`} error={error} onSave={save} onCancel={onClose}>
-      <p className={styles.muted} style={{ margin: 0 }}>Line {index + 1}: {item.description} · {formatQuantity(item.quantityMilli, snapshot.locale)}{item.unit ? ` ${item.unit}` : ''}</p>
+      <p className={styles.muted} style={{ margin: 0 }}>Line {index + 1}: {item.description ?? 'Description not supplied'} · {formatQuantity(item.quantityMilli, snapshot.locale)}{item.unit ? ` ${item.unit}` : ''}</p>
       <label className={styles.label} htmlFor={propId}>Change</label>
       <select id={propId} className={styles.select} value={property} onChange={(e) => { const p = e.target.value as LineProperty; setProperty(p); setInput(initial(p)); setError(null) }}>
         <option value="description">Description</option>

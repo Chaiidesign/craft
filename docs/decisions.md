@@ -8,6 +8,68 @@ Status is **approved** unless marked otherwise. When a later decision replaces a
 
 ---
 
+## Chat-to-document flow (branch `feat/chat-document-flow`)
+
+The plan for this work is the "chat → document → refine → export" plan approved on 2026-10-15: slice S1 (invoice end to end, real model, hosted) is this branch; S2–S6 follow on later branches. Decisions D-49 to D-58 were settled by Chaitanya and Instinct before building; D-59 onward were made during the build.
+
+### D-62 · 2026-10-15 · What "deterministic export" guarantees
+The brief: "Export is deterministic; never re-summarize at export time." The `export_document` tool renders the pinned revision with the existing adapters and nothing else, and stamps the file with the **revision's** creation time, not the export time.
+- **PDF: byte-identical** for the same revision. jsPDF chose a random file ID on every export; `pdf.ts` now derives it from the title, subject and creation time.
+- **Word: content-identical, not byte-identical.** `word/document.xml` is the same text and layout every time, but the docx library numbers pictures across the whole process, writes the current time into `docProps/core.xml`, and keys the embedded fonts with random GUIDs. Making the package byte-stable needs a zip post-processor (re-keying the fonts), recorded as a later step.
+Applied in: `src/lib/documents/export/pdf.ts`, `src/lib/documents/generation/tools.ts`, tests in `generation.test.ts`.
+
+### D-61 · 2026-10-15 · Documents with no stated issuer are unbranded
+Every snapshot carries a brand profile, and the issuer's name comes from it (`issuer.name` is brand-owned). A prompt such as "invoice for Acme, $2,400" names no issuer, and D-49 forbids inventing one, so generated documents use an **unbranded** profile (`templates/brand.ts`): no name, no logo, a neutral palette, the default type theme.
+- An unbranded document has **no letterhead**; it starts at its title rather than showing an empty mark or "No logo supplied".
+- The issuer field stays missing until someone states it. On an unbranded document `issuer.name` is an ordinary field (not brand-owned), and once supplied it appears in the footer.
+- Fixture invoices keep their fictional brands and render exactly as before.
+- The invoice block skeleton moved from the fixtures to `templates/invoice.ts` so fixtures and generation build invoices the same way.
+Applied in: `src/lib/documents/templates/`, `compose.ts`, `revisions.ts`.
+
+### D-60 · 2026-10-15 · An unstated line-item description is missing, not an error
+Amends the Step 1 validation rule ("Line item has no description" was a blocking error). "invoice for Acme, $2,400" does not say what the $2,400 covers.
+- A description that was not supplied is stored as `null` and reported as **missing**: the invoice saves as incomplete, the preview shows the approved missing-value state ("Missing — Description"), and it exports as a draft. A supplied but blank description is still an **error**.
+- After the draft saves, the chat's follow-up may ask what the amount covers; that is the refine loop, not a gate. The first turn always produces a document.
+- Rejected: using the prompt's own words as the description, which reads as junk on a sent invoice.
+Applied in: `model.ts` (`InvoiceLineItem.description: string | null`), `validation.ts`, `compose.ts`, `layout/blocks.ts`, `export/docx.ts`, `session.ts`; test in `validation.test.ts`.
+
+### D-59 · 2026-10-15 · Scope of the generation work
+Output types: invoice first, then brief, memo or report, then deck (derived from the brief), then letter, one-pager and proposal. Inputs: the prompt, the chat conversation, pasted text or Markdown, and PDF (sent to Claude as a document). DOCX input comes later, after asking about a parser package. Model per step: the latest Opus for first-pass generation; if refine turns feel slow in play-testing, refine may step down to Sonnet, recorded as a decision with the reasoning.
+
+### D-58 · 2026-10-15 · Real citations only when traced
+A citation may be real (not marked fictional) only if it points to a source in the request's evidence bundle (the conversation or an uploaded file) and the host checks that the source exists. Claims carry provenance. Fixtures stay fictional. Amends the PRD's fictional-only rule; lands in S2.
+
+### D-57 · 2026-10-15 · The Claude client is `@anthropic-ai/sdk`
+One new dependency, used on the server and in the CLI only, never in the browser bundle.
+
+### D-56 · 2026-10-15 · One model-only route
+The demo chat reaches the model through one new route handler, `/api/document-model`, that only forwards a model request and returns the candidate operations. It answers 404 in production and is open in development and on Vercel previews; it caps tokens, body size, retries and time, and never logs prompt content. The pipeline, gate and revisions stay pure TypeScript and run the same for every caller. Amends D-51's "no HTTP routes". No existing route, auth guard or `/api` proxy rule changes.
+
+### D-55 · 2026-10-15 · Generate any type and read sources, staged
+Types first, conversation as a source second, file uploads third.
+
+### D-54 · 2026-10-15 · Done condition for S1
+A hosted Vercel preview running the real model (Chaitanya adds the Anthropic key to Vercel's Preview environment), multi-turn refinement in the chat: a fresh visitor prompts an invoice, revises it twice, and exports a PDF.
+
+### D-53 · 2026-10-15 · The frontier bar
+Real generation, output at a designer's bar, fast refine laps. design.md (a versioned per-brand style artifact) is the next slice after the invoice.
+
+### D-52 · 2026-10-15 · The generation writer is swappable
+A `GenerationModel` interface. A scripted model for tests and CI, including deliberately bad output to test retries. A real Claude-backed model in development; the API key lives in a local `.env` only (git-ignored), never committed.
+
+### D-51 · 2026-10-15 · The agent surface
+Pure TypeScript tools (`generate`, `revise`, `export`) with exported JSON tool schemas, plus a vite-node CLI that reads and writes a store file and prints JSON tool results. The revision store is passed in and returned; there is no parallel store.
+
+### D-50 · 2026-10-15 · The chat client is a demo route
+A chat page beside `/document-verify`, open in development and on Vercel previews, 404 in production. Wiring the real `/chat` is a later PR, after its environment is set up.
+
+### D-49 · 2026-10-15 · The gate blocks invalid documents only
+Schema errors, wrong types and sums that don't match block saving. Missing facts are saved as explicit unknowns (shown as missing in the preview), and the document exports as a draft. Nothing is invented.
+
+**Research used for D-49 to D-62.** The research digest supplied with the plan (two rounds, already verified, not re-fetched): the intent → outline → typed blocks pipeline with per-type budgets and provenance (cathrynlavery/diagram-design); constrained generation with an exhaustive runtime schema, structured validation errors, bounded retries and atomic application (Nutrient's agentic-tools and workflow guides), including the trap that a whole-document replace loses element identity, which is why operations target stable IDs; target-plus-digest edit safety, distilled from a source this build never reads; and schema validity is not truth, unknown versus observed absence (morluto/rea). Taken from them: the layered gate (`gate.ts`), digest-checked revise operations, host-assigned IDs, the quote check on every prompt-derived value, and the two-retry loop.
+
+---
+
 ## Review of PR #1
 
 ### D-48 · 2026-10-15 · Merge PR #1; release stays unapproved

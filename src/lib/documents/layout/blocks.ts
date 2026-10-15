@@ -401,7 +401,7 @@ function measureTable(node: TableNode, ctx: MeasureContext): MeasuredBlock {
     ]
   const rowsIn: { id: string; values: PlanValue[] }[] = node.primitive === 'table'
     ? node.rows.map((r) => ({ id: r.id, values: r.cells.map((c, i) => ({ kind: 'text', text: c, style: columns[i]?.numeric ? 'amount' : 'tableText' }) as PlanValue) }))
-    : node.rows.map((r) => ({ id: r.id, values: [{ kind: 'text', text: r.description, style: 'tableText' }, { kind: 'text', text: r.quantity, style: 'amount' }, r.unitPrice, r.amount] }))
+    : node.rows.map((r) => ({ id: r.id, values: [r.description, { kind: 'text', text: r.quantity, style: 'amount' }, r.unitPrice, r.amount] }))
   const captionText = node.primitive === 'table' ? node.caption : node.currencyNote
   const caption = captionText
     ? breakLines(fonts, [{ text: captionText, style: PRINT_TYPE.label }, ...(node.primitive === 'table' && node.citations.length ? [{ text: citationMarker(node.citations), style: PRINT_TYPE.citation }] : [])], W)

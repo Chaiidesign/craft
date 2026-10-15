@@ -1,7 +1,8 @@
 // Invoice fixtures (PRD §11: 1, 2, 3 and 10). All fictional sample data.
 
 import { DISCOUNT_OPTIONS, INVOICE_FIELDS as F, TAX_OPTIONS } from '../invoice'
-import type { Block, BrandProfile, CurrencyCode, Field, InvoiceLineItem, InvoiceSnapshot } from '../model'
+import type { BrandProfile, CurrencyCode, InvoiceLineItem, InvoiceSnapshot } from '../model'
+import { invoiceSnapshot } from '../templates/invoice'
 import {
   HALDEN_ROWE,
   MARROW_FINCH,
@@ -14,7 +15,6 @@ import {
   choice,
   currency,
   date,
-  fieldMap,
   item,
   lines,
   m,
@@ -22,43 +22,11 @@ import {
   notApplicable,
   percent,
   provided,
-  run,
   text,
 } from './builders'
 
 const taxChoices = TAX_OPTIONS
 const discountChoices = DISCOUNT_OPTIONS
-
-function invoiceSnapshot(input: {
-  brand: BrandProfile
-  locale: string
-  fields: Field[]
-  items: InvoiceLineItem[]
-  internalNote?: string
-}): InvoiceSnapshot {
-  const blocks: Block[] = [
-    { id: 'blk-parties', type: 'field-group', title: 'Parties', fieldIds: [F.issuerName, F.issuerAddress, F.buyerName, F.buyerAddress] },
-    { id: 'blk-details', type: 'field-group', title: 'Invoice details', fieldIds: [F.number, F.issueDate, F.dueDate, F.poNumber, F.currency] },
-    { id: 'blk-lines', type: 'line-items', items: input.items },
-    { id: 'blk-adjustments', type: 'field-group', title: 'Discount and tax', fieldIds: [F.discountApplicability, F.discountRate, F.taxApplicability, F.taxRate] },
-    { id: 'blk-totals', type: 'totals', lineItemsBlockId: 'blk-lines' },
-    { id: 'blk-payment', type: 'field-group', title: 'Payment', fieldIds: [F.paymentTerms] },
-  ]
-  if (input.internalNote) {
-    blocks.push({ id: 'blk-internal-note', type: 'callout', tone: 'note', audience: 'internal', runs: [run(input.internalNote)] })
-  }
-  return {
-    schemaVersion: 1,
-    kind: 'invoice',
-    templateId: 'invoice@1',
-    locale: input.locale,
-    brand: input.brand,
-    ...fieldMap(input.fields),
-    blocks,
-    citations: [],
-    layoutPreset: 'a4-portrait',
-  }
-}
 
 // ── Fixture 1: complete branded invoice ─────────────────────────────────────
 //
