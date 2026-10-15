@@ -10,7 +10,7 @@ import { readPdf, squash } from '../testing/pdfText'
 import { capability, formatsFor, FORMAT_FILE } from './capabilities'
 import { FORCED_FAILURE_MESSAGE } from './adapters'
 import { exportFilename, FILENAME_PART_MAX, shortRevisionId } from './filename'
-import { emptyExports, ExportJobError, getExport, renderJob, retryRequest, settleExport, startExport, type ExportJob } from './jobs'
+import { CANCEL_MESSAGE, cancelExport, emptyExports, exportAgainRequest, ExportJobError, getExport, isCancelled, renderJob, retryRequest, settleExport, startExport, type ExportJob } from './jobs'
 import { brandLongNameInvoice } from '../fixtures/invoices'
 
 const files = new Map<string, Uint8Array>()
@@ -22,7 +22,7 @@ function setup(snapshot: DocumentSnapshot = completeInvoice()) {
   return { env, store, outputId, v1: revision }
 }
 
-async function run(state: ReturnType<typeof emptyExports>, env: ReturnType<typeof fixedEnv>, job: ExportJob, forceFailure = false) {
+async function run(state: ReturnType<typeof emptyExports>, env: ReturnType<typeof fixedEnv>, job: ExportJob, forceFailure?: string) {
   const outcome = await renderJob(job, { resources: nodeResources(job.snapshot), title: 't', subject: 's', createdAt: '2026-10-14T09:00:00.000Z', forceFailure })
   return settleExport(state, env, job, outcome, keep)
 }
@@ -117,7 +117,7 @@ describe('export jobs', () => {
     const pdf = startExport(state, env, store, { outputId, revisionId: v1.revisionId, format: 'pdf' })
     state = await run(pdf.state, env, pdf.job!)
     const docx = startExport(state, env, store, { outputId, revisionId: v1.revisionId, format: 'docx' })
-    state = await run(docx.state, env, docx.job!, true)
+    state = await run(docx.state, env, docx.job!, FORCED_FAILURE_MESSAGE)
     const pptx = startExport(state, env, store, { outputId, revisionId: v1.revisionId, format: 'pptx' })
     state = pptx.state
     expect(state.records.map((r) => [r.format, r.status])).toEqual([['pdf', 'succeeded'], ['docx', 'failed'], ['pptx', 'unsupported']])
@@ -200,5 +200,46 @@ describe('export jobs', () => {
       expect(rec.status === 'failed' && rec.error.code, format).toBe('validation-blocked')
       expect(rec.status === 'failed' && rec.error.message).toMatch(/“blk-summary” needs .*pt but a page holds/)
     }
+  })
+
+  it('cancelling: the late result is discarded — no file, no success event — even after the document moved on', async () => {
+    const { env, store, outputId, v1 } = setup()
+    const started = startExport(emptyExports(), env, store, { outputId, revisionId: v1.revisionId, format: 'pdf' })
+    const { store: s2, revision: v2 } = saveEdit(store, env, outputId, v1.revisionId, { kind: 'field', fieldId: 'payment.terms', value: text('Net 15.') })
+    const cancelled = cancelExport(started.state, env, started.record.exportId)
+    const rec = getExport(cancelled, started.record.exportId)
+    expect(isCancelled(rec)).toBe(true)
+    expect(rec.status === 'failed' && rec.error.message).toBe(CANCEL_MESSAGE.user)
+    expect(cancelled.events.at(-1)).toMatchObject({ type: 'exportCancelled', reason: 'user' })
+    // The render finishes anyway; its result arrives late.
+    const outcome = await renderJob(started.job!, { resources: nodeResources(started.job!.snapshot), title: 't', subject: 's', createdAt: '2026-10-14T09:00:00.000Z' })
+    expect(outcome.ok).toBe(true)
+    let urls = 0
+    const late = settleExport(cancelled, env, started.job!, outcome, () => { urls++; return 'blob:late' })
+    expect(late).toBe(cancelled)
+    expect(urls).toBe(0)
+    expect(late.events.some((e) => e.type === 'exportSucceeded')).toBe(false)
+    // The newer revision is untouched and can be exported; a retry of the cancelled job keeps v1.
+    expect(startExport(late, env, s2, { outputId, revisionId: v2.revisionId, format: 'pdf' }).record.status).toBe('pending')
+    const retry = retryRequest(late, started.record.exportId)
+    expect(retry).toMatchObject({ revisionId: v1.revisionId, format: 'pdf', retryOf: started.record.exportId })
+    // Cancelling also lifts the duplicate block for the same revision and format.
+    expect(startExport(late, env, s2, { outputId, revisionId: v1.revisionId, format: 'pdf' }).record.status).toBe('pending')
+  })
+
+  it('only a pending job can be cancelled', async () => {
+    const { env, store, outputId, v1 } = setup()
+    const started = startExport(emptyExports(), env, store, { outputId, revisionId: v1.revisionId, format: 'pdf' })
+    const done = await run(started.state, env, started.job!)
+    expect(() => cancelExport(done, env, started.record.exportId)).toThrow(expect.objectContaining({ code: 'not-cancellable' }))
+  })
+
+  it('export again: an expired record repeats its revision, format and draft confirmation as a new export', () => {
+    const { env, store, outputId, v1 } = setup(incompleteInvoice())
+    const started = startExport(emptyExports(), env, store, { outputId, revisionId: v1.revisionId, format: 'pdf', confirmDraft: true })
+    const rec = started.record
+    const expired = { ...started.state, records: [{ ...rec, status: 'expired' as const, artifact: { filename: 'x.pdf', mimeType: 'application/pdf', byteSize: 10 } }] }
+    expect(exportAgainRequest(expired, rec.exportId)).toEqual({ outputId, revisionId: v1.revisionId, format: 'pdf', confirmDraft: true })
+    expect(() => exportAgainRequest(started.state, rec.exportId)).toThrow(expect.objectContaining({ code: 'not-retryable' }))
   })
 })

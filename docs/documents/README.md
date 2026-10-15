@@ -1,6 +1,6 @@
 # Document-quality prototype
 
-Mock-data prototype of Souvenir's document design system: invoice and brief templates, document tokens and layout primitives, pagination, revisions and real PDF, Word and PowerPoint exports (browser storage and recovery arrive in Step 6). Fixtures are fictional. Nothing here calls a backend, AI service, auth provider or sending channel.
+Mock-data prototype of Souvenir's document design system: invoice and brief templates, document tokens and layout primitives, pagination, revisions, real PDF, Word and PowerPoint exports, and browser-session storage with recovery. Fixtures are fictional. Nothing here calls a backend, AI service, auth provider or sending channel.
 
 - **Workbench:** `/document-verify` — run `npx next dev -p 4010`, open http://localhost:4010/document-verify. Available in development and on Vercel preview deployments; 404 in production.
 - **Tests:** `npx vitest run src/lib/documents src/components/documents src/app/document-verify`
@@ -30,6 +30,8 @@ This README grows with each build step; a section heading names the step that bu
 | Glyph outlines (chart picture in Word files) | `src/lib/documents/outlines.ts` |
 | Export panel, generated-PDF preview, browser export resources | `src/app/document-verify/ExportPanel.tsx`, `src/components/documents/PdfFilePreview.tsx`, `exportResources.ts`, `pdfjs.ts` |
 | Sample exports and their page images | `docs/documents/samples/`, `scripts/documents/` |
+| Browser session: save, load checks, recovery; session fixtures | `src/lib/documents/session.ts`, `src/lib/documents/fixtures/sessions.ts` |
+| Export runner, section error screen, viewer opening | `src/app/document-verify/exportRunner.ts`, `SectionBoundary.tsx`, `src/components/documents/viewerOpen.ts` |
 | Workbench page | `src/app/document-verify/` |
 
 A **document plan** is the renderer-neutral output of a template: an ordered list of primitive nodes with all display text already derived from typed values. The **layout engine** turns a plan into pages: it breaks lines with the theme's real font metrics and places blocks by meaning. The HTML preview draws the engine's lines at the engine's positions, and the PDF renderer draws the same lines at the same positions, so the preview and the PDF wrap and break pages identically. Word and PowerPoint lay text out themselves; see [Exports](#exports-step-5).
@@ -159,7 +161,7 @@ See [Exports](#exports-step-5): the PDF embeds the TTFs; Word files name and emb
 
 ## Revisions *(Step 4)*
 
-Every document in the workbench lives in an **in-memory revision store** (`revisions.ts`). Reloading the page resets it; browser storage and broken-session recovery are Step 6.
+Every document in the workbench lives in an **in-memory revision store** (`revisions.ts`), saved to this browser's storage after every change (see [Session, recovery and errors](#session-recovery-and-errors-step-6)).
 
 - **Identity.** A document record has an output ID, a current revision and an ordered list of revisions; a revision has its own ID, its parent, a timestamp, an author, a change summary, the operation that made it and a snapshot. "v1, v2…" are display labels in creation order; the revision ID is the identity, so two documents (or a brief and its deck) with the same title never get confused.
 - **Immutability.** Snapshots, revisions and records are deep-frozen when created: changing saved content throws. Every operation returns a new store; earlier stores are untouched.
@@ -213,6 +215,39 @@ The workbench exports the revision being viewed: invoices and briefs as **PDF** 
 
 **Build note.** pptxgenjs 4 contains `import('node:fs')` / `import('node:https')` for when it runs under Node; webpack can't bundle the `node:` scheme for browsers. `next.config.ts` therefore has a client-only `webpack` hook that maps exactly those two to empty modules, and now always declares `turbopack` (empty unless the design-system sibling is present) because Next 16 refuses to start Turbopack dev when a `webpack` hook exists without one.
 
+## Session, recovery and errors *(Step 6)*
+
+**What is kept.** One key, `souvenir-doc-workbench:v1`, holds the revision store (documents, revisions, approval markers), the export records and events, and which document is the derived deck, with `schemaVersion: 1`. It is written after every change and read once after the page mounts (so the server and first client render agree). This is demo storage in one browser, not production persistence. **Export files are never stored**: they would fill browser storage quickly (Word files are about 625 KB) and their download links die with the page. On reload a finished export comes back as "{format} of v{n} — file not kept after reload. Export again to download." with an **Export again** button (same revision, format and draft confirmation; a new export, not a retry), and an export that was still running comes back as "{format} of v{n} cancelled — the page was reloaded before it finished", so it can never block a new export.
+
+**Loading checks everything first.** Shape, version, and references: every document's revisions exist and belong to it, the current revision is in its history, parents exist, a deck's source brief revision exists, approvals point at real revisions, export records point at real revisions, and every snapshot can be read by validation (including money as whole minor units). Fixture documents that are incomplete or invalid by design still load; only data validation can't read is refused. Loaded revisions are deep-frozen again.
+
+**A malformed session is never silently replaced.** The banner says "The saved workbench session couldn’t be loaded: {reason}. Nothing has been changed yet. Changes won’t be saved while this banner is showing." with **Download the unreadable data** and **Start again from the sample fixtures**. Until one is chosen nothing is written, so the bad data stays where it was. Start again first copies it to `souvenir-doc-workbench:v1:backup`; if that copy fails, nothing is cleared and the save-failure warning shows instead. Reasons, one per kind, each with a test that forces it (`fixtures/sessions.ts` breaks one thing in a valid session per kind):
+
+| Kind | Reason |
+|---|---|
+| Not JSON | it isn’t valid JSON |
+| Unknown version | it was saved by an unknown version ({version}) |
+| Wrong structure | its structure is wrong at {path} |
+| Current revision not in history | {document}’s current revision isn’t in its history |
+| Missing parent | revision {id}’s parent {parent} is missing |
+| Missing deck source | deck {id} comes from brief revision {rev}, which is missing |
+| Approval of a missing revision | an approval refers to revision {id}, which is missing |
+| Snapshot validation can't read | revision {id} fails validation: {message} |
+
+**Saving can fail.** If storage is full or blocked (some private modes throw on access), the workbench keeps working and says "Changes can’t be saved in this browser ({reason}). They will be lost on reload.", where the reason is the browser's own message.
+
+**Reset.** **Reset workbench** (header) asks first: "This clears the saved session and reloads the sample fixtures. Exports and revisions you made will be lost." **Reset** clears the saved session and reloads the fixtures; **Cancel** (or Escape) leaves everything as it was. Focus returns to the Reset workbench button. If the saved session is malformed, Reset backs it up first, as Start again does. The backup key is never cleared by the workbench.
+
+**Cancelling an export.** A running export shows **Cancel**. The PDF, Word and PowerPoint renderers run in the page and can't be stopped partway, so Cancel marks the record "{format} of v{n} cancelled — the result will be discarded when it arrives" (error code `cancelled`, event `exportCancelled`), and when the result arrives it is thrown away: no file, no object URL, no success event, no "ready" announcement, no preview switch. Announcements and the preview switch now follow the stored record after settling, not the render outcome (`exportRunner.ts`), which fixes a Step 5 path where a discarded result could still announce "ready". A cancelled export can be retried for the same revision. **Limit (accepted; see Known limitations):** Cancel can only take effect while an export is loading its fonts and images; once the renderer itself starts it runs to the end on the page's main thread, and no click is handled until it finishes (the result is then discarded). A warm export here takes about 0.1 s in all (Word 105 ms, PDF 83 ms, measured in the browser), so Cancel is hard to hit by hand; the tests and fixture 11 cancel while resource loading is held, then let the render finish late.
+
+**Renderer vs viewer errors.** A renderer error is a failed export record with **Retry**; the document and its revisions are untouched. A viewer error means the file was made but the PDF viewer couldn't show it: "The PDF was generated ({size}) but the viewer couldn’t show it: {reason}. The download still works." with **Try the viewer again** and **Show the HTML preview**. A file no longer in memory is a viewer error too. While the alert shows, the Step 5 status line ("The PDF could not be shown.") is removed, so a screen reader announces one message.
+
+**Section error screens.** The fixture inspector, the HTML preview and each export panel sit behind an error screen: "This section hit an error: {message}. Your revisions are unchanged." with **Try again**. The revision store lives above every screen, so a crash in a section can't lose it.
+
+**Fixture 11** runs all of this with the real functions (16 checks): forced renderer error and retry, forced viewer error and re-open, cancel with a late result after the document moved to v2, duplicate filenames (the same revision exported twice gives the same filename and two records; a brief and its deck share a filename base and differ only in the short ID — identity always comes from the record, never the filename), a reload round trip, each malformed kind, Start again's backup and a failing save. "Try it by hand" exports the complete invoice with two scenario-only checkboxes, "Force a renderer failure (scenario 11 only)" and "Force a viewer failure (scenario 11 only)".
+
+**Hydration fix.** IDs used `Date.now()` from the first render, so server and client HTML differed on revision IDs (a Step 4 hydration warning in dev). The first render now uses fixed `fx` IDs; from mount on, new IDs carry a prefix unique to the page load, so they never collide with IDs in a saved session.
+
 ## Approved working agreements
 
 Recorded values (approved as recorded values, not spec changes):
@@ -234,12 +269,19 @@ Approved Step 5 wording: the filename pattern; the draft warning, "Export draft"
 
 Approved Step 5 values and text: `WORD_HEADER_FROM_EDGE_PT = 24` (Word's running header 24pt from the top edge, inside the top margin); always declaring `turbopack` in `next.config.ts`; short revision IDs in filenames as the last four hex digits of the revision ID's FNV-1a hash; the Word chart order (title, picture, axes line, data table, summary); and the workbench text — the export panel note "Files are made in this browser from the revision you are viewing (v{n}), fixed when the export starts. Approval is not export, and export is not sending."; buttons "Export {format}", "Preview", "Fit width", "100%", "150%", "Download {filename}"; "Forced failure (scenario 9 only)", the error "Forced renderer failure (scenario 9 only)", the checkbox "Force a Word renderer failure (scenario 9 only)" and the scenario 9 "Try it by hand" note; the refusal "An export of this revision to {format} is already in progress ({export ID})."; and the HTML-preview note's added sentence.
 
+Approved Step 6 decisions and text: the storage split (one versioned key for revisions and approvals; files never stored; records reload expired; running exports reload cancelled), malformed-session handling (banner, never silently replaced, backup key, one forced test per kind), cancel-and-discard with the stored-record fix, the renderer/viewer split with section error screens, the scenario 11 checkboxes, identity from the export record never the filename, and all the text quoted in [Session, recovery and errors](#session-recovery-and-errors-step-6).
+
+Approved Step 6 follow-ups: the `expired` export status (PRD §5 updated to five statuses), Reset backing up a malformed session first, the hydration fix, generated malformed sessions in place of the Step 1 list, two-tab last-write-wins as a known limitation, and one announcement on a viewer error. Also approved, text added while building: the button "Export again" on an expired record; the error "Forced viewer failure (scenario 11 only)" and the renderer error for scenario 11, "Forced renderer failure (scenario 11 only)" (the scenario 9 one with its number changed), with the pill "Forced failure (scenario 11 only)"; the download filename `souvenir-doc-workbench-unreadable.json`; the announcements "Restored the saved workbench session.", "Started again from the sample fixtures." and "Workbench reset to the sample fixtures."; and the detail text inside "fails validation: {message}" (for example "line item “li-1” has a unit price that is not whole minor units").
+
 New values and new document wording are proposed for approval before they are used.
 
 ## Known limitations
 
 - **`ja-JP` locale is unsupported** by the placeholder fonts: its dates use 年, 月 and 日 and its currency the full-width ￥, which no committed face can draw. Layout stops with a clear "characters the fonts can't draw" error; nothing is substituted. (Approved behaviour.)
 - Other non-Latin scripts are likewise refused until a face that covers them is added to a theme.
+- **Two tabs overwrite each other.** Each tab writes the whole session; the last write wins, so one tab's revisions can replace another's. No cross-tab syncing is built.
+- **Edits while the malformed-session banner shows are not saved** (saving is paused so the unreadable data isn't overwritten); the banner says so: "Changes won’t be saved while this banner is showing." The workbench is deliberately not made read-only.
+- **Cancel only works while fonts and images load.** Once the renderer starts it can't respond until it finishes; its result is then discarded. No artificial slow render is built to widen the window.
 
 ## Brand
 

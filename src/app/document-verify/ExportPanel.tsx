@@ -2,29 +2,27 @@
 
 // Export panel: one button per format the document kind supports (unsupported
 // formats are shown disabled with their reason), the draft warning, per-format
-// records with their own status and retry, and the generated PDF itself.
-// Every export targets the revision being viewed, fixed when it starts.
+// records with their own status, cancel, retry and export-again, and the
+// generated PDF itself. Every export targets the revision being viewed, fixed
+// when it starts. Announcements and the preview switch follow the stored
+// record (exportRunner.ts), so a cancelled job's late result stays silent.
 
 import React, { useState } from 'react'
 
 import { Button } from '@/components/Button'
 import { browserExportResources } from '@/components/documents/exportResources'
 import { PdfFilePreview } from '@/components/documents/PdfFilePreview'
-import { ADAPTERS } from '@/lib/documents/export/adapters'
+import { FORCED_VIEWER_FAILURE } from '@/components/documents/viewerOpen'
+import { ADAPTERS, forcedRendererFailure } from '@/lib/documents/export/adapters'
 import { capability, formatsFor, FORMAT_LABEL } from '@/lib/documents/export/capabilities'
-import { ExportJobError, formatSize, renderJob, retryRequest, settleExport, startExport, type ExportState, type StartRequest } from '@/lib/documents/export/jobs'
+import { cancelExport, exportAgainRequest, ExportJobError, formatSize, retryRequest, type StartRequest } from '@/lib/documents/export/jobs'
 import type { DocumentEnv, ExportFormat, ExportRecord } from '@/lib/documents/model'
 import { getDocument, getRevision, versionLabel, type RevisionStore } from '@/lib/documents/revisions'
 
+import { exportStatusLabel, runExport, type ExportControls } from './exportRunner'
 import styles from './workbench.module.css'
 
-export interface ExportControls {
-  exports: ExportState
-  /** Applies a change to the latest export state (jobs settle asynchronously). */
-  updateExports: (change: (s: ExportState) => ExportState) => void
-  /** The latest state, read synchronously when a job starts (duplicate check). */
-  readExports: () => ExportState
-}
+export { exportStatusLabel, type ExportControls }
 
 /** Generated files by their object URL, so the PDF preview reads the bytes themselves (the app's CSP blocks fetching blob: URLs). */
 const generated = new Map<string, Uint8Array>()
@@ -34,29 +32,27 @@ const objectUrl = (bytes: Uint8Array, mimeType: string) => {
   return url
 }
 
-/** Approved status labels. */
-export function exportStatusLabel(store: RevisionStore, r: ExportRecord): string {
-  const format = FORMAT_LABEL[r.format]
-  const v = versionLabel(store, r.revisionId)
-  switch (r.status) {
-    case 'pending': return `Preparing ${format} of ${v}…`
-    case 'succeeded': return `${format} of ${v} ready (${formatSize(r.artifact.byteSize)})`
-    case 'failed': return `${format} failed: ${r.error.message}`
-    case 'unsupported': return r.error.message
-  }
+/** Deliberate, labelled faults for one scenario only. */
+export interface ForcedFaults {
+  scenario: 9 | 11
+  /** Formats whose renderer is made to fail. */
+  formats: ReadonlySet<ExportFormat>
+  /** Make the PDF viewer fail (scenario 11). */
+  viewer?: boolean
 }
 
-const TONE: Record<ExportRecord['status'], string> = { pending: 'neutral', succeeded: 'ready', failed: 'invalid', unsupported: 'neutral' }
+const TONE: Record<ExportRecord['status'], string> = { pending: 'neutral', succeeded: 'ready', failed: 'invalid', unsupported: 'neutral', expired: 'neutral' }
 
-export function ExportPanel({ store, env, outputId, revisionId, controls, forceFailure, onAnnounce }: {
+export function ExportPanel({ store, env, outputId, revisionId, controls, forced, onAnnounce, onShowHtml }: {
   store: RevisionStore
   env: DocumentEnv
   outputId: string
   revisionId: string
   controls: ExportControls
-  /** Scenario 9 only: formats whose renderer is made to fail on purpose. */
-  forceFailure?: ReadonlySet<ExportFormat>
+  forced?: ForcedFaults
   onAnnounce?: (message: string) => void
+  /** Offered when the PDF viewer fails. */
+  onShowHtml?: () => void
 }) {
   const doc = getDocument(store, outputId)
   const revision = getRevision(store, revisionId)
@@ -67,33 +63,25 @@ export function ExportPanel({ store, env, outputId, revisionId, controls, forceF
 
   const run = async (req: StartRequest) => {
     setRefusal(null)
-    let started
+    const result = await runExport({
+      controls, env, store, req,
+      resources: browserExportResources,
+      localUrl: objectUrl,
+      forceFailure: forced?.formats.has(req.format) ? forcedRendererFailure(forced.scenario) : undefined,
+      announce: onAnnounce,
+      onPdfReady: setPreviewId,
+    })
+    if ('refusal' in result) setRefusal(result.refusal)
+  }
+
+  const cancel = (exportId: string) => {
     try {
-      started = startExport(controls.readExports(), env, store, req)
+      controls.updateExports((s) => cancelExport(s, env, exportId))
+      onAnnounce?.(exportStatusLabel(store, controls.readExports().records.find((r) => r.exportId === exportId)!))
     } catch (e) {
-      if (e instanceof ExportJobError) { setRefusal(e.message); return }
-      throw e
+      if (e instanceof ExportJobError) setRefusal(e.message)
+      else throw e
     }
-    controls.updateExports(() => started.state)
-    const { job, record } = started
-    if (!job) { onAnnounce?.(exportStatusLabel(store, record)); return }
-    onAnnounce?.(exportStatusLabel(store, record))
-    let outcome
-    try {
-      const resources = await browserExportResources(job.snapshot)
-      outcome = await renderJob(job, {
-        resources,
-        title: doc.title,
-        subject: `Revision ${job.revisionId} (${v})`,
-        createdAt: env.now(),
-        forceFailure: forceFailure?.has(job.format),
-      })
-    } catch (e) {
-      outcome = { ok: false as const, error: { code: 'renderer-failed' as const, message: e instanceof Error ? e.message : String(e) } }
-    }
-    controls.updateExports((s) => settleExport(s, env, job, outcome, objectUrl))
-    if (outcome.ok && job.format === 'pdf') setPreviewId(job.exportId)
-    onAnnounce?.(outcome.ok ? `${FORMAT_LABEL[job.format]} of ${v} ready.` : `${FORMAT_LABEL[job.format]} failed: ${outcome.error.message}`)
   }
 
   const validation = (format: ExportFormat) => ADAPTERS[format].validate(revision.snapshot)
@@ -109,8 +97,8 @@ export function ExportPanel({ store, env, outputId, revisionId, controls, forceF
   const draftCheck = confirming ? validation(confirming) : null
 
   return (
-    <section className={styles.panel} aria-labelledby="export-title">
-      <h2 id="export-title" className={styles.panelTitle}>Export {v}</h2>
+    <section className={styles.panel} aria-labelledby={`export-title-${outputId}`}>
+      <h2 id={`export-title-${outputId}`} className={styles.panelTitle}>Export {v}</h2>
       <p className={styles.muted} style={{ marginTop: 0 }}>
         Files are made in this browser from the revision you are viewing ({v}), fixed when the export starts. Approval is not export, and export is not sending.
       </p>
@@ -120,11 +108,11 @@ export function ExportPanel({ store, env, outputId, revisionId, controls, forceF
           const pending = controls.exports.records.some((r) => r.status === 'pending' && r.revisionId === revisionId && r.format === format)
           return (
             <span key={format} className={styles.exportFormat}>
-              <Button size="sm" variant={cap.supported ? 'outline' : 'ghost'} disabled={!cap.supported || pending} onClick={() => click(format)} aria-describedby={cap.supported ? undefined : `export-reason-${format}`}>
+              <Button size="sm" variant={cap.supported ? 'outline' : 'ghost'} disabled={!cap.supported || pending} onClick={() => click(format)} aria-describedby={cap.supported ? undefined : `export-reason-${outputId}-${format}`}>
                 Export {FORMAT_LABEL[format]}
               </Button>
-              {!cap.supported && <span id={`export-reason-${format}`} className={styles.muted}>{cap.reason}</span>}
-              {forceFailure?.has(format) && <span className={styles.pill} data-tone="invalid">Forced failure (scenario 9 only)</span>}
+              {!cap.supported && <span id={`export-reason-${outputId}-${format}`} className={styles.muted}>{cap.reason}</span>}
+              {forced?.formats.has(format) && <span className={styles.pill} data-tone="invalid">Forced failure (scenario {forced.scenario} only)</span>}
             </span>
           )
         })}
@@ -148,11 +136,20 @@ export function ExportPanel({ store, env, outputId, revisionId, controls, forceF
               <span className={styles.pill} data-tone={TONE[r.status]}>{FORMAT_LABEL[r.format]}{r.draft ? ' · draft' : ''}</span>
               <span>
                 <span role="status">{exportStatusLabel(store, r)}</span>
+                {r.status === 'pending' && (
+                  <>{' '}<Button size="sm" variant="ghost" onClick={() => cancel(r.exportId)}>Cancel</Button></>
+                )}
                 {r.status === 'succeeded' && (
                   <>
                     {' '}<a href={r.artifact.localUrl} download={r.artifact.filename}>{r.artifact.filename}</a>
                     <span className={styles.muted}> · {r.artifact.mimeType}</span>
                     {r.format === 'pdf' && shown?.exportId !== r.exportId && <>{' '}<Button size="sm" variant="ghost" onClick={() => setPreviewId(r.exportId)}>Preview</Button></>}
+                  </>
+                )}
+                {r.status === 'expired' && (
+                  <>
+                    {' '}<span className={styles.muted}>{r.artifact.filename} · {formatSize(r.artifact.byteSize)}</span>
+                    {' '}<Button size="sm" variant="outline" onClick={() => void run(exportAgainRequest(controls.readExports(), r.exportId))}>Export again</Button>
                   </>
                 )}
                 {r.status === 'failed' && (
@@ -169,7 +166,16 @@ export function ExportPanel({ store, env, outputId, revisionId, controls, forceF
 
       {shown && (
         <div className={styles.previewWell}>
-          <PdfFilePreview key={shown.exportId} bytes={generated.get(shown.artifact.localUrl) ?? null} url={shown.artifact.localUrl} filename={shown.artifact.filename} label={`PDF preview (generated file, ${versionLabel(store, shown.revisionId)})`} />
+          <PdfFilePreview
+            key={`${shown.exportId}${forced?.viewer ? ':forced-viewer' : ''}`}
+            bytes={generated.get(shown.artifact.localUrl) ?? null}
+            url={shown.artifact.localUrl}
+            filename={shown.artifact.filename}
+            size={formatSize(shown.artifact.byteSize)}
+            label={`PDF preview (generated file, ${versionLabel(store, shown.revisionId)})`}
+            forceFailure={forced?.viewer ? FORCED_VIEWER_FAILURE : undefined}
+            onShowHtml={onShowHtml}
+          />
         </div>
       )}
     </section>

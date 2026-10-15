@@ -17,8 +17,8 @@ export interface RenderOptions {
   subject: string
   /** ISO time of the export, written as the file's creation date where the format has one. */
   createdAt: string
-  /** Scenario 9 only: make this renderer fail at its render step, deliberately and visibly. */
-  forceFailure?: boolean
+  /** Scenarios 9 and 11 only: make this renderer fail at its render step with this message, deliberately and visibly. */
+  forceFailure?: string
 }
 
 export type Validation =
@@ -36,7 +36,9 @@ export interface ExportAdapter {
   render(snapshot: DocumentSnapshot, options: RenderOptions): Promise<RenderOutcome>
 }
 
-export const FORCED_FAILURE_MESSAGE = 'Forced renderer failure (scenario 9 only)'
+/** The error a forced renderer failure carries; it names the only scenario that can force it. */
+export const forcedRendererFailure = (scenario: 9 | 11) => `Forced renderer failure (scenario ${scenario} only)`
+export const FORCED_FAILURE_MESSAGE = forcedRendererFailure(9)
 
 function validate(format: ExportFormat, snapshot: DocumentSnapshot): Validation {
   const cap = capability(snapshot.kind, format)
@@ -68,7 +70,7 @@ function adapter(format: ExportFormat, render: (s: DocumentSnapshot, o: RenderOp
       const checked = validate(format, snapshot)
       if (!checked.ok) return checked
       try {
-        if (options.forceFailure) throw new Error(FORCED_FAILURE_MESSAGE)
+        if (options.forceFailure) throw new Error(options.forceFailure)
         const out = await render(snapshot, options)
         if (out.bytes.byteLength === 0) return { ok: false, error: { code: 'renderer-failed', message: `${FORMAT_LABEL[format]} renderer produced an empty file` } }
         return { ok: true, ...out }

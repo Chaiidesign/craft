@@ -13,18 +13,19 @@ import { HistoryPanel, RevisionBar } from './RevisionPanels'
 import { nodeResources } from '@/lib/documents/testing/nodeResources'
 import { readPdf } from '@/lib/documents/testing/pdfText'
 
-import { runApprovedThenEdited, runBoundedEdit, runPartialExport, runRestore, type ExportDeps } from './scenarios'
+import { runApprovedThenEdited, runBoundedEdit, runErrorsAndRecovery, runPartialExport, runRestore, type ExportDeps } from './scenarios'
 
 const NODE_DEPS: ExportDeps = { resources: async (s) => nodeResources(s), pdfPageTexts: async (b) => (await readPdf(b)).pages.map((p) => p.text) }
 
 const strip = (html: string) => html.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ')
 
-describe('scenario runners (fixtures 6, 7, 8, 9)', () => {
+describe('scenario runners (fixtures 6, 7, 8, 9, 11)', () => {
   it.each([
     ['bounded edit', runBoundedEdit],
     ['approved then edited', () => runApprovedThenEdited(NODE_DEPS)],
     ['restore', runRestore],
     ['partial export', () => runPartialExport(NODE_DEPS)],
+    ['errors and recovery', () => runErrorsAndRecovery(NODE_DEPS)],
   ])('%s: every check passes, none deferred', async (_, run) => {
     const checks = await run()
     expect(checks.length).toBeGreaterThan(2)

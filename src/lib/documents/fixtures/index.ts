@@ -45,17 +45,6 @@ export interface ScenarioFixture extends FixtureBase {
 
 export type Fixture = DocumentFixture | ScenarioFixture
 
-/**
- * Raw strings a demo session might find in local storage. Recovery (Step 6)
- * must reject each with a specific message and keep a usable default session.
- */
-export const MALFORMED_SESSIONS: readonly { label: string; raw: string }[] = [
-  { label: 'Not JSON', raw: '{"documents": [' },
-  { label: 'Wrong schema version', raw: '{"schemaVersion": 99, "documents": []}' },
-  { label: 'Revision points at a missing parent', raw: '{"schemaVersion": 1, "documents": [{"outputId": "out-1", "revisionIds": ["rev-002"], "currentRevisionId": "rev-002"}], "revisions": [{"revisionId": "rev-002", "parentRevisionId": "rev-001"}]}' },
-  { label: 'Amount stored as a formatted string', raw: '{"schemaVersion": 1, "documents": [], "revisions": [{"snapshot": {"blocks": [{"type": "line-items", "items": [{"unitPrice": "$1,200.00"}]}]}}]}' },
-]
-
 /** An empty document: no fields, no blocks. Must explain itself, not show a blank canvas. */
 function emptyDocument(): DocumentSnapshot {
   const base = completeInvoice()
@@ -97,7 +86,7 @@ export const FIXTURES: readonly Fixture[] = [
   { id: 'brand-long-name', prdNumber: 10, type: 'document', title: 'Brand: very long issuer name', purpose: 'A 99-character issuer name wraps without clipping or shrinking (GBP).', build: brandLongNameInvoice },
   { id: 'empty-document', prdNumber: 11, type: 'document', title: 'Empty document', purpose: 'No fields and no blocks: the preview explains what is missing instead of showing a blank canvas.', build: emptyDocument },
   {
-    id: 'errors-and-recovery', prdNumber: 11, type: 'scenario', title: 'Errors, cancellation and recovery', runsIn: 'step-6',
+    id: 'errors-and-recovery', prdNumber: 11, type: 'scenario', title: 'Errors, cancellation and recovery', baseFixtureId: 'invoice-complete', runsIn: 'step-6',
     purpose: 'Renderer vs viewer errors, a cancelled render whose late result is ignored, duplicate filenames, and malformed local-session recovery.',
     steps: ['Force a renderer error — draft survives, retry offered', 'Force a viewer error — structured view offered', 'Cancel a render; a late result must not overwrite a newer snapshot', 'Two exports with the same filename keep distinct revision identity', 'Load each malformed session — specific message, usable default'],
   },

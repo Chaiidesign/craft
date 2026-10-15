@@ -8,11 +8,15 @@
 // Step 3: the preview is laid out with real font metrics and paginated by meaning.
 // Step 4: every document lives in an in-memory revision store. Panels show the
 // revision being viewed; bounded edits, proposals and restores create new
-// revisions; scenarios 5–8 run against real revisions. Reloading resets the
-// store (browser storage arrives in Step 6).
+// revisions; scenarios 5–8 run against real revisions.
 // Step 5: real exports — PDF (jsPDF, the engine's own lines), Word and PowerPoint
 // — of an explicitly selected revision, with per-format records, the draft
 // warning, retries, and a preview of the generated PDF itself.
+// Step 6: the session (revisions, approvals, export records — never files) is
+// kept in this browser's storage and checked in full on load; a malformed
+// session is reported, never silently replaced. Exports can be cancelled (a
+// late result is discarded), viewer failures are told apart from renderer
+// failures, each section has an error screen, and Reset starts over.
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -51,13 +55,15 @@ import {
   type RevisionStore,
 } from '@/lib/documents/revisions'
 import { emptyExports, type ExportState } from '@/lib/documents/export/jobs'
+import { clearSession, openStorage, readSession, startAgain, writeSession, type KeyValueStorage } from '@/lib/documents/session'
 import { resolveTheme } from '@/lib/documents/theme'
 import { validateSnapshot, type Readiness, type ValidationIssue } from '@/lib/documents/validation'
 
-import { ExportPanel, type ExportControls } from './ExportPanel'
+import { ExportPanel, type ExportControls, type ForcedFaults } from './ExportPanel'
 import { FieldEditor, LineItemEditor, TextEditor, textTargets, type SaveEdit } from './Editors'
 import { ComparePanel, HistoryPanel, ProposalPanel, RevisionBar, type ProposalState } from './RevisionPanels'
-import { runApprovedThenEdited, runBoundedEdit, runPartialExport, runRestore, type ExportDeps, type ScenarioCheck } from './scenarios'
+import { runApprovedThenEdited, runBoundedEdit, runErrorsAndRecovery, runPartialExport, runRestore, type ExportDeps, type ScenarioCheck } from './scenarios'
+import { SectionBoundary } from './SectionBoundary'
 import styles from './workbench.module.css'
 
 const READINESS_LABEL: Record<Readiness, string> = {
@@ -73,16 +79,24 @@ const SEVERITY_LABEL: Record<ValidationIssue['severity'], string> = {
 }
 
 const STEP_LABEL = { 'step-3': 'Step 3', 'step-4': 'Step 4', 'step-5': 'Step 5', 'step-6': 'Step 6' } as const
-const RUNNABLE_NOW = new Set(['step-3', 'step-4', 'step-5'])
+const RUNNABLE_NOW = new Set(['step-3', 'step-4', 'step-5', 'step-6'])
 
 const documentFixtures = FIXTURES.filter((f) => f.type === 'document')
 const scenarioFixtures = FIXTURES.filter((f) => f.type === 'scenario')
 
-/** Real clock and unique IDs for the interactive workbench (tests use fixedEnv). */
-function workbenchEnv(): DocumentEnv {
+/**
+ * Real clock and IDs for the interactive workbench (tests use fixedEnv). The first render uses
+ * fixed "fx" IDs so the server and client render the same fixtures; from mount on, IDs carry a
+ * prefix unique to this page load, so they never collide with IDs in a saved session.
+ */
+function workbenchEnv(): DocumentEnv & { beginSession: () => void } {
   let n = 0
-  const session = Date.now().toString(36)
-  return { now: () => new Date().toISOString(), nextId: (prefix) => `${prefix}-${session}-${String(++n).padStart(3, '0')}` }
+  let session = 'fx'
+  return {
+    now: () => new Date().toISOString(),
+    nextId: (prefix) => `${prefix}-${session}-${String(++n).padStart(3, '0')}`,
+    beginSession: () => { if (session === 'fx') session = Date.now().toString(36) },
+  }
 }
 
 function initialStore(env: DocumentEnv): RevisionStore {
@@ -92,6 +106,27 @@ function initialStore(env: DocumentEnv): RevisionStore {
     store = createDocument(store, env, f.build(), { outputId: outputIdFor(f.id) }).store
   }
   return store
+}
+
+interface BrowserSessionLoad {
+  storage?: KeyValueStorage
+  loaded?: { store: RevisionStore; exports: ExportState; deckId: string | null }
+  malformed?: { reason: string; raw: string }
+  saveError?: string
+  /** Start saving: only when a session loaded or none existed, so a malformed one is never overwritten unasked. */
+  persist: boolean
+}
+
+function loadBrowserSession(env: DocumentEnv): BrowserSessionLoad {
+  const opened = openStorage(() => window.localStorage)
+  if (!opened.ok) return { saveError: opened.reason, persist: false }
+  const loaded = readSession(opened.storage, env)
+  switch (loaded.status) {
+    case 'unavailable': return { storage: opened.storage, saveError: loaded.reason, persist: false }
+    case 'malformed': return { storage: opened.storage, malformed: { reason: loaded.reason, raw: loaded.raw }, persist: false }
+    case 'loaded': return { storage: opened.storage, loaded: loaded.session, persist: true }
+    case 'empty': return { storage: opened.storage, persist: true }
+  }
 }
 
 interface Workbench {
@@ -122,6 +157,84 @@ export function DocumentWorkbench() {
     updateExports: (change) => { exportRef.current = change(exportRef.current); setExportState(exportRef.current) },
   }), [exportState])
 
+  // ── Browser session ──
+  const storageRef = useRef<KeyValueStorage | null>(null)
+  const [persist, setPersist] = useState(false)
+  const [malformed, setMalformed] = useState<{ reason: string; raw: string } | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [confirmReset, setConfirmReset] = useState(false)
+  const resetButtonRef = useRef<HTMLButtonElement>(null)
+
+  const replaceAll = useCallback((next: { store: RevisionStore; exports: ExportState; deckId: string | null }) => {
+    exportRef.current = next.exports
+    setExportState(next.exports)
+    setStore(next.store)
+    setDeckId(next.deckId)
+    setViewing({})
+  }, [])
+
+  const applySessionLoad = useCallback((outcome: BrowserSessionLoad) => {
+    if (outcome.loaded) replaceAll(outcome.loaded)
+    if (outcome.saveError) setSaveError(outcome.saveError)
+    if (outcome.malformed) setMalformed(outcome.malformed)
+    if (outcome.loaded) setAnnouncement('Restored the saved workbench session.')
+    setPersist(outcome.persist)
+  }, [replaceAll])
+
+
+  // Storage is read after mount: the server render and the first client render both show the fixtures.
+  // Reading browser storage once on mount is exactly the external-system sync effects are for.
+  useEffect(() => {
+    env.beginSession()
+    const outcome = loadBrowserSession(env)
+    if (outcome.storage) storageRef.current = outcome.storage
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of browser storage after hydration
+    applySessionLoad(outcome)
+  }, [env, applySessionLoad])
+
+  // Every change is written through to browser storage; a failed write is reported, never ignored.
+  useEffect(() => {
+    if (!persist || !storageRef.current) return
+    const saved = writeSession(storageRef.current, { store, exports: exportState, deckId })
+    setSaveError(saved.ok ? null : saved.reason)
+  }, [persist, store, exportState, deckId])
+
+  const fresh = () => replaceAll({ store: initialStore(env), exports: emptyExports(), deckId: null })
+
+  const downloadUnreadable = () => {
+    if (!malformed) return
+    const url = URL.createObjectURL(new Blob([malformed.raw], { type: 'application/json' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'souvenir-doc-workbench-unreadable.json'
+    a.click()
+    window.setTimeout(() => URL.revokeObjectURL(url), 0)
+  }
+
+  const startAgainFromFixtures = (focusTitle: unknown = true) => {
+    if (!malformed || !storageRef.current) return
+    const result = startAgain(storageRef.current, malformed.raw)
+    fresh()
+    setMalformed(null)
+    if (result.ok) { setPersist(true); setSaveError(null) } else setSaveError(result.reason)
+    setAnnouncement('Started again from the sample fixtures.')
+    // The banner (and the button that had focus) is gone: focus moves to the fixture heading.
+    if (focusTitle !== false) window.setTimeout(() => document.getElementById('fixture-title')?.focus(), 0)
+  }
+
+  const reset = () => {
+    setConfirmReset(false)
+    resetButtonRef.current?.focus()
+    // A malformed session is backed up before it is cleared, exactly as "Start again" does.
+    if (malformed) { startAgainFromFixtures(false); return }
+    if (storageRef.current) {
+      const cleared = clearSession(storageRef.current)
+      if (!cleared.ok) setSaveError(cleared.reason)
+    }
+    fresh()
+    setAnnouncement('Workbench reset to the sample fixtures.')
+  }
+
   const wb: Workbench = {
     store, env, viewing, deckId, setDeckId, exports: exportControls, announce: setAnnouncement,
     view: (outputId, revisionId) => setViewing((v) => {
@@ -146,19 +259,55 @@ export function DocumentWorkbench() {
           <h1 className={styles.title}>Document quality workbench</h1>
           <p className={styles.subtitle}>Prototype. Fixtures and local state only — no backend, AI, auth or sending.</p>
           <span className={styles.sampleTag}>{SAMPLE_LABEL}</span>
+          <Button ref={resetButtonRef} size="sm" variant="ghost" onClick={() => setConfirmReset(true)} aria-expanded={confirmReset}>Reset workbench</Button>
         </div>
       </header>
+
+      {confirmReset && (
+        <ResetConfirm onReset={reset} onCancel={() => { setConfirmReset(false); resetButtonRef.current?.focus() }} />
+      )}
+      {malformed && (
+        <div className={styles.sessionBanner} role="alert" data-session="malformed">
+          <p>The saved workbench session couldn’t be loaded: {malformed.reason}. Nothing has been changed yet.</p>
+          <p>Changes won’t be saved while this banner is showing.</p>
+          <div className={styles.toolbar}>
+            <Button size="sm" variant="outline" onClick={downloadUnreadable}>Download the unreadable data</Button>
+            <Button size="sm" onClick={startAgainFromFixtures}>Start again from the sample fixtures</Button>
+          </div>
+        </div>
+      )}
+      {saveError && (
+        <div className={styles.sessionBanner} role="alert" data-session="save-failed">
+          <p>Changes can’t be saved in this browser ({saveError.replace(/\.$/, '')}). They will be lost on reload.</p>
+        </div>
+      )}
 
       <div className={styles.layout}>
         <FixturePicker fixtureId={fixture.id} onSelect={select} />
         <main className={styles.main} aria-labelledby="fixture-title">
-          {fixture.type === 'scenario'
-            ? <ScenarioInspector key={fixture.id} fixture={fixture} wb={wb} onOpenFixture={select} />
-            : <DocumentInspector key={fixture.id} fixture={fixture} wb={wb} onOpenFixture={select} />}
+          <SectionBoundary key={fixture.id} label={fixture.title}>
+            {fixture.type === 'scenario'
+              ? <ScenarioInspector fixture={fixture} wb={wb} onOpenFixture={select} />
+              : <DocumentInspector fixture={fixture} wb={wb} onOpenFixture={select} />}
+          </SectionBoundary>
         </main>
       </div>
 
       <p className={styles.srOnly} aria-live="polite">{announcement}</p>
+    </div>
+  )
+}
+
+function ResetConfirm({ onReset, onCancel }: { onReset: () => void; onCancel: () => void }) {
+  const resetRef = useRef<HTMLButtonElement>(null)
+  useEffect(() => { resetRef.current?.focus() }, [])
+  return (
+    <div className={styles.sessionBanner} role="alertdialog" aria-labelledby="reset-warning" onKeyDown={(e) => { if (e.key === 'Escape') onCancel() }}>
+      <p id="reset-warning">This clears the saved session and reloads the sample fixtures. Exports and revisions you made will be lost.</p>
+      <div className={styles.toolbar}>
+        <Button ref={resetRef} size="sm" onClick={onReset}>Reset</Button>
+        <Button size="sm" variant="ghost" onClick={onCancel}>Cancel</Button>
+      </div>
     </div>
   )
 }
@@ -281,12 +430,17 @@ function DocumentInspector({ fixture, wb, onOpenFixture }: { fixture: Fixture; w
   const proposal = useMemo(() => (template ? proposalFrom(template, outputId, doc.revisionIds[0]) : null), [template, outputId, doc.revisionIds])
 
   const scenarios = scenarioFixtures.filter((s) => s.type === 'scenario' && s.baseFixtureId === fixture.id)
+  const showHtmlPreview = () => {
+    const heading = document.getElementById('preview-title')
+    heading?.focus()
+    heading?.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+  }
   const targets = useMemo(() => textTargets(snapshot), [snapshot])
 
   return (
     <>
       <section className={styles.panel} aria-labelledby="fixture-title">
-        <h2 id="fixture-title" className={styles.fixtureTitle}>{fixture.title}</h2>
+        <h2 id="fixture-title" className={styles.fixtureTitle} tabIndex={-1}>{fixture.title}</h2>
         <p className={styles.muted}>Fixture {fixture.prdNumber} · {fixture.purpose}</p>
         <div className={styles.metaRow}>
           <span className={styles.pill} data-tone={report.readiness}>{READINESS_LABEL[report.readiness]}</span>
@@ -309,9 +463,13 @@ function DocumentInspector({ fixture, wb, onOpenFixture }: { fixture: Fixture; w
         )}
       </section>
 
-      <PreviewPanel snapshot={snapshot} />
+      <SectionBoundary label="HTML preview (not the PDF)">
+        <PreviewPanel snapshot={snapshot} />
+      </SectionBoundary>
 
-      <ExportPanel store={wb.store} env={wb.env} outputId={outputId} revisionId={viewedId} controls={wb.exports} onAnnounce={wb.announce} />
+      <SectionBoundary label={`Export ${versionLabel(wb.store, viewedId)}`}>
+        <ExportPanel store={wb.store} env={wb.env} outputId={outputId} revisionId={viewedId} controls={wb.exports} onAnnounce={wb.announce} onShowHtml={showHtmlPreview} />
+      </SectionBoundary>
 
       <section className={styles.panel} aria-labelledby="issues-title">
         <h2 id="issues-title" className={styles.panelTitle}>Issues ({report.issues.length})</h2>
@@ -520,7 +678,7 @@ function PreviewPanel({ snapshot }: { snapshot: DocumentSnapshot }) {
 
   return (
     <section className={styles.panel} aria-labelledby="preview-title">
-      <h2 id="preview-title" className={styles.panelTitle}>HTML preview (not the PDF)</h2>
+      <h2 id="preview-title" className={styles.panelTitle} tabIndex={-1}>HTML preview (not the PDF)</h2>
       <p className={styles.muted} style={{ marginTop: 0 }}>
         Laid out from the viewed revision with the document fonts, tokens and primitives, and paginated by meaning. Not an export: the PDF is made by the export panel below and drawn from the same layout.
       </p>
@@ -668,9 +826,11 @@ const RUNNERS: Partial<Record<string, () => Promise<ScenarioCheck[]>>> = {
   'approved-then-edited': () => runApprovedThenEdited(BROWSER_EXPORT_DEPS),
   restore: runRestore,
   'partial-export': () => runPartialExport(BROWSER_EXPORT_DEPS),
+  'errors-and-recovery': () => runErrorsAndRecovery(BROWSER_EXPORT_DEPS),
 }
 
-const FORCE_WORD_FAILURE: ReadonlySet<ExportFormat> = new Set(['docx'])
+const FORCE_WORD_FAILURE: ForcedFaults = { scenario: 9, formats: new Set<ExportFormat>(['docx']) }
+const ALL_FORMATS: ReadonlySet<ExportFormat> = new Set(['pdf', 'docx', 'pptx'])
 
 function ScenarioInspector({ fixture, wb, onOpenFixture }: { fixture: Extract<Fixture, { type: 'scenario' }>; wb: Workbench; onOpenFixture: (id: string) => void }) {
   const base = fixture.baseFixtureId ? getFixture(fixture.baseFixtureId) : undefined
@@ -679,6 +839,8 @@ function ScenarioInspector({ fixture, wb, onOpenFixture }: { fixture: Extract<Fi
   const [running, setRunning] = useState(false)
   const [runError, setRunError] = useState<string | null>(null)
   const [forceWord, setForceWord] = useState(true)
+  const [forceRenderer, setForceRenderer] = useState(false)
+  const [forceViewer, setForceViewer] = useState(true)
   const runNow = async () => {
     if (!runner) return
     setRunning(true)
@@ -687,7 +849,7 @@ function ScenarioInspector({ fixture, wb, onOpenFixture }: { fixture: Extract<Fi
   }
   return (
     <section className={styles.panel} aria-labelledby="fixture-title">
-      <h2 id="fixture-title" className={styles.fixtureTitle}>{fixture.title}</h2>
+      <h2 id="fixture-title" className={styles.fixtureTitle} tabIndex={-1}>{fixture.title}</h2>
       <p className={styles.muted}>Fixture {fixture.prdNumber} · {fixture.purpose}</p>
       <div className={styles.metaRow}>
         <span className={styles.pill} data-tone="neutral">{RUNNABLE_NOW.has(fixture.runsIn) ? 'Scenario — runnable now' : `Scenario — runnable from ${STEP_LABEL[fixture.runsIn]}`}</span>
@@ -714,7 +876,26 @@ function ScenarioInspector({ fixture, wb, onOpenFixture }: { fixture: Extract<Fi
                   <h3 className={styles.groupHeading} style={{ marginTop: 16 }}>Try it by hand</h3>
                   <p className={styles.muted}>Exports the current revision of {base.title} in this workbench. While the box is ticked, the Word renderer is made to fail at its render step — a deliberate, labelled fault that exists only in this scenario. Untick it and retry: the retry keeps the original revision.</p>
                   <label className={styles.label}><input type="checkbox" checked={forceWord} onChange={(e) => setForceWord(e.target.checked)} /> Force a Word renderer failure (scenario 9 only)</label>
-                  <ExportPanel store={wb.store} env={wb.env} outputId={outputIdFor(base.id)} revisionId={currentRevision(wb.store, outputIdFor(base.id)).revisionId} controls={wb.exports} forceFailure={forceWord ? FORCE_WORD_FAILURE : undefined} onAnnounce={wb.announce} />
+                  <ExportPanel store={wb.store} env={wb.env} outputId={outputIdFor(base.id)} revisionId={currentRevision(wb.store, outputIdFor(base.id)).revisionId} controls={wb.exports} forced={forceWord ? FORCE_WORD_FAILURE : undefined} onAnnounce={wb.announce} />
+                </>
+              )}
+              {fixture.id === 'errors-and-recovery' && base && (
+                <>
+                  <h3 className={styles.groupHeading} style={{ marginTop: 16 }}>Try it by hand</h3>
+                  <label className={styles.label}><input type="checkbox" checked={forceRenderer} onChange={(e) => setForceRenderer(e.target.checked)} /> Force a renderer failure (scenario 11 only)</label>
+                  <label className={styles.label}><input type="checkbox" checked={forceViewer} onChange={(e) => setForceViewer(e.target.checked)} /> Force a viewer failure (scenario 11 only)</label>
+                  <SectionBoundary label={`Export ${base.title}`}>
+                    <ExportPanel
+                      store={wb.store}
+                      env={wb.env}
+                      outputId={outputIdFor(base.id)}
+                      revisionId={currentRevision(wb.store, outputIdFor(base.id)).revisionId}
+                      controls={wb.exports}
+                      forced={forceRenderer || forceViewer ? { scenario: 11, formats: forceRenderer ? ALL_FORMATS : new Set(), viewer: forceViewer } : undefined}
+                      onAnnounce={wb.announce}
+                      onShowHtml={() => onOpenFixture(base.id)}
+                    />
+                  </SectionBoundary>
                 </>
               )}
             </>
@@ -790,7 +971,9 @@ function DeckScenario({ wb }: { wb: Workbench }) {
             <div className={styles.previewWell}>
               <DeckPreview snapshot={deckRev.snapshot as DeckSnapshot} onLayout={onLayout} />
             </div>
-            <ExportPanel store={wb.store} env={wb.env} outputId={deckDoc!.outputId} revisionId={deckRev.revisionId} controls={wb.exports} onAnnounce={wb.announce} />
+            <SectionBoundary label={`Export deck ${versionLabel(wb.store, deckRev.revisionId)}`}>
+              <ExportPanel store={wb.store} env={wb.env} outputId={deckDoc!.outputId} revisionId={deckRev.revisionId} controls={wb.exports} onAnnounce={wb.announce} />
+            </SectionBoundary>
           </>
         )}
       {error && <p className={styles.formError} role="alert">{error}</p>}

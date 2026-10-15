@@ -660,3 +660,22 @@
 .draftConfirm p {
   margin: 0 0 8px;
 }
+
+/* Session notices (Step 6): malformed session, save failure, reset confirmation. */
+.sessionBanner {
+  max-width: 1200px;
+  margin: 12px auto 0;
+  padding: 12px 16px;
+  border: 1px solid var(--yellow-100);
+  border-radius: 8px;
+  background: var(--yellow-50);
+  overflow-wrap: anywhere;
+}
+
+.sessionBanner p {
+  margin: 0 0 8px;
+}
+
+.sessionBanner p:last-child {
+  margin-bottom: 0;
+}

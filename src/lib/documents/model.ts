@@ -305,3 +305,5 @@ export type ExportRecord =
   | (ExportBase & { status: 'succeeded'; artifact: ExportArtifact })
   | (ExportBase & { status: 'failed'; error: ExportError })
   | (ExportBase & { status: 'unsupported'; error: ExportError })
+  /** Reloaded from browser storage: the record is kept, the file is not (files are never stored). */
+  | (ExportBase & { status: 'expired'; artifact: Omit<ExportArtifact, 'localUrl'> })

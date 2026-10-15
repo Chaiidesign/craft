@@ -7,7 +7,13 @@
 // Approval is not export success, and export is not sending.
 //
 // The state is immutable, like the revision store: every operation returns a
-// new state. Events record exportStarted / exportSucceeded / exportFailed.
+// new state. Events record exportStarted / exportSucceeded / exportFailed /
+// exportCancelled.
+//
+// Cancelling: the renderers run in the page and can't be stopped partway, so a
+// cancel marks the record failed with code `cancelled` and the result is
+// discarded when it arrives (settleExport only settles a pending record). A
+// late result therefore never becomes a file, an event or a "ready" label.
 
 import type { DocumentEnv, DocumentSnapshot, ExportError, ExportFormat, ExportId, ExportRecord, OutputId, RevisionId } from '../model'
 import { getRevision, versionNumber, type RevisionStore } from '../revisions'
@@ -19,6 +25,7 @@ export type ExportEvent =
   | { type: 'exportStarted'; exportId: ExportId; outputId: OutputId; revisionId: RevisionId; format: ExportFormat; at: string }
   | { type: 'exportSucceeded'; exportId: ExportId; at: string; filename: string; byteSize: number }
   | { type: 'exportFailed'; exportId: ExportId; at: string; error: ExportError }
+  | { type: 'exportCancelled'; exportId: ExportId; at: string; reason: CancelReason }
 
 export interface ExportState {
   /** Oldest first. */
@@ -28,7 +35,16 @@ export interface ExportState {
 
 export const emptyExports = (): ExportState => ({ records: [], events: [] })
 
-export type ExportJobErrorCode = 'duplicate-pending' | 'draft-not-confirmed' | 'not-found' | 'not-retryable'
+export type ExportJobErrorCode = 'duplicate-pending' | 'draft-not-confirmed' | 'not-found' | 'not-retryable' | 'not-cancellable'
+
+/** Why a job was cancelled; the text completes "{format} of v{n} cancelled — …" (approved). */
+export type CancelReason = 'user' | 'reload'
+export const CANCEL_MESSAGE: Readonly<Record<CancelReason, string>> = {
+  user: 'the result will be discarded when it arrives',
+  reload: 'the page was reloaded before it finished',
+}
+
+export const isCancelled = (r: ExportRecord): boolean => r.status === 'failed' && r.error.code === 'cancelled'
 
 export class ExportJobError extends Error {
   constructor(readonly code: ExportJobErrorCode, message: string) {
@@ -118,11 +134,29 @@ export function settleExport(state: ExportState, env: DocumentEnv, job: ExportJo
   return { records: state.records.map((r) => (r.exportId === job.exportId ? next : r)), events: [...state.events, event] }
 }
 
-/** A retry of a failed export: same revision, same format, same draft confirmation. */
+/** A retry of a failed (or cancelled) export: same revision, same format, same draft confirmation. */
 export function retryRequest(state: ExportState, exportId: ExportId): StartRequest {
   const record = getExport(state, exportId)
   if (record.status !== 'failed') throw new ExportJobError('not-retryable', `Export ${exportId} is ${record.status}; only a failed export can be retried.`)
   return { outputId: record.outputId, revisionId: record.revisionId, format: record.format, confirmDraft: record.draft, retryOf: exportId }
+}
+
+/** Exporting again after a reload dropped the file: same revision, format and draft confirmation; a new export, not a retry. */
+export function exportAgainRequest(state: ExportState, exportId: ExportId): StartRequest {
+  const record = getExport(state, exportId)
+  if (record.status !== 'expired') throw new ExportJobError('not-retryable', `Export ${exportId} is ${record.status}; only an export whose file was not kept can be exported again.`)
+  return { outputId: record.outputId, revisionId: record.revisionId, format: record.format, confirmDraft: record.draft }
+}
+
+/** Cancels a pending job. Its result, when it arrives, is discarded by settleExport. */
+export function cancelExport(state: ExportState, env: DocumentEnv, exportId: ExportId, reason: CancelReason = 'user'): ExportState {
+  const record = getExport(state, exportId)
+  if (record.status !== 'pending') throw new ExportJobError('not-cancellable', `Export ${exportId} is ${record.status}; only a pending export can be cancelled.`)
+  const next: ExportRecord = { ...record, status: 'failed', error: { code: 'cancelled', message: CANCEL_MESSAGE[reason] } }
+  return {
+    records: state.records.map((r) => (r.exportId === exportId ? next : r)),
+    events: [...state.events, { type: 'exportCancelled', exportId, at: env.now(), reason }],
+  }
 }
 
 export function renderJob(job: ExportJob, options: Omit<RenderOptions, 'createdAt'> & { createdAt: string }): Promise<RenderOutcome> {
