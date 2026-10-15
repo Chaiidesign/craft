@@ -36,7 +36,8 @@ function provided(snapshot: DocumentSnapshot, fieldId: string): string | null {
 }
 
 export function exportFilename(snapshot: DocumentSnapshot, format: ExportFormat, version: number, revisionId: RevisionId): string {
-  const issuer = slug(snapshot.brand.issuerDisplayName, false) || 'issuer'
+  // An unbranded document (D-61) names its issuer only in the issuer field, if at all.
+  const issuer = slug(snapshot.brand.issuerDisplayName || provided(snapshot, INVOICE_FIELDS.issuerName) || '', false) || 'issuer'
   const number = snapshot.kind === 'invoice' ? provided(snapshot, INVOICE_FIELDS.number) : null
   const title = snapshot.kind === 'invoice' ? null : provided(snapshot, BRIEF_FIELDS.title)
   const what = (number ? slug(number, true) : title ? slug(title, false) : '') || snapshot.kind

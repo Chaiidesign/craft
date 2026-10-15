@@ -19,6 +19,7 @@
     "doctor": "npx react-doctor@latest"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "0.131.0",
     "@auth0/nextjs-auth0": "^4.19.0",
     "@base-ui/react": "^1.4.1",
     "@formspree/react": "^3.0.0",
