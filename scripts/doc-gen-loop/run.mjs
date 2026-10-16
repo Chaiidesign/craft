@@ -2,7 +2,12 @@
 // Doc-generation baseline harness: one pass over scripts/doc-gen-loop/matrix.json
 // against the locally running app (which proxies to the shared dev backend).
 //
-//   node scripts/doc-gen-loop/run.mjs --pass 1 [--only 01a,04b] [--base http://localhost:3000]
+//   node scripts/doc-gen-loop/run.mjs --pass 1 [--only 01a,04b] [--headed] [--base http://localhost:3000]
+//
+// --headed shows the browser so the interface can be watched. Runs already
+// finished in this pass (ok, or failed twice) are skipped, so a stopped pass
+// can be restarted without repeating chats; the 2-minute spacing counts from
+// the last recorded run.
 //
 // Reuses the session saved by login.mjs. Changes no app code. Per run it records
 // one line in docs/reports/doc-gen-loop/runs.jsonl plus screenshots and any
@@ -31,6 +36,7 @@ const BASE = arg("--base", "http://localhost:3000");
 const PASS = Number(arg("--pass", "1"));
 const ONLY = arg("--only", "")?.split(",").filter(Boolean) ?? [];
 const APP_DIR = arg("--app-dir", resolve(process.env.HOME, "craft"));
+const HEADED = process.argv.includes("--headed");
 
 const SPACING_MS = 2 * 60_000;
 const MAX_RUNS = 40;
@@ -370,12 +376,15 @@ try { appCommit = execFileSync("git", ["-C", APP_DIR, "rev-parse", "--short", "H
 writeFileSync(resolve(passDir, "meta.json"), JSON.stringify({ pass: PASS, base: BASE, appDir: APP_DIR, appCommit, startedAt: new Date().toISOString(),
   backend: "https://devapi.getsouvenir.com (via the local /api proxy)", model: "account default" }, null, 2) + "\n");
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ headless: !HEADED });
 const context = await browser.newContext({ storageState: STATE, viewport: { width: 1440, height: 900 }, acceptDownloads: true });
 await context.addInitScript(streamProbe);
 
-const plan = matrix.runs.filter((r) => !ONLY.length || ONLY.includes(r.id));
-let lastStart = 0;
+const prior = existsSync(RUNS) ? readFileSync(RUNS, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l)).filter((r) => r.pass === PASS) : [];
+const finished = new Set(prior.filter((r) => r.outcome === "ok" || (r.outcome === "failed" && r.attempt >= 2)).map((r) => r.id));
+const plan = matrix.runs.filter((r) => (!ONLY.length || ONLY.includes(r.id)) && !finished.has(r.id));
+if (finished.size) log(`skipping ${finished.size} finished run(s): ${[...finished].join(", ")}`);
+let lastStart = prior.length ? Date.parse(prior[prior.length - 1].startedAt) : 0;
 let exitCode = 0;
 try {
   for (const spec of plan) {
