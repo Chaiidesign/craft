@@ -22,3 +22,19 @@ exit 2
 [15:49:23] 02b#1 failed (http-502) first text - ms, total 114 ms
 [15:49:38] STOPPED (stop-file): STOP file found
 exit 2
+[15:52:56] skipping 3 finished run(s): 01a, 01b, 02a
+[15:52:56] run 04b (prd-report, demanding) attempt 1
+[15:54:58] 04b#1 failed (harness: Invalid URL) first text 88720 ms, total 92471 ms, model Advanced
+[15:54:58] run 04b (prd-report, demanding) attempt 2
+[15:55:05] 04b#2 failed (http-502) first text - ms, total 99 ms
+[15:56:30] STOPPED (stop-file): STOP file found
+exit 2
+[15:57:13] skipping 3 finished run(s): 01a, 01b, 02a
+[15:57:13] run 06b (checklist-form, demanding) attempt 1
+[15:58:47] 06b#1 ok first text 78323 ms, total 82286 ms, model Advanced
+[15:59:13] run 07b (fixed-fields, demanding) attempt 1
+[16:01:49] 07b#1 ok first text 92335 ms, total 96006 ms, model Advanced
+[16:01:49] run 08b (json-schema, demanding) attempt 1
+[16:02:40] 08b#1 ok first text 36728 ms, total 39904 ms, model Advanced
+[16:02:40] pass complete
+exit 0
