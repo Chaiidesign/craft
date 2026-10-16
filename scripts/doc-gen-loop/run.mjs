@@ -21,7 +21,7 @@
 // - prompts are prefixed "[loop-test] " so the chats can be found and deleted
 
 import { execFileSync } from "node:child_process";
-import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { chromium } from "playwright-core";
 
@@ -208,7 +208,32 @@ function judge(spec, shape, files) {
   return out;
 }
 
-async function oneRun(context, spec, attempt) {
+async function oneRun(browser, spec, attempt) {
+  const context = await browser.newContext({ storageState: STATE, viewport: { width: 1440, height: 900 }, acceptDownloads: true });
+  await context.addInitScript(streamProbe);
+  try { return await runIn(context, spec, attempt); }
+  finally {
+    // Keep the rolling login session fresh for the next run (same file, mode 600).
+    await context.storageState({ path: STATE }).then(() => chmodSync(STATE, 0o600)).catch(() => {});
+    await context.close().catch(() => {});
+  }
+}
+
+// Loads /chat. A load the browser aborts before anything is sent (seen twice in
+// pass 1 as net::ERR_ABORTED) is retried here; it creates no chat and sends no
+// prompt, so it is not a run retry.
+async function openChat(page) {
+  for (let i = 1; ; i++) {
+    try { return await page.goto(`${BASE}/chat`, { waitUntil: "domcontentloaded" }); }
+    catch (err) {
+      if (i >= 3 || !/ERR_ABORTED/.test(String(err?.message))) throw err;
+      log(`  /chat load aborted (try ${i}), loading again in 5 s`);
+      await sleep(5000);
+    }
+  }
+}
+
+async function runIn(context, spec, attempt) {
   const tag = `p${PASS}-${spec.id}${attempt > 1 ? "-retry" : ""}`;
   const prompt = matrix.prefix + spec.prompt;
   const rec = { pass: PASS, id: spec.id, attempt, format: spec.format, level: spec.level, prompt, startedAt: new Date().toISOString() };
@@ -224,7 +249,7 @@ async function oneRun(context, spec, attempt) {
   });
   const thinking = new Map();
   try {
-    await page.goto(`${BASE}/chat`, { waitUntil: "domcontentloaded" });
+    await openChat(page);
     await page.waitForLoadState("networkidle", { timeout: 20000 }).catch(() => {});
     if (!page.url().startsWith(BASE) || new URL(page.url()).pathname.startsWith("/auth")) throw new Halt("auth", `sent to login (${new URL(page.url()).pathname})`);
     if (authHits.length) throw new Halt("auth", `HTTP ${authHits[0].status} on ${authHits[0].path} while loading`);
@@ -377,11 +402,12 @@ writeFileSync(resolve(passDir, "meta.json"), JSON.stringify({ pass: PASS, base: 
   backend: "https://devapi.getsouvenir.com (via the local /api proxy)", model: "account default" }, null, 2) + "\n");
 
 const browser = await chromium.launch({ headless: !HEADED });
-const context = await browser.newContext({ storageState: STATE, viewport: { width: 1440, height: 900 }, acceptDownloads: true });
-await context.addInitScript(streamProbe);
 
 const prior = existsSync(RUNS) ? readFileSync(RUNS, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l)).filter((r) => r.pass === PASS) : [];
-const finished = new Set(prior.filter((r) => r.outcome === "ok" || (r.outcome === "failed" && r.attempt >= 2)).map((r) => r.id));
+// Finished = ok, or failed twice after sending. Harness-side failures sent nothing
+// to the backend, so they don't count against the one-retry rule.
+const sentFailures = (id) => prior.filter((r) => r.id === id && r.outcome === "failed" && !String(r.failure).startsWith("harness") && r.sentAt).length;
+const finished = new Set(prior.filter((r) => r.outcome === "ok" || sentFailures(r.id) >= 2).map((r) => r.id));
 const plan = matrix.runs.filter((r) => (!ONLY.length || ONLY.includes(r.id)) && !finished.has(r.id));
 if (finished.size) log(`skipping ${finished.size} finished run(s): ${[...finished].join(", ")}`);
 let lastStart = prior.length ? Date.parse(prior[prior.length - 1].startedAt) : 0;
@@ -394,7 +420,7 @@ try {
       if (existsSync(STOP)) throw new Halt("stop-file", "STOP file found");
       lastStart = Date.now();
       log(`run ${spec.id} (${spec.format}, ${spec.level}) attempt ${attempt}`);
-      const rec = await oneRun(context, spec, attempt);
+      const rec = await oneRun(browser, spec, attempt);
       if (rec.outcome !== "failed") break;
     }
   }
