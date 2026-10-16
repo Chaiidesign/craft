@@ -26,7 +26,7 @@ The bar for every prompt:
 
 | Date | Commit | Model | Results |
 |---|---|---|---|
-| 2026-10-15 | `0bbe32d6` + the local-date fix (D-67) | `anthropic/claude-opus-5.5` via OpenRouter (D-65), effort medium | **10/10 pass, every turn in 1 attempt.** Details below. |
+| 2026-10-15 | `f3c88efb` | `anthropic/claude-opus-5.5` via OpenRouter (D-65), effort medium | **10/10 pass, every turn in 1 attempt.** Details below. |
 
 ### 2026-10-15 run, in detail
 

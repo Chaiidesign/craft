@@ -42,7 +42,7 @@ Plan: prompt in chat → validated document → refine in conversation → expor
 | 5b | `ac54180d` | Each document's conversation starts at "New document" (D-64); D-63 ("$" = USD) recorded as proposed; hosted-path checks |
 | 5c | `64ce87cc` | Model provider switch: Souvenir's OpenRouter key, direct Anthropic API as fallback (D-65) |
 | 5d | `4333fa06` | Real-model smoke test through OpenRouter; forced tool use replaced (D-66) |
-| 6a | see git log | Real model: 10/10 evals pass; done flow in the chat; PDF; "today" is the local date (D-67); last reply kept clear of the composer |
+| 6a | `f3c88efb` | Real model: 10/10 evals pass; done flow in the chat; PDF; "today" is the local date (D-67); last reply kept clear of the composer |
 | 6b | | Hosted preview run (D-54): needs `OPENROUTER_API_KEY` in Vercel Preview, then a redeploy |
 
 ## Next step
