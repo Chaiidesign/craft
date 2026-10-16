@@ -241,7 +241,8 @@ async function runIn(context, spec, attempt) {
   const httpErrors = [];
   const page = await context.newPage();
   page.on("response", (r) => {
-    const u = new URL(r.url());
+    let u;
+    try { u = new URL(r.url()); } catch { return; }
     if (u.origin !== new URL(BASE).origin) return;
     const s = r.status();
     if (s === 401 || s === 403) authHits.push({ status: s, path: u.pathname });
@@ -346,7 +347,9 @@ async function runIn(context, spec, attempt) {
       if (popup) {
         await popup.waitForLoadState("load", { timeout: 15000 }).catch(() => {});
         await sleep(2500);
-        f.preview = { opened: true, host: new URL(popup.url()).host || popup.url().slice(0, 30) };
+        let host = popup.url().slice(0, 40);
+        try { host = new URL(popup.url()).host || host; } catch { /* about:blank, blob: or empty */ }
+        f.preview = { opened: true, host };
         await popup.screenshot({ path: resolve(passDir, `${tag}-preview-${i}.png`) }).catch(() => { f.preview.screenshot = "failed"; });
         await popup.close().catch(() => {});
       } else f.preview = { opened: false, downloadedInstead: !!dl };
