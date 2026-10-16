@@ -42,7 +42,8 @@ Plan: prompt in chat → validated document → refine in conversation → expor
 | 5b | `ac54180d` | Each document's conversation starts at "New document" (D-64); D-63 ("$" = USD) recorded as proposed; hosted-path checks |
 | 5c | `64ce87cc` | Model provider switch: Souvenir's OpenRouter key, direct Anthropic API as fallback (D-65) |
 | 5d | `4333fa06` | Real-model smoke test through OpenRouter; forced tool use replaced (D-66) |
-| 6 | | Done prompt and 8 evals (waiting on Chaitanya's reading of the streaming differences in the S1 report), then the hosted preview run |
+| 6a | see git log | Real model: 10/10 evals pass; done flow in the chat; PDF; "today" is the local date (D-67); last reply kept clear of the composer |
+| 6b | | Hosted preview run (D-54): needs `OPENROUTER_API_KEY` in Vercel Preview, then a redeploy |
 
 ## Next step
 
@@ -50,4 +51,4 @@ S1 step 6: run the eval set and the done prompt against the real model, then the
 
 ## Blockers
 
-- **S1 step 6:** the local key is in `.env.local`, and the smoke test passed. The evals are paused for Chaitanya's reading of the streaming differences (S1 report). The hosted run needs `OPENROUTER_API_KEY` in Vercel's Preview environment, which only Chaitanya can add. Everything up to step 5 is done and checked against stand-ins.
+- **S1 step 6b, the hosted run:** needs `OPENROUTER_API_KEY` in Vercel's Preview environment and a redeploy, which only Chaitanya can do. Also confirm the Auth0 variables exist in Preview. The local real-model run is done (10/10 evals). Everything up to step 5 is done and checked against stand-ins.

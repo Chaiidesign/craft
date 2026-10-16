@@ -10,7 +10,7 @@ import type { InvoiceSnapshot } from '@/lib/documents/model'
 
 import { ModelError, ScriptedModel } from './model'
 import { MAX_RETRIES } from './loop'
-import { blankInvoice, exportDocument, generateDocument, reviseDocument, toolSchemas, type DocumentResult } from './tools'
+import { blankInvoice, exportDocument, generateDocument, reviseDocument, today, toolSchemas, type DocumentResult } from './tools'
 
 const PROMPT = 'invoice for Acme, $2,400'
 
@@ -163,6 +163,22 @@ describe('the gate (D-49): invalid output never becomes a revision', () => {
     expect(model.requests).toHaveLength(MAX_RETRIES + 1)
     expect(error).toMatchObject({ code: 'gate-failed', message: 'No valid document after 3 attempts; nothing was saved.', retryable: true })
     expect(error.errors).toEqual([expect.objectContaining({ code: 'invalid-value', message: '2026-02-30 is not a real calendar date.' })])
+  })
+})
+
+describe('today, as given to the model', () => {
+  it('is the local calendar date, not the UTC one', () => {
+    const tz = process.env.TZ
+    try {
+      process.env.TZ = 'America/Los_Angeles'
+      // 02:00 UTC on 16 October is 19:00 on 15 October in California.
+      expect(today(fixedEnv('2026-10-16T02:00:00.000Z'))).toBe('2026-10-15')
+      process.env.TZ = 'Asia/Tokyo'
+      expect(today(fixedEnv('2026-10-15T20:00:00.000Z'))).toBe('2026-10-16')
+    } finally {
+      if (tz === undefined) delete process.env.TZ
+      else process.env.TZ = tz
+    }
   })
 })
 

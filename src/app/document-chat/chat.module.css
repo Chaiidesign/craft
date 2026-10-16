@@ -65,6 +65,12 @@
   padding: 8px 16px 24px;
 }
 
+/* Scrolled into view after each reply. The margin keeps the last message clear of
+   the sticky composer, which otherwise covers it. */
+.threadEnd {
+  scroll-margin-bottom: 128px;
+}
+
 /* ── Empty state ── */
 
 .empty {

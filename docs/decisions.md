@@ -12,6 +12,13 @@ Status is **approved** unless marked otherwise. When a later decision replaces a
 
 The plan for this work is the "chat → document → refine → export" plan approved on 2026-10-15: slice S1 (invoice end to end, real model, hosted) is this branch; S2–S6 follow on later branches. Decisions D-49 to D-58 were settled by Chaitanya and Instinct before building; D-59 onward were made during the build.
 
+### D-67 · 2026-10-15 · "Today" is the person's local date
+**Problem.** Eval 8 ("dated today") set the invoice date to 2026-10-16 at 19:00 on 2026-10-15 in California. The tools took "today" from the UTC clock, which is already tomorrow there from 17:00. That would put a wrong date on a sent invoice.
+
+**Rule.** The `today` given to the model is the calendar date in the local time zone where the tools run. For the chat that is the person's browser; for the CLI, the machine it runs on.
+
+Applied in: `generation/tools.ts` (`today`); test in `generation.test.ts`.
+
 ### D-66 · 2026-10-15 · Opus 5.5 can't be forced to call a tool: the proposal tool is offered, not forced
 **Problem.** The first real request (through OpenRouter, routed to Anthropic) returned 400 with Anthropic's own error and request ID (`req_011Cg4gpGEVMZe4wi6yB7zof`, `provider_name: Anthropic`): `tool_choice: type "tool" and "any" are not supported for this model.` This is the model's documented behavior on the direct API too, not an OpenRouter difference. Anthropic's "What's new in Claude Opus 5.5" says: "Claude Opus 5.5 doesn't support forced tool use. `tool_choice` set to `{"type": "any"}` or `{"type": "tool", "name": "..."}` returns a 400 `invalid_request_error`." The S1 step-4 code forced the tool, and the local stand-in accepted it, so the bug only showed against the real model. Claude Sonnet 5.5 rejects it the same way; Opus 4.8 accepts it. The model tier stays Opus 5.5 (D-59).
 

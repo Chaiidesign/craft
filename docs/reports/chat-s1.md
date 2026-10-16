@@ -111,6 +111,21 @@ Across all three, the pieces arrive every ~50 ms as the model writes. No `thinki
 
 Not compared side by side: no direct Anthropic key is available, so the differences are measured against Anthropic's documentation, not against a direct run.
 
+## Real model: evals and the done flow in the browser (2026-10-15)
+
+**Evals: 10/10 pass, every turn in 1 attempt, 3–10 s per call.** Full table in [../documents/evals/s1-invoice.md](../documents/evals/s1-invoice.md). They found two problems, both fixed:
+- **A wrong date (fixed, D-67).** "Dated today" used the UTC date, a day ahead in California after 5 pm.
+- **A wrong expectation in the eval set itself.** Eval 2 expected a final total, but the prompt says nothing about a discount, and an unstated discount is unknown, not zero. The model was right; the row is corrected and marked as corrected.
+
+**Done flow in the chat with the real model, local dev server (`.env.local` → OpenRouter):**
+- "invoice for Acme, $2,400" → "Drafted v1. What is the $2,400 charge for?"
+- "add a line item: design review, $600" → "Updated to v2: added line 2. Who is sending this invoice (your name or business)?"
+- "due in 30 days" → "Updated to v3: set Payment terms. Who is sending this invoice?"
+- **Download PDF:** `issuer_invoice_v3_a862.pdf`, 54,834 bytes, saved as [chat-s1/real-v3.pdf](chat-s1/real-v3.pdf). Its text shows the draft banner, Bill to Acme, both lines, subtotal $3,000.00, "Incomplete — not a final amount" with both reasons, and the payment terms.
+- Screenshots: `real-1280-drafting.png` (the skeleton while the model works), `real-1280-v1.png`, `real-1280-v3.png`, `real-390-v3.png`, `real-320-v3.png`, `real-390-memo.png`, `real-1280-memo.png`. No horizontal scroll at 390 or 320 (scroll width equals viewport width).
+
+**Fixed during the browser run: a plain-text reply could end up hidden behind the input box.** At 390 px, the memo reply ("I can only draft invoices so far…") was scrolled to the bottom edge, under the sticky composer. The scroll target now keeps 128 px clear (`.threadEnd` in `chat.module.css`). Re-checked at 390 and 1280: the reply's bottom edge is at 706 px and the composer's top at 750 px.
+
 ## Needs a decision
 
 - **D-63:** "$" is read as US dollars unless another dollar is named. This is proposed, not approved; see decisions.md.

@@ -258,7 +258,7 @@ export function DocumentChat({ model: modelProp, storage: storageProp, resources
             <DraftingCard snapshot={pending.draft.snapshot} label={pending.label} applied={pending.draft.applied} />
           </div>
         )}
-        <div ref={threadEnd} />
+        <div ref={threadEnd} className={styles.threadEnd} />
       </main>
 
       <form className={styles.composerWrap} onSubmit={(e) => { e.preventDefault(); void send(input) }}>

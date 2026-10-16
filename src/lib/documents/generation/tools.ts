@@ -139,7 +139,15 @@ function documentResult(store: RevisionStore, outputId: string, revisionId: Revi
   return { outputId, revisionId, version: versionNumber(store, revisionId), title: getDocument(store, outputId).title, readiness: view.readiness, document: view, changed, followUp, attempts }
 }
 
-const today = (env: DocumentEnv) => env.now().slice(0, 10)
+/**
+ * The person's calendar date, in the local time zone where the tools run (the
+ * browser for the chat), not UTC: in California after 5 pm, UTC is already
+ * tomorrow, and "dated today" would date the invoice a day ahead.
+ */
+export function today(env: DocumentEnv): string {
+  const at = new Date(env.now())
+  return `${at.getFullYear()}-${String(at.getMonth() + 1).padStart(2, '0')}-${String(at.getDate()).padStart(2, '0')}`
+}
 
 /** A blank, unbranded invoice (D-61): the base every generated invoice starts from. */
 export function blankInvoice(locale = 'en-US'): InvoiceSnapshot {
