@@ -1,0 +1,24 @@
+[15:39:15] run 01a (brainstorm, simple) attempt 1
+[15:39:42] 01a#1 ok first text 12506 ms, total 15773 ms, model Advanced
+[15:41:15] run 01b (brainstorm, demanding) attempt 1
+[15:41:51] 01b#1 ok first text 13192 ms, total 25299 ms, model Advanced
+[15:42:34] skipping 2 finished run(s): 01a, 01b
+[15:43:15] run 02a (memo-email, simple) attempt 1
+[15:43:46] 02a#1 ok first text 15526 ms, total 17904 ms, model Advanced
+[15:45:15] run 02b (memo-email, demanding) attempt 1
+[15:45:15] 02b#1 failed (harness: page.goto: net::ERR_ABORTED at http://localhost:3000/chat
+Call log:
+[2m  - navigating to "http://localhost:3000/chat", waiting until "domcontentloaded"[22m
+)
+[15:47:15] run 02b (memo-email, demanding) attempt 2
+[15:47:17] 02b#2 failed (harness: page.goto: net::ERR_ABORTED at http://localhost:3000/chat
+Call log:
+[2m  - navigating to "http://localhost:3000/chat", waiting until "domcontentloaded"[22m
+)
+[15:48:17] STOPPED (stop-file): STOP file found
+exit 2
+[15:49:14] skipping 3 finished run(s): 01a, 01b, 02a
+[15:49:15] run 02b (memo-email, demanding) attempt 1
+[15:49:23] 02b#1 failed (http-502) first text - ms, total 114 ms
+[15:49:38] STOPPED (stop-file): STOP file found
+exit 2

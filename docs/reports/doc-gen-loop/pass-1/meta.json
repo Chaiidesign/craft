@@ -1,0 +1,9 @@
+{
+  "pass": 1,
+  "base": "http://localhost:3000",
+  "appDir": "/Users/chaitanyalandge/craft",
+  "appCommit": "c7dcd12f",
+  "startedAt": "2026-10-16T15:49:12.969Z",
+  "backend": "https://devapi.getsouvenir.com (via the local /api proxy)",
+  "model": "account default"
+}
