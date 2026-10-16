@@ -43,3 +43,7 @@ next-env.d.ts
 # local dev logs / editor extension packages
 tmp-*.log
 *.vsix
+
+# Doc-generation baseline harness (scripts/doc-gen-loop): saved login session and kill switch
+/.auth/
+/docs/reports/doc-gen-loop/STOP

@@ -1,0 +1,61 @@
+{
+  "prefix": "[loop-test] ",
+  "note": "Pass 1 baseline. Eight formats, loose to strict, one simple and one demanding prompt each. Every name and company is fictional. `expect` is what the run is measured against: words = [min, max] for the main output, items = count asked for, file = a downloadable file was asked for, json = output must parse.",
+  "runs": [
+    { "id": "01a", "format": "brainstorm", "level": "simple",
+      "prompt": "Brainstorm 10 names for a small ceramics studio's monthly newsletter. Just the list.",
+      "expect": { "items": 10 } },
+    { "id": "01b", "format": "brainstorm", "level": "demanding",
+      "prompt": "Brainstorm 25 ideas to improve 90-day retention for a B2B design-collaboration tool. Group them by effort (low, medium, high) and give one risk for each idea.",
+      "expect": { "items": 25 } },
+
+    { "id": "02a", "format": "memo-email", "level": "simple",
+      "prompt": "Write a short email to my team moving Friday's standup from 9:30am to 10am, starting this week. Under 80 words.",
+      "expect": { "words": [20, 80] } },
+    { "id": "02b", "format": "memo-email", "level": "demanding",
+      "prompt": "Write a one-page memo (about 400 words) to the leadership team of Northwind Labs, a 40-person software company, proposing a three-month four-day-week pilot. Use these sections: Context, Proposal, Risks, Ask.",
+      "expect": { "words": [320, 500], "sections": 4 } },
+
+    { "id": "03a", "format": "narrative-blog", "level": "simple",
+      "prompt": "Write a 300-word blog post about why we redesigned the onboarding flow for our note-taking app, Fieldnote.",
+      "expect": { "words": [240, 360] } },
+    { "id": "03b", "format": "narrative-blog", "level": "demanding",
+      "prompt": "Write a 1,000-word essay titled \"The tool shapes the craft\" for product designers, with an introduction, three sections with headings, and a conclusion.",
+      "expect": { "words": [850, 1150], "sections": 3 } },
+
+    { "id": "04a", "format": "prd-report", "level": "simple",
+      "prompt": "Write a short PRD for a \"Save as template\" button in a document editor: problem, goal, and at most 5 requirements.",
+      "expect": { "words": [120, 450], "sections": 3 } },
+    { "id": "04b", "format": "prd-report", "level": "demanding",
+      "prompt": "Create a full PRD as a downloadable Word document for an offline mode in Fieldnote, a note-taking app. Include problem, goals, non-goals, at least 5 user stories, functional requirements, success metrics, and open questions. About two pages.",
+      "expect": { "words": [700, 1400], "sections": 7, "file": "docx" } },
+
+    { "id": "05a", "format": "comparison-table", "level": "simple",
+      "prompt": "Compare Notion, Obsidian and Apple Notes on price, offline support, collaboration and export options, as a table.",
+      "expect": { "table": [3, 4] } },
+    { "id": "05b", "format": "comparison-table", "level": "demanding",
+      "prompt": "Compare five fictional analytics vendors (Acorn, Birch, Cedar, Dune, Ember) on 8 criteria in a table. The data is illustrative, so say so. Add a weighted score column, state the weights, and end with a one-paragraph recommendation.",
+      "expect": { "table": [5, 9] } },
+
+    { "id": "06a", "format": "checklist-form", "level": "simple",
+      "prompt": "Make a launch-day checklist for a small SaaS product release, 10 items.",
+      "expect": { "items": 10 } },
+    { "id": "06b", "format": "checklist-form", "level": "demanding",
+      "prompt": "Create a vendor onboarding form as a downloadable document: company details, tax ID, bank details, contact person, services offered, and a signature block. Mark required fields and give each field a type (text, date, number, checkbox).",
+      "expect": { "file": "any" } },
+
+    { "id": "07a", "format": "fixed-fields", "level": "simple",
+      "prompt": "Create an invoice from Halden Studio to Acme Corp, invoice number HS-104, USD, net 30, with 3 line items: brand workshop $1,200, logo design $2,400, style guide $900.",
+      "expect": { "total": "4,500" } },
+    { "id": "07b", "format": "fixed-fields", "level": "demanding",
+      "prompt": "Create a freelance design services contract template as a Word document, with named placeholders such as {{CLIENT_NAME}} and {{START_DATE}}, and 8 numbered clauses: scope, timeline, fees, payment terms, revisions, intellectual property, confidentiality, termination.",
+      "expect": { "file": "docx", "sections": 8 } },
+
+    { "id": "08a", "format": "json-schema", "level": "simple",
+      "prompt": "Return JSON only: a list of 3 products, each with id, name, price (a number) and inStock (a boolean).",
+      "expect": { "json": true, "items": 3 } },
+    { "id": "08b", "format": "json-schema", "level": "demanding",
+      "prompt": "Return a downloadable .json file containing one example order for a fictional customer. It must validate against this JSON Schema: {\"type\":\"object\",\"required\":[\"order_id\",\"customer\",\"items\",\"status\"],\"properties\":{\"order_id\":{\"type\":\"string\"},\"customer\":{\"type\":\"object\",\"required\":[\"name\",\"email\"],\"properties\":{\"name\":{\"type\":\"string\"},\"email\":{\"type\":\"string\"}}},\"items\":{\"type\":\"array\",\"minItems\":2,\"items\":{\"type\":\"object\",\"required\":[\"sku\",\"qty\",\"unit_price\"],\"properties\":{\"sku\":{\"type\":\"string\"},\"qty\":{\"type\":\"integer\"},\"unit_price\":{\"type\":\"number\"}}}},\"status\":{\"enum\":[\"pending\",\"paid\",\"shipped\"]}}}",
+      "expect": { "json": true, "file": "json" } }
+  ]
+}
