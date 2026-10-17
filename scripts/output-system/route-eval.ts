@@ -14,6 +14,11 @@
 //   --no-env-file     load no file; use the environment only
 //   --concurrency n   requests in flight at once (default 4)
 //   --label text      added to the results file name
+//   --session n       build-loop session to charge spend to (default "adhoc")
+//
+// Every call's cost (OpenRouter's usage.cost, US$) is appended to
+// docs/output-system/spend/ledger.jsonl, and the run refuses to start once a
+// spend limit in docs/output-system/build-loop.md is reached (build-loop.md §9).
 //
 // The key comes from the environment (D-65): OPENROUTER_API_KEY or
 // ANTHROPIC_API_KEY, chosen by MODEL_PROVIDER. With no key the harness stops
@@ -22,7 +27,7 @@
 // (the table), plus latest.md.
 
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
 import Anthropic from '@anthropic-ai/sdk'
@@ -30,6 +35,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { EFFORT, LIMITS, OPENROUTER_BASE_URL, providerFromEnv } from '../../src/lib/documents/generation/claude'
 import { isRight, lastMade, loadPrompt, parseEvalSet, summarise, type EvalRequest, type ResultRow } from '../../src/lib/output-system/evals'
 import { ACTIONS, isAction, LANE_LABELS, isLane, outcomeOf, type Outcome } from '../../src/lib/output-system/lanes'
+import { parseLedger, priceCall, parseLimits, spendStatus, summariseSpend, type SpendEntry } from '../../src/lib/output-system/spend'
 
 const ROOT = resolve(import.meta.dirname, '../..')
 const DIR = join(ROOT, 'docs/output-system')
@@ -116,6 +122,19 @@ async function main() {
     process.exit(2)
   }
 
+  const session = flag('session') ?? 'adhoc'
+  const ledgerPath = join(DIR, 'spend/ledger.jsonl')
+  const buildLoopPath = join(DIR, 'build-loop.md')
+  const limits = parseLimits(existsSync(buildLoopPath) ? readFileSync(buildLoopPath, 'utf8') : '')
+  const ledger = () => (existsSync(ledgerPath) ? parseLedger(readFileSync(ledgerPath, 'utf8')) : [])
+  const before = spendStatus(summariseSpend(ledger()), session, limits)
+  if (before.level === 'stop') {
+    process.stderr.write(`${before.message} Not starting.\n`)
+    process.exit(4)
+  }
+  if (before.level === 'warn') process.stderr.write(`${before.message}\n`)
+  mkdirSync(join(DIR, 'spend'), { recursive: true })
+
   const choice = providerFromEnv()
   if (!choice.ok) {
     process.stderr.write(
@@ -129,10 +148,12 @@ async function main() {
     ? new Anthropic({ baseURL: OPENROUTER_BASE_URL, authToken: choice.key, apiKey: null, timeout: LIMITS.timeoutMs, maxRetries: 2 })
     : new Anthropic({ apiKey: choice.key, timeout: LIMITS.timeoutMs, maxRetries: 2 })
 
-  async function route(r: EvalRequest): Promise<ResultRow & { raw: unknown; modelId?: string }> {
+  async function route(r: EvalRequest): Promise<ResultRow & { raw: unknown; modelId?: string; costUsd: number; costEstimated: boolean }> {
     let last: Anthropic.Message | undefined
     let picked: Choice | undefined
     let error: string | undefined
+    let costUsd = 0
+    let priced = true
     // One retry when the reply names no action (tool use can't be forced on Opus 5.5, D-66).
     for (let attempt = 0; attempt < 2 && !picked; attempt++) {
       try {
@@ -144,8 +165,26 @@ async function main() {
           tool_choice: { type: 'auto' },
           output_config: { effort: EFFORT },
           messages: messagesFor(r),
-          ...(choice.ok && choice.provider === 'openrouter' ? OPENROUTER_ROUTING : {}),
-        })
+          // OpenRouter reports each call's cost in usage.cost when asked.
+          ...(choice.ok && choice.provider === 'openrouter' ? { ...OPENROUTER_ROUTING, usage: { include: true } } : {}),
+        } as Anthropic.MessageCreateParamsNonStreaming)
+        const price = priceCall(last.usage, last.usage.input_tokens, last.usage.output_tokens)
+        if (price.estimated) priced = false
+        costUsd += price.costUsd
+        const entry: SpendEntry = {
+          at: new Date().toISOString(),
+          session,
+          lane: 'routing',
+          purpose: `routing-${set.length}`,
+          promptVersion: sha(prompt),
+          model: last.model,
+          inputTokens: last.usage.input_tokens,
+          outputTokens: last.usage.output_tokens,
+          costUsd: price.costUsd,
+          ...(price.estimated ? { estimated: true } : {}),
+          cached: false,
+        }
+        appendFileSync(ledgerPath, `${JSON.stringify(entry)}\n`)
         picked = readChoice(last)
       } catch (e) {
         error = e instanceof Error ? e.message : String(e)
@@ -164,6 +203,8 @@ async function main() {
       ...(picked?.question ? { question: picked.question } : {}),
       raw: last?.content.filter((c) => c.type !== 'thinking') ?? null,
       modelId: last?.model,
+      costUsd: Math.round(costUsd * 1e6) / 1e6,
+      costEstimated: !priced,
     }
   }
 
@@ -194,6 +235,9 @@ async function main() {
     instructionSha: sha(HARNESS_INSTRUCTION),
     right,
     total,
+    session,
+    runCostUsd: Math.round(rows.reduce((t, r) => t + (r.costUsd ?? 0), 0) * 1e6) / 1e6,
+    estimatedRows: rows.filter((r) => r.costEstimated).length,
   }
 
   const label = (o: Outcome) => {
@@ -207,7 +251,7 @@ async function main() {
   const md = [
     `# Routing results: ${right} of ${total} right`,
     '',
-    `${meta.date} · ${meta.provider} · requested \`${meta.modelRequested}\`, answered by \`${meta.modelAnswered}\` · effort ${meta.effort} · prompt \`${meta.promptSha}\` · test instruction \`${meta.instructionSha}\``,
+    `${meta.date} · ${meta.provider} · requested \`${meta.modelRequested}\`, answered by \`${meta.modelAnswered}\` · effort ${meta.effort} · prompt \`${meta.promptSha}\` · test instruction \`${meta.instructionSha}\` · session ${meta.session} · cost US$${meta.runCostUsd.toFixed(4)}${meta.estimatedRows ? ` (${meta.estimatedRows} calls estimated from tokens)` : ''}`,
     '',
     'Generated by `scripts/output-system/route-eval.ts`. "Right" means the chosen lane is one of the expected lanes, or the model asked a question where asking is allowed.',
     '',
@@ -227,6 +271,7 @@ async function main() {
   writeFileSync(join(out, `${stamp}.md`), md)
   writeFileSync(join(out, 'latest.md'), md)
   process.stdout.write(`${right} of ${total} right. Results: docs/output-system/evals/results/${stamp}.md\n`)
+  process.stdout.write(`This run: US$${meta.runCostUsd.toFixed(4)}${meta.estimatedRows ? ` (${meta.estimatedRows} calls estimated from tokens)` : ''}. ${spendStatus(summariseSpend(ledger()), session, limits).message}\n`)
 }
 
 void main()

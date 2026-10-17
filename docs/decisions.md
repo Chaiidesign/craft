@@ -8,6 +8,71 @@ Status is **approved** unless marked otherwise. When a later decision replaces a
 
 ---
 
+## Output system build loop (branch `feat/output-system-build`)
+
+The plan is [output-system/build-loop.md](output-system/build-loop.md) (Chaitanya, 2026-10-17): four launch kinds (chat reply, strict document, composed document, file), built in Sessions 0 to 4 for a demo on Friday 23 October. Decisions marked **assumed** were made under the loop's rule: "pick the simplest safe option, record it marked assumed, and continue".
+
+### D-79 · 2026-10-17 · Spend is tracked per call, with limits read from build-loop.md
+**Status: approved in principle** (build-loop.md §9). The estimate rates are **assumed**.
+
+**Rule.**
+- **Every model call is recorded.** Each one appends a line to `docs/output-system/spend/ledger.jsonl` with its session, kind, purpose, prompt version, tokens and cost.
+  - The cost is OpenRouter's `usage.cost` in US$, requested with `usage: { include: true }`. A probe on 2026-10-17 confirmed OpenRouter returns it.
+  - When a provider reports no cost, as on the direct Anthropic fallback, the cost is **estimated** from tokens at US$4 per million input and US$20 per million output tokens (the rates OpenRouter's `cost_details` showed), and labelled "estimated".
+  - A call with neither a cost nor an estimate triggers a warning, so the limits can't silently stop applying.
+- **Limits come from build-loop.md.** They are US$20 per session and US$75 for the build, read from the file so the designer can change them there. At 80% of either limit a warning is shown. At 100% the harness refuses to start (exit code 4).
+- **Cache keys are ready.** `src/lib/output-system/cache.ts` makes stable keys from the request, prompt version and guide version. The cache store itself arrives with the model route in Session 1.
+  - Routing verification runs bypass the cache on purpose, since their point is to sample the model again.
+- **Calls before the ledger existed aren't in it.** These are the Phase 1 runs (versions 1 to 4, 12 runs) and one probe. Estimated from Session 0's rate, they cost about US$4, which is recorded in `progress.md`. The exact figure is on the OpenRouter dashboard.
+
+Applied in: `src/lib/output-system/spend.ts`, `cache.ts`, `scripts/output-system/route-eval.ts`.
+
+### D-78 · 2026-10-17 · `/output-verify` is development-only, and its proxy line waits for approval
+**Status: proposed** (the proxy line). The page guard is **assumed**.
+
+**Problem.**
+- `/output-verify` sits outside the `(app)` group, like `/document-verify`. To open without a signed-in session, it needs one line in `src/proxy.ts`, the auth gate.
+- build-loop.md §10 says to stop before any change that touches auth, so the line is not applied.
+- `/api/*` routes already pass the proxy (`auth0.middleware` only), so the model route planned for Session 1 needs no proxy change.
+
+**Rule.**
+- **Development only.** The page returns 404 unless `NODE_ENV` is development, Vercel previews included. That is narrower than `/document-verify`, which also opens on previews. Previews are deployment, which needs its own approval.
+- **The proposed proxy line** follows the existing `/reasoning-verify` pattern:
+  ```ts
+  // Output-system prototype: /output-verify and its gallery (sample stores,
+  // local state). Development only (D-78).
+  if (
+    process.env.NODE_ENV !== "production" &&
+    (pathname === "/output-verify" || pathname.startsWith("/output-verify/"))
+  ) {
+    return NextResponse.next();
+  }
+  ```
+- **The page reads its states from the lane registry.** Launch kinds show "Being built", and every other kind shows "Coming later".
+
+Applied in: `src/app/output-verify/` (page, gallery, shell), `src/lib/output-system/registry.ts`.
+
+### D-77 · 2026-10-17 · Sample stores
+**Status: assumed.**
+
+**Rule.**
+- **Two fictional stores,** generated from fixed seeds with a fixed anchor date (2026-09-30), never "today". This avoids the D-67 class of bug.
+  - **Saffron Loom Textiles:** INR, India, A4. It reuses the `SAFFRON_LOOM` brand profile from the document fixtures.
+  - **Fernhill Goods Co.:** USD, United States, US Letter. Its brand profile is new and fictional, because none of the document fixtures' USD brands is a store.
+- **Counts are per store:** 60 products, 200 customers and 500 orders over the 12 months to the anchor date. That meets build-loop.md §5 whether its counts are read per store or in total.
+- **Money is in integer minor units.**
+  - Every line total is unit price × quantity.
+  - Every order total is subtotal − discount + shipping + tax. The tests check this.
+  - Tax: GST at 5% for the INR store and none for the USD store, both assumed. Discounts: 10% on about 15% of orders. Shipping is free above a threshold.
+- **Only fulfilled orders count as sales.** Refunded (about 6%) and cancelled (about 4%) orders appear in exports but never in sales totals.
+  - The aggregates (`fixtures/aggregates.ts`) are derived from the orders, so any number in a reply can be recomputed.
+- **Customer emails use `example.com`,** which is reserved for documentation (RFC 2606).
+- **Every screen that shows the data labels it** "Sample data: fictional stores, customers and orders".
+
+Applied in: `src/lib/output-system/fixtures/`; tests in `fixtures/fixtures.test.ts`.
+
+---
+
 ## Output system, Phase 1: Foundations (branch `feat/output-system-foundations`)
 
 The plan is [output-system/plan.md](output-system/plan.md) (Chaitanya, 2026-10-17): nine output lanes, a ten-question router, one guide per lane, design tokens and an eval set, built in five gated phases. This branch is Phase 1 only. D-68 to D-70 were made during the build and are **proposed** until Chaitanya approves them. D-71 is left for S1's next decision.

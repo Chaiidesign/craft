@@ -29,6 +29,39 @@ Checks at Step 7 (final code): typecheck, lint and production build clean; 1,421
 - **Word and PowerPoint in Microsoft's own apps are unverified.** Neither is installed here. Word files were checked only in Apple Pages and PowerPoint files only in Apple Keynote, which both substitute Helvetica; differences are in the feature README's "Unsupported and unverified".
 - **Known limitations and debt:** listed in the feature README (including generated files kept in memory until the page closes).
 
+## In progress: output system build loop, branch `feat/output-system-build`
+
+Updated 2026-10-17.
+- **Plan:** [output-system/build-loop.md](output-system/build-loop.md).
+- **Session report:** [reports/output-system-build-session-0.md](reports/output-system-build-session-0.md).
+- **Decisions:** D-77 to D-79. D-71 is still left for S1.
+
+**Session 0 (Verify): done; stopped for the designer.**
+- **Phase 1 confirmed again.** Routing with prompt version 4 scored 34/34 in each of three live runs. The results files are linked in the session report.
+- **Built:**
+  - the sample stores, two of them with 60 products, 200 customers and 500 orders each
+  - the aggregates, lane registry, spend ledger, limits and cache keys
+  - the `/output-verify` shell and its gallery
+  - the rubric
+- **Not done: the 390/1280 look check of the shell.** It waits on the proxy line (D-78).
+
+**Spend:**
+
+| | US$ |
+|---|---|
+| Session 0 | 1.11 |
+| Build total, from the ledger | 1.11 of the 75 limit |
+| Phase 1, before the ledger existed (estimated, not in the ledger) | about 4 |
+
+**Waiting on the designer:**
+1. Approve Phase 1.
+2. Approve the `/output-verify` proxy line (D-78).
+3. Choose how the worktree's dev server gets the model key: a symlink to `~/craft/.env.local`, or Chai creates the file.
+
+**Next: Session 1 (chat and file),** once item 1 is approved. It starts with the look check of the shell if item 2 is approved.
+
+**Open problems:** none beyond the three waits above.
+
 ## In progress: output system Phase 1 (Foundations), branch `feat/output-system-foundations`
 
 Updated 2026-10-17.

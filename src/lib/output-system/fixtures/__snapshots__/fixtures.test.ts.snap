@@ -1,0 +1,8 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`sample stores > is the same every time: fixed seed and anchor date 1`] = `
+[
+  "saffron-loom:399325935:SL-01001:2026-09-30",
+  "fernhill-goods:7614413:FH-01001:2026-09-30",
+]
+`;

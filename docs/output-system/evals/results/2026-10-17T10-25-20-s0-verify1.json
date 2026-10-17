@@ -1,0 +1,943 @@
+{
+  "meta": {
+    "date": "2026-10-17T10:25:20.159Z",
+    "provider": "openrouter",
+    "modelRequested": "anthropic/claude-opus-5.5",
+    "modelAnswered": "anthropic/claude-opus-5.5",
+    "effort": "medium",
+    "promptSha": "f368cc732b1b",
+    "instructionSha": "59dd7b3f2ce6",
+    "right": 34,
+    "total": 34,
+    "session": "0",
+    "runCostUsd": 0.369984,
+    "unpricedRows": 0
+  },
+  "instruction": "This conversation is a routing test, not a real request. Do not make anything and do not read any guide. Decide what you would do first for the person's latest message, following the instructions above, and report it by calling report_choice exactly once.\n\nChoose action from: reply_in_chat, show_message_card, show_chart, create_strict_document, create_document, create_design, create_dashboard, publish_page, build_file, ask_question, update_existing, export_version, show_format_options.\n- reply_in_chat: you would answer in chat.\n- ask_question: you would ask the person one question before making anything; put the question in question.\n- update_existing: you would update something already made in this conversation as a new version.\n- export_version: you would export something already made in this conversation in a format, without changing it.\n- show_format_options: you would tell the person it can't be made in the format they named, and offer the closest formats.\n- Any other action: the action named in the instructions above that you would use first.",
+  "rows": [
+    {
+      "id": "r01",
+      "request": "Why did sales drop last week?",
+      "expected": [
+        "chat_reply",
+        "inline_chart"
+      ],
+      "ask_ok": false,
+      "chosen": "chat_reply",
+      "right": true,
+      "reason": "The person wants an explanation, not a chart, document or file, so a short chat answer based on store data fits (question 9).",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_01LpjobnjYuzFSCU5zoGnjuv",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "reply_in_chat",
+            "reason": "The person wants an explanation, not a chart, document or file, so a short chat answer based on store data fits (question 9)."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.014416
+    },
+    {
+      "id": "r02",
+      "request": "What's a sensible return window for a small apparel brand?",
+      "expected": [
+        "chat_reply"
+      ],
+      "ask_ok": false,
+      "chosen": "chat_reply",
+      "right": true,
+      "reason": "This is a general advice question that works well as a text answer (step 9). They didn't ask for a policy document.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_01VtDfY4jnpJj2F49pRmqNvP",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "reply_in_chat",
+            "reason": "This is a general advice question that works well as a text answer (step 9). They didn't ask for a policy document."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.010444
+    },
+    {
+      "id": "r03",
+      "request": "Write a product title for our linen summer dress, under 60 characters.",
+      "expected": [
+        "chat_reply"
+      ],
+      "ask_ok": false,
+      "chosen": "chat_reply",
+      "right": true,
+      "reason": "A short product title isn't a change, file, message, exact-terms document, visual design or kept document, so step 9 applies and chat is enough.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_01VzJFPLB3oUkmDg5wfoEhJf",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "reply_in_chat",
+            "reason": "A short product title isn't a change, file, message, exact-terms document, visual design or kept document, so step 9 applies and chat is enough."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.01094
+    },
+    {
+      "id": "r04",
+      "request": "Reply to this customer: \"My order #4471 arrived with a cracked mug and I want a refund NOW.\"",
+      "expected": [
+        "message_card"
+      ],
+      "ask_ok": false,
+      "chosen": "message_card",
+      "right": true,
+      "reason": "This is a message to a specific customer, so it gets drafted as a message card (question 3).",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_01StSjZirMDiqbWkccWJEGuF",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "show_message_card",
+            "reason": "This is a message to a specific customer, so it gets drafted as a message card (question 3)."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.009696
+    },
+    {
+      "id": "r05",
+      "request": "Draft the email for our summer sale going to the VIP list on Friday.",
+      "expected": [
+        "message_card"
+      ],
+      "ask_ok": false,
+      "chosen": "message_card",
+      "right": true,
+      "reason": "This is a message for a specific list (VIP subscribers), so rule 3 applies: draft it with show_message_card.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_01Lz9VBsk7pc3afZhDA9x4gv",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "show_message_card",
+            "reason": "This is a message for a specific list (VIP subscribers), so rule 3 applies: draft it with show_message_card."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.009848
+    },
+    {
+      "id": "r06",
+      "request": "Text message reminding customers that their saved cart expires tonight.",
+      "expected": [
+        "message_card"
+      ],
+      "ask_ok": false,
+      "chosen": "message_card",
+      "right": true,
+      "reason": "This is a message for a particular list (customers with saved carts), so rule 3 says to draft it as a message.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_01SVWgu7THopCr7fbRjwYJu4",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "show_message_card",
+            "reason": "This is a message for a particular list (customers with saved carts), so rule 3 says to draft it as a message."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.010216
+    },
+    {
+      "id": "r07",
+      "request": "Show me sales by week for the last 8 weeks.",
+      "expected": [
+        "inline_chart"
+      ],
+      "ask_ok": false,
+      "chosen": "inline_chart",
+      "right": true,
+      "reason": "This asks for numbers to look at once, so the rule for numbers points to show_chart rather than a dashboard.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_012FCZYAKwwtzF3CrJJPLjsm",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "show_chart",
+            "reason": "This asks for numbers to look at once, so the rule for numbers points to show_chart rather than a dashboard."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.011284
+    },
+    {
+      "id": "r08",
+      "request": "Which five products sold the most in September?",
+      "expected": [
+        "inline_chart",
+        "chat_reply"
+      ],
+      "ask_ok": false,
+      "chosen": "inline_chart",
+      "right": true,
+      "reason": "This is a question about numbers (top sellers in September) that only needs a quick look, so rule 7 applies before the chat-reply rule and points to a quick chart.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_01JwB6sEcRNKcuhY7QX75tdc",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "show_chart",
+            "reason": "This is a question about numbers (top sellers in September) that only needs a quick look, so rule 7 applies before the chat-reply rule and points to a quick chart."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.01264
+    },
+    {
+      "id": "r09",
+      "request": "Invoice Bloom & Co for 40 ceramic planters at $18 each.",
+      "expected": [
+        "strict_document"
+      ],
+      "ask_ok": false,
+      "chosen": "strict_document",
+      "right": true,
+      "reason": "An invoice involves money and exact facts, so it gets the strict document with the invoice template.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_01Qwn7mWCbvqz8PrguRNQRTG",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "create_strict_document",
+            "reason": "An invoice involves money and exact facts, so it gets the strict document with the invoice template."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.009704
+    },
+    {
+      "id": "r10",
+      "request": "Quote for 500 wholesale units of the travel mug for Northside Outfitters.",
+      "expected": [
+        "strict_document"
+      ],
+      "ask_ok": false,
+      "chosen": "strict_document",
+      "right": true,
+      "reason": "A quote involves money and exact facts, so rule 4 says to use a strict document with the quote template.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_01VRXmUJxyrpExet8ZZXCPvz",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "create_strict_document",
+            "reason": "A quote involves money and exact facts, so rule 4 says to use a strict document with the quote template."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.009768
+    },
+    {
+      "id": "r11",
+      "request": "Purchase order to Packwell for 1,200 kraft mailer boxes, as a PDF.",
+      "expected": [
+        "strict_document"
+      ],
+      "ask_ok": false,
+      "chosen": "strict_document",
+      "right": true,
+      "reason": "A purchase order involves money and exact terms, so it goes through the strict document path (question 4), and PDF only sets how it is delivered.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_0186NDSyPF5tEAgnfVyYGYrM",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "create_strict_document",
+            "reason": "A purchase order involves money and exact terms, so it goes through the strict document path (question 4), and PDF only sets how it is delivered."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.010924
+    },
+    {
+      "id": "r12",
+      "request": "Write our returns policy: 30 days, unworn items only, the buyer pays return shipping.",
+      "expected": [
+        "strict_document"
+      ],
+      "ask_ok": false,
+      "chosen": "strict_document",
+      "right": true,
+      "reason": "Step 4: a policy involves legal terms and facts that must be exact, so it uses the strict document with the policy template.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_01VZ8WyYfGzxNwSbSB7E1JHD",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "create_strict_document",
+            "reason": "Step 4: a policy involves legal terms and facts that must be exact, so it uses the strict document with the policy template."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.009896
+    },
+    {
+      "id": "r13",
+      "request": "Black Friday campaign plan.",
+      "expected": [
+        "composed_document"
+      ],
+      "ask_ok": false,
+      "chosen": "composed_document",
+      "right": true,
+      "reason": "A campaign plan is writing they'll keep or share, so rule 6 applies and the format isn't open enough to need a question.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_018aZsLrajgPSySsrKZoS1N9",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "create_document",
+            "reason": "A campaign plan is writing they'll keep or share, so rule 6 applies and the format isn't open enough to need a question."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.01124
+    },
+    {
+      "id": "r14",
+      "request": "Write the October sales report I can share with my business partner.",
+      "expected": [
+        "composed_document"
+      ],
+      "ask_ok": false,
+      "chosen": "composed_document",
+      "right": true,
+      "reason": "A report they will keep and share is writing, so it becomes a document (rule 6), and that rule is checked before the numbers rule.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_01McCqksZGWjwaWLvrb9vek1",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "create_document",
+            "reason": "A report they will keep and share is writing, so it becomes a document (rule 6), and that rule is checked before the numbers rule."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.01238
+    },
+    {
+      "id": "r15",
+      "request": "Spec sheet for the Alpine 30L backpack for our retail partners.",
+      "expected": [
+        "composed_document"
+      ],
+      "ask_ok": false,
+      "chosen": "composed_document",
+      "right": true,
+      "reason": "A spec sheet is writing to keep and share, so it falls under question 6 (create_document). It doesn't involve money or legal terms, and it isn't something people judge mainly by looking.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_018R87gB1GVKNzveRgijuK5y",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "create_document",
+            "reason": "A spec sheet is writing to keep and share, so it falls under question 6 (create_document). It doesn't involve money or legal terms, and it isn't something people judge mainly by looking."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.011536
+    },
+    {
+      "id": "r16",
+      "request": "Instagram ad for the summer sale.",
+      "expected": [
+        "design"
+      ],
+      "ask_ok": false,
+      "chosen": "design",
+      "right": true,
+      "reason": "An Instagram ad is something the person will judge by looking at it, so it gets a design (question 5).",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_012PaLViBXs7ihtficMdyBJh",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "create_design",
+            "reason": "An Instagram ad is something the person will judge by looking at it, so it gets a design (question 5)."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.009648
+    },
+    {
+      "id": "r17",
+      "request": "Mock up a product page for the new candle line.",
+      "expected": [
+        "design"
+      ],
+      "ask_ok": false,
+      "chosen": "design",
+      "right": true,
+      "reason": "A product page mockup is judged by looking, so rule 5 (create_design) applies.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_01NkMY6kjf11cfYAne6Dq3AH",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "create_design",
+            "reason": "A product page mockup is judged by looking, so rule 5 (create_design) applies."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.009572
+    },
+    {
+      "id": "r18",
+      "request": "Investor pitch deck for our seed round.",
+      "expected": [
+        "design"
+      ],
+      "ask_ok": false,
+      "chosen": "design",
+      "right": true,
+      "reason": "A pitch deck is a set of slides people judge by looking, so rule 5 says to make it with create_design.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_01LoLXf37apRUPPivHw8JUGq",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "create_design",
+            "reason": "A pitch deck is a set of slides people judge by looking, so rule 5 says to make it with create_design."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.011232
+    },
+    {
+      "id": "r19",
+      "request": "A weekly sales dashboard I can check every Monday.",
+      "expected": [
+        "dashboard"
+      ],
+      "ask_ok": false,
+      "chosen": "dashboard",
+      "right": true,
+      "reason": "Numbers they will check repeatedly go in a dashboard (question 7).",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_01HT1GFbUv2rFs6vf94mBL7f",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "create_dashboard",
+            "reason": "Numbers they will check repeatedly go in a dashboard (question 7)."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.009588
+    },
+    {
+      "id": "r20",
+      "request": "I want to keep an eye on stock levels for my top 30 products every day.",
+      "expected": [
+        "dashboard"
+      ],
+      "ask_ok": false,
+      "chosen": "dashboard",
+      "right": true,
+      "reason": "These are numbers they'll check over and over, so rule 7 says to use a dashboard.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_01ANgKRNsJuUP7RJXATsDXMk",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "create_dashboard",
+            "reason": "These are numbers they'll check over and over, so rule 7 says to use a dashboard."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.009688
+    },
+    {
+      "id": "r21",
+      "request": "Shipping cost calculator for my site.",
+      "expected": [
+        "published_page"
+      ],
+      "ask_ok": false,
+      "chosen": "published_page",
+      "right": true,
+      "reason": "A calculator is something people interact with, so step 8 says to make it with publish_page. It isn't a fixed money document like an invoice or quote.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_01CXkt7WmgrRjrmm2uJtq1cC",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "publish_page",
+            "reason": "A calculator is something people interact with, so step 8 says to make it with publish_page. It isn't a fixed money document like an invoice or quote."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.012928
+    },
+    {
+      "id": "r22",
+      "request": "A quiz that helps shoppers find their skin type and recommends one of our serums.",
+      "expected": [
+        "published_page"
+      ],
+      "ask_ok": false,
+      "chosen": "published_page",
+      "right": true,
+      "reason": "Shoppers will interact with a quiz, so rule 8 points to a published interactive page.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_01GzvvfFB8PaAZXpvBiGivv4",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "publish_page",
+            "reason": "Shoppers will interact with a quiz, so rule 8 points to a published interactive page."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.00968
+    },
+    {
+      "id": "r23",
+      "request": "Export last month's orders as Excel.",
+      "expected": [
+        "file"
+      ],
+      "ask_ok": false,
+      "chosen": "file",
+      "right": true,
+      "reason": "Question 2: a raw data export (orders as Excel) is made as a file with build_file.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_013yzBANmHKXKZst6Wc1DjFu",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "build_file",
+            "reason": "Question 2: a raw data export (orders as Excel) is made as a file with build_file."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.009584
+    },
+    {
+      "id": "r24",
+      "request": "Give me our product catalog as a CSV.",
+      "expected": [
+        "file"
+      ],
+      "ask_ok": false,
+      "chosen": "file",
+      "right": true,
+      "reason": "Rule 2: a raw data export of products as CSV is made with build_file.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_01CQ7P8vKt28QapmSLso1Lib",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "build_file",
+            "reason": "Rule 2: a raw data export of products as CSV is made with build_file."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.009512
+    },
+    {
+      "id": "r25",
+      "request": "Write descriptions for these 20 products: the Alpine backpack, the Ridge daypack, the Summit duffel and 17 more from the spring range.",
+      "expected": [
+        "composed_document"
+      ],
+      "ask_ok": false,
+      "chosen": "composed_document",
+      "right": true,
+      "reason": "Twenty product descriptions are writing to keep and use, so step 6 applies. It isn't a message, a document with exact money or legal terms, a visual design or a data export.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_01RQ7rZfmXsxywGsCHP4aC7M",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "create_document",
+            "reason": "Twenty product descriptions are writing to keep and use, so step 6 applies. It isn't a message, a document with exact money or legal terms, a visual design or a data export."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.013112
+    },
+    {
+      "id": "r26",
+      "request": "A report for Monday's meeting on how Q3 went.",
+      "expected": [
+        "composed_document",
+        "design"
+      ],
+      "ask_ok": true,
+      "chosen": "ask",
+      "right": true,
+      "reason": "The instructions give \"a report for Monday's meeting\" as the example of a truly open format (document or slides), so one short question comes first.",
+      "question": "Would you like the Q3 report as a written document or as slides to present on Monday?",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_01XeXZLt3apt3peBEM4cXhkV",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "ask_question",
+            "question": "Would you like the Q3 report as a written document or as slides to present on Monday?",
+            "reason": "The instructions give \"a report for Monday's meeting\" as the example of a truly open format (document or slides), so one short question comes first."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.010768
+    },
+    {
+      "id": "r27",
+      "request": "Move the email send to Thursday and add a section on influencer outreach.",
+      "expected": [
+        "update:composed_document"
+      ],
+      "ask_ok": false,
+      "chosen": "update:composed_document",
+      "right": true,
+      "reason": "Rule 1: this changes the campaign plan already made in this conversation, so it gets updated as a new version, not a second copy.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_01MVwCqsLJxQ8HYrkEdYhP7D",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "update_existing",
+            "reason": "Rule 1: this changes the campaign plan already made in this conversation, so it gets updated as a new version, not a second copy."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.010076
+    },
+    {
+      "id": "r28",
+      "request": "Make it a PDF.",
+      "expected": [
+        "export:strict_document"
+      ],
+      "ask_ok": false,
+      "chosen": "export:strict_document",
+      "right": true,
+      "reason": "Rule 1: \"Make it a PDF\" means export the current version of the invoice already in this conversation.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_012YC65KguWANb8RBgZsCJ7f",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "export_version",
+            "reason": "Rule 1: \"Make it a PDF\" means export the current version of the invoice already in this conversation."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.009896
+    },
+    {
+      "id": "r29",
+      "request": "Share this with my team.",
+      "expected": [
+        "composed_document"
+      ],
+      "ask_ok": false,
+      "chosen": "composed_document",
+      "right": true,
+      "reason": "The instructions say that when someone wants a chat answer passed on to other people, it becomes a document they can share, not a message.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_01HZVZBkCuhHzWUjZ9fGmnWk",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "create_document",
+            "reason": "The instructions say that when someone wants a chat answer passed on to other people, it becomes a document they can share, not a message."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.009992
+    },
+    {
+      "id": "r30",
+      "request": "Size guide for our jeans.",
+      "expected": [
+        "published_page",
+        "composed_document"
+      ],
+      "ask_ok": false,
+      "chosen": "published_page",
+      "right": true,
+      "reason": "Step 8 names a size guide as an interactive page, so publish_page is the first fit. Earlier steps don't apply: there's no earlier work to update, no file, no message, nothing that needs exact money or legal terms, and it isn't a visual design.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_012jfy9SAGCRVgBsRbEzMkeq",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "publish_page",
+            "reason": "Step 8 names a size guide as an interactive page, so publish_page is the first fit. Earlier steps don't apply: there's no earlier work to update, no file, no message, nothing that needs exact money or legal terms, and it isn't a visual design."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.014716
+    },
+    {
+      "id": "r31",
+      "request": "I've attached our wholesale price list (prices.xlsx). Raise every price by 5% and round to the nearest .99.",
+      "expected": [
+        "file"
+      ],
+      "ask_ok": false,
+      "chosen": "file",
+      "right": true,
+      "reason": "Question 2 applies: they want a change made to a file they uploaded, so I'd make that file with build_file.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_011NvDFvboveEEmUD3fErwtw",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "build_file",
+            "reason": "Question 2 applies: they want a change made to a file they uploaded, so I'd make that file with build_file."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.009812
+    },
+    {
+      "id": "r32",
+      "request": "Here's our customer list as a CSV I uploaded. Remove the duplicates and fix the capitalisation of the names.",
+      "expected": [
+        "file"
+      ],
+      "ask_ok": false,
+      "chosen": "file",
+      "right": true,
+      "reason": "Rule 2: they want changes made to a file they uploaded, so I'd build a new file.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_018itJCfB4ZER2gaUPfwEYJw",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "build_file",
+            "reason": "Rule 2: they want changes made to a file they uploaded, so I'd build a new file."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.009712
+    },
+    {
+      "id": "r33",
+      "request": "Send it to me as an Excel file.",
+      "expected": [
+        "format_not_supported"
+      ],
+      "ask_ok": false,
+      "chosen": "format_not_supported",
+      "right": true,
+      "reason": "The Instagram ad is a design, and a design can't be exported as Excel, so the person needs to be told and offered the closest formats.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_015APWrwgMGPGoCTphEU8UWD",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "show_format_options",
+            "reason": "The Instagram ad is a design, and a design can't be exported as Excel, so the person needs to be told and offered the closest formats."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.01258
+    },
+    {
+      "id": "r34",
+      "request": "Can I get the shipping calculator as a PowerPoint?",
+      "expected": [
+        "format_not_supported"
+      ],
+      "ask_ok": false,
+      "chosen": "format_not_supported",
+      "right": true,
+      "reason": "The calculator is an interactive page that can't be exported as PowerPoint, so the rule is to say so and offer the closest formats.",
+      "raw": [
+        {
+          "type": "tool_use",
+          "id": "toolu_01GCX27h5NkbcuZLyBytz8uK",
+          "caller": {
+            "type": "direct"
+          },
+          "name": "report_choice",
+          "input": {
+            "action": "show_format_options",
+            "reason": "The calculator is an interactive page that can't be exported as PowerPoint, so the rule is to say so and offer the closest formats."
+          }
+        }
+      ],
+      "modelId": "anthropic/claude-opus-5.5",
+      "costUsd": 0.012956
+    }
+  ]
+}
