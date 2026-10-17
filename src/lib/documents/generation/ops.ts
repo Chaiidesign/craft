@@ -9,12 +9,12 @@
 
 import { z } from 'zod'
 
-import { INVOICE_FIELDS } from '../invoice'
+import { COMMERCIAL_KINDS, INVOICE_FIELDS } from '../invoice'
 
 const CURRENCY_CODES = ['USD', 'EUR', 'GBP', 'INR', 'JPY'] as const
 
-/** Documents the generator can make now (D-59 widens this slice by slice). */
-export const GENERATABLE_KINDS = ['invoice'] as const
+/** Documents the generator can make now (D-59 widens this slice by slice; the quote, purchase order and receipt share the invoice's fields). */
+export const GENERATABLE_KINDS = COMMERCIAL_KINDS
 export type GeneratableKind = (typeof GENERATABLE_KINDS)[number]
 
 export const INVOICE_FIELD_IDS = Object.values(INVOICE_FIELDS) as [string, ...string[]]

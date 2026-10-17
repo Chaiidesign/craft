@@ -4,8 +4,8 @@
 // into a model prompt or a tool result.
 
 import { CURRENCIES } from '../defaults'
-import { computeInvoiceTotals, invoiceCurrency } from '../invoice'
-import type { DocumentSnapshot, FieldValue, InvoiceSnapshot, Money } from '../model'
+import { computeInvoiceTotals, invoiceCurrency, isCommercial } from '../invoice'
+import type { DocumentSnapshot, FieldValue, Money } from '../model'
 import { validateSnapshot, type Readiness } from '../validation'
 import { digest } from './digest'
 import type { GenerationValue } from './ops'
@@ -101,8 +101,8 @@ export function documentView(snapshot: DocumentSnapshot): DocumentView {
     digest: digest(li),
   }))
   let totals: DocumentView['totals'] = { subtotal: null, total: null, unknownBecause: [] }
-  if (snapshot.kind === 'invoice') {
-    const t = computeInvoiceTotals(snapshot as InvoiceSnapshot)
+  if (isCommercial(snapshot)) {
+    const t = computeInvoiceTotals(snapshot)
     totals = {
       subtotal: t.subtotal.known ? moneyToDecimal(t.subtotal.money) : null,
       total: t.total.known ? moneyToDecimal(t.total.money) : null,
@@ -112,7 +112,7 @@ export function documentView(snapshot: DocumentSnapshot): DocumentView {
   return {
     kind: snapshot.kind,
     readiness: report.readiness,
-    currency: snapshot.kind === 'invoice' ? invoiceCurrency(snapshot as InvoiceSnapshot) : null,
+    currency: isCommercial(snapshot) ? invoiceCurrency(snapshot) : null,
     fields,
     lineItems: items,
     totals,

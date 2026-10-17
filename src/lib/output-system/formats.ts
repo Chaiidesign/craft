@@ -29,7 +29,8 @@ type AnyFormat = ExportFormat | PlannedFormat
 
 /** The engine kinds behind each kind of thing, where there is code. */
 const BUILT: Partial<Record<Lane, { kind: DocumentKind; covers: string; plannedTypes: string[] }>> = {
-  strict_document: { kind: 'invoice', covers: 'Invoices', plannedTypes: ['quote', 'purchase order', 'receipt', 'returns policy'] },
+  // The quote, purchase order and receipt share the invoice's exports (capabilities.ts; tested).
+  strict_document: { kind: 'invoice', covers: 'Invoices, quotes, purchase orders and receipts', plannedTypes: ['credit note', 'packing slip', 'returns policy'] },
   composed_document: { kind: 'brief', covers: 'Briefs, memos and reports', plannedTypes: ['campaign plan', 'spec sheet', 'guide', 'letter', 'one-pager', 'proposal'] },
   design: { kind: 'deck', covers: 'Slides and decks', plannedTypes: ['ad', 'social post', 'banner', 'product page mockup'] },
 }

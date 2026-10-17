@@ -44,6 +44,10 @@ function outcome(made: Made, previous: Lane | undefined): Outcome | 'error' {
       return 'file'
     case 'format-options':
       return 'format_not_supported' as Outcome
+    case 'document':
+      return made.created ? 'strict_document' : 'update:strict_document'
+    case 'export':
+      return 'export:strict_document'
     case 'coming-later':
       if (made.lane === 'export') return previous ? `export:${previous}` : 'export:unknown'
       return previous && made.lane === previous ? `update:${previous}` : made.lane

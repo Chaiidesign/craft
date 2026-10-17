@@ -85,6 +85,10 @@
 .chart { min-width: 0; grid-template-columns: minmax(0, 1fr); margin: 0; border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; }
 .chart svg { display: block; height: auto; }
 
+/* Documents (Session 2): the lead line, then the engine's document card at full thread width. */
+.documentReply { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-width: 0; width: 100%; }
+.documentLead { margin: 0; max-width: 680px; }
+
 /* Gallery (Session 1) */
 .galleryItem { border-top: 1px solid var(--rule); padding: 20px 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
 .galleryItem .person { justify-self: start; margin: 0; }

@@ -85,7 +85,7 @@ const arr = (v: unknown, path: string): unknown[] => (Array.isArray(v) ? v : wro
 const str = (v: unknown, path: string): string => (typeof v === 'string' && v.length > 0 ? v : wrongAt(path))
 const oneOf = <T extends string>(v: unknown, allowed: readonly T[], path: string): T => (allowed.includes(v as T) ? (v as T) : wrongAt(path))
 
-const KINDS = ['invoice', 'brief', 'deck'] as const
+const KINDS = ['invoice', 'quote', 'purchase-order', 'receipt', 'brief', 'deck'] as const
 const FORMATS = ['pdf', 'docx', 'pptx'] as const
 const STATUSES = ['pending', 'succeeded', 'failed', 'unsupported', 'expired'] as const
 const ERROR_CODES = ['unsupported-format', 'validation-blocked', 'renderer-failed', 'font-missing-glyph', 'cancelled'] as const
@@ -158,7 +158,7 @@ function checkExport(v: unknown, path: string): ExportRecord {
 
 /** Why a saved snapshot can't be used, or null. Fixture snapshots may be incomplete or invalid by design; this only refuses ones validation can't read. */
 export function snapshotProblem(v: Obj): string | null {
-  if (!KINDS.includes(v.kind as never)) return `its kind “${String(v.kind)}” is not invoice, brief or deck`
+  if (!KINDS.includes(v.kind as never)) return `its kind “${String(v.kind)}” is not invoice, quote, purchase order, receipt, brief or deck`
   if (!isObj(v.fields)) return 'it has no fields object'
   if (!Array.isArray(v.fieldOrder)) return 'it has no field order'
   for (const id of v.fieldOrder) if (typeof id !== 'string' || !(id in v.fields)) return `its field order lists “${String(id)}”, which is not among its fields`

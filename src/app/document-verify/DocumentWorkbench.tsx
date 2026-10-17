@@ -30,7 +30,7 @@ import { deriveDeck } from '@/lib/documents/deck'
 import { describeFieldState } from '@/lib/documents/display'
 import { FIXTURES, getFixture, SAMPLE_LABEL, type Fixture } from '@/lib/documents/fixtures'
 import { outputIdFor, PROPOSAL_TEMPLATES, proposalFrom, SAMPLE_REVIEWER } from '@/lib/documents/fixtures/revisions'
-import { computeInvoiceTotals, type Amount } from '@/lib/documents/invoice'
+import { computeInvoiceTotals, isCommercial, type Amount } from '@/lib/documents/invoice'
 import type { DeckLayout } from '@/lib/documents/layout/slides'
 import type { Block, BriefSnapshot, DeckSnapshot, DocumentEnv, DocumentSnapshot, ExportFormat, InvoiceSnapshot } from '@/lib/documents/model'
 import { formatMoney, formatQuantity } from '@/lib/documents/money'
@@ -555,7 +555,7 @@ function DocumentInspector({ fixture, wb, onOpenFixture }: { fixture: Fixture; w
           )}
       </section>
 
-      {snapshot.kind === 'invoice' && <InvoiceAmounts snapshot={snapshot} canEdit={canEdit} onSave={save} />}
+      {isCommercial(snapshot) && <InvoiceAmounts snapshot={snapshot} canEdit={canEdit} onSave={save} />}
 
       {targets.length > 0 && <TextEditPanel snapshot={snapshot} canEdit={canEdit} onSave={save} />}
 

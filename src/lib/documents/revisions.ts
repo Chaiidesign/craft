@@ -12,6 +12,8 @@
 // Browser storage and broken-session recovery arrive in Step 6.
 
 import { formatFieldValue } from './display'
+import { isCommercial, KIND_NOUN } from './invoice'
+import { templateFor } from './templates/invoice'
 import { deriveDeck } from './deck'
 import type {
   Block,
@@ -99,9 +101,10 @@ export function versionNumber(store: RevisionStore, revisionId: RevisionId): num
 export const versionLabel = (store: RevisionStore, revisionId: RevisionId) => `v${versionNumber(store, revisionId)}`
 
 function titleOf(snapshot: DocumentSnapshot): string {
-  if (snapshot.kind === 'invoice') {
+  if (isCommercial(snapshot)) {
+    const name = templateFor(snapshot.kind).title
     const n = snapshot.fields['invoice.number']
-    return n?.state.status === 'provided' ? `Invoice ${formatFieldValue(n.state.value, snapshot.locale)}` : 'Invoice'
+    return n?.state.status === 'provided' ? `${name} ${formatFieldValue(n.state.value, snapshot.locale)}` : name
   }
   const t = snapshot.fields[BRIEF_FIELDS.title]
   return t?.state.status === 'provided' ? formatFieldValue(t.state.value, snapshot.locale) : snapshot.kind === 'deck' ? 'Deck' : 'Brief'
@@ -181,10 +184,11 @@ export function isCalendarDate(iso: string): boolean {
 /** The invoice's currency; amounts entered on an invoice must be in it. */
 function requireInvoiceCurrency(snapshot: DocumentSnapshot, money: Money, what: string): void {
   if (!Number.isInteger(money.amountMinor) || money.amountMinor < 0) throw new RevisionError('invalid-edit', `${what} must be a whole number of minor units, not negative.`)
-  if (snapshot.kind !== 'invoice') return
+  if (!isCommercial(snapshot)) return
+  const noun = KIND_NOUN[snapshot.kind]
   const currency = snapshot.fields['invoice.currency']
-  if (currency?.state.status !== 'provided' || currency.state.value.type !== 'currency') throw new RevisionError('invalid-edit', `Set the invoice currency before entering ${what.toLowerCase()}.`)
-  if (currency.state.value.code !== money.currency) throw new RevisionError('invalid-edit', `${what} is in ${money.currency}, but this invoice is in ${currency.state.value.code}.`)
+  if (currency?.state.status !== 'provided' || currency.state.value.type !== 'currency') throw new RevisionError('invalid-edit', `Set the ${noun} currency before entering ${what.toLowerCase()}.`)
+  if (currency.state.value.code !== money.currency) throw new RevisionError('invalid-edit', `${what} is in ${money.currency}, but this ${noun} is in ${currency.state.value.code}.`)
 }
 
 /** Trims a value before saving; whitespace-only content is refused by the caller. */

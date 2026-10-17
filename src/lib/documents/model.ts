@@ -18,7 +18,14 @@ export type BlockId = string
 export type CitationId = string
 export type ExportId = string
 
-export type DocumentKind = 'invoice' | 'brief' | 'deck'
+/**
+ * The invoice and the documents built the same way: parties, details, line
+ * items, totals and terms. They share one template structure; each kind sets
+ * its own title, labels and required fields (`templates/invoice.ts`).
+ */
+export type CommercialKind = 'invoice' | 'quote' | 'purchase-order' | 'receipt'
+
+export type DocumentKind = CommercialKind | 'brief' | 'deck'
 
 /** Clock + ID source. Injected so tests and fixtures are deterministic. */
 export interface DocumentEnv {
@@ -205,15 +212,19 @@ interface SnapshotBase {
 /**
  * The origin of one generated value. `prompt`: stated by the person, quoted in `evidence`
  * (the gate checks the quote is really in what they wrote). `caller`: supplied directly by an
- * agent or script through the tool surface, which vouches for it.
+ * agent or script through the tool surface, which vouches for it. `store`: copied by the host from
+ * store data, never typed by a model.
  */
 export type Provenance =
   | { source: 'prompt'; evidence: string }
   | { source: 'caller' }
+  /** Copied by the host from the connected store's data (an order, a product, the store's own details); `ref` names what it was copied from. */
+  | { source: 'store'; ref: string }
 
+/** An invoice, quote, purchase order or receipt: one structure, its kind named here. */
 export interface InvoiceSnapshot extends SnapshotBase {
-  kind: 'invoice'
-  templateId: 'invoice@1'
+  kind: CommercialKind
+  templateId: `${CommercialKind}@1`
 }
 
 export interface BriefSnapshot extends SnapshotBase {

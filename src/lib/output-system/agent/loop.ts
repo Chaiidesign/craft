@@ -7,6 +7,11 @@
 
 import type Anthropic from '@anthropic-ai/sdk'
 
+import { capability } from '../../documents/export/capabilities'
+import { documentView } from '../../documents/generation/view'
+import { isCommercial } from '../../documents/invoice'
+import type { CommercialKind, DocumentEnv, ExportFormat } from '../../documents/model'
+import { currentRevision, emptyStore, getRevision, history, versionNumber, type RevisionStore } from '../../documents/revisions'
 import { buildChart, type Chart, type ChartSpec } from '../chart'
 import type { Store } from '../fixtures/stores'
 import type { FileSpec } from '../files/datasets'
@@ -14,6 +19,7 @@ import type { UploadChange } from '../files/upload'
 import type { Lane } from '../lanes'
 import { checkNumbers, type Claim } from '../numbers'
 import { askStore, StoreQuerySchema } from '../storeTool'
+import { kindName, makeStrictDocument, updateStrictDocument, type StrictDocumentInput, type UpdateDocumentInput } from '../strict'
 import { findForbiddenWords } from '../words'
 import { GuideInputSchema, progressLabel, TERMINAL, toolDefs } from './tools'
 
@@ -35,6 +41,8 @@ export type Made =
   | { kind: 'upload-change'; changes: UploadChange[]; note?: string }
   | { kind: 'chart'; spec: ChartSpec; chart: Chart; lead: string }
   | { kind: 'format-options'; thing: Lane; requestedFormat: string; offered: string[]; message: string }
+  | { kind: 'document'; docKind: CommercialKind; outputId: string; revisionId: string; version: number; changeSummary: string; followUp?: string; created: boolean }
+  | { kind: 'export'; docKind: CommercialKind; outputId: string; revisionId: string; version: number; format: ExportFormat }
   | { kind: 'coming-later'; lane: Lane | 'export'; summary: string }
   | { kind: 'error'; message: string }
 
@@ -52,17 +60,28 @@ export type TurnInput = {
   call: ModelCall
   onEvent?: (e: LoopEvent) => void
   today: string
+  /** Documents made earlier in this conversation, and which one is current (the one a follow-up changes). */
+  documents?: { revisions: RevisionStore; current: string | null }
+  /** IDs and clock for new versions; random IDs by default, so versions from different turns never collide. */
+  env?: DocumentEnv
 }
 
-export type TurnResult = { made: Made; calls: number; toolsUsed: string[]; storeAnswers: unknown[] }
+export type TurnResult = { made: Made; calls: number; toolsUsed: string[]; storeAnswers: unknown[]; revisions?: RevisionStore }
+
+const defaultEnv: DocumentEnv = { now: () => new Date().toISOString(), nextId: (p) => `${p}-${globalThis.crypto.randomUUID().slice(0, 8)}` }
 
 /** Sample-mode facts the prompt can't know: which store, its currency and "today" (D-81). */
-export function contextBlock(store: Store, today: string, upload?: UploadInfo): string {
+export function contextBlock(store: Store, today: string, upload?: UploadInfo, documents?: TurnInput['documents']): string {
   const lines = [
     `Connected store: ${store.name} (${store.country}), currency ${store.currency}. This is sample data from a fictional store.`,
     `Today is ${today}. The store's data is complete up to and including today, so a period that ends today is final. Use ask_store for any store figure; quote its numbers as given and never calculate your own.`,
   ]
   if (upload) lines.push(`The person uploaded a file. Here is what it holds (header, a few sample rows and the row count): ${JSON.stringify(upload)}`)
+  const doc = documents?.current ? currentRevision(documents.revisions, documents.current) : null
+  if (doc && isCommercial(doc.snapshot)) {
+    const version = versionNumber(documents!.revisions, doc.revisionId)
+    lines.push(`Made earlier in this conversation: a ${kindName(doc.snapshot.kind)}, now at version ${version}. A change to it is a new version (update_document); “make it a PDF” exports it (export_version). Here is the current version, with the digest of every field and line:\n${JSON.stringify(documentView(doc.snapshot))}`)
+  }
   return lines.join('\n')
 }
 
@@ -72,7 +91,7 @@ export async function runTurn(input: TurnInput): Promise<TurnResult> {
   const tools = toolDefs() as Anthropic.Tool[]
   const system: Anthropic.TextBlockParam[] = [
     { type: 'text', text: input.prompt },
-    { type: 'text', text: contextBlock(input.store, input.today, input.upload) },
+    { type: 'text', text: contextBlock(input.store, input.today, input.upload, input.documents) },
     // A chat reply is the fallback for every request, so its guide always applies:
     // it is sent with every turn rather than left to a read_guide call (D-85).
     { type: 'text', text: `The guide for chat replies, which applies whenever you answer in chat:\n\n${input.guides.chat_reply}` },
@@ -87,6 +106,10 @@ export async function runTurn(input: TurnInput): Promise<TurnResult> {
   const guidesRead = new Set<string>(['chat_reply'])
   let retried = false
   let calls = 0
+  const docs = input.documents ?? { revisions: emptyStore(), current: null }
+  const currentDoc = docs.current ? currentRevision(docs.revisions, docs.current) : null
+  const currentNoun = currentDoc && isCommercial(currentDoc.snapshot) ? kindName(currentDoc.snapshot.kind) : undefined
+  const sourceText = [...input.history.filter((h) => h.role === 'person').map((h) => h.text), input.request].join('\n')
 
   while (calls < MAX_CALLS) {
     calls++
@@ -117,7 +140,7 @@ export async function runTurn(input: TurnInput): Promise<TurnResult> {
     for (const use of uses) {
       toolsUsed.push(use.name)
       input.onEvent?.({ type: 'tool', name: use.name })
-      input.onEvent?.({ type: 'progress', label: progressLabel(use.name, use.input) })
+      input.onEvent?.({ type: 'progress', label: progressLabel(use.name, use.input, currentNoun) })
 
       if (use.name === 'read_guide') {
         const g = GuideInputSchema.safeParse(use.input)
@@ -145,7 +168,7 @@ export async function runTurn(input: TurnInput): Promise<TurnResult> {
         results.push({ type: 'tool_result', tool_use_id: use.id, is_error: true, content: `There is no action called ${use.name}.` })
         continue
       }
-      const needsGuide = terminal.lane === 'format_not_supported' || terminal.lane === 'export' ? null : terminal.lane
+      const needsGuide = terminal.lane === 'format_not_supported' || terminal.lane === 'export' || terminal.lane === 'update' ? null : terminal.lane
       if (needsGuide && !guidesRead.has(needsGuide)) {
         results.push({ type: 'tool_result', tool_use_id: use.id, is_error: true, content: `Read the guide for ${needsGuide} with read_guide before you make it, then call ${use.name} again.` })
         continue
@@ -156,6 +179,16 @@ export async function runTurn(input: TurnInput): Promise<TurnResult> {
         retried = true
         results.push({ type: 'tool_result', tool_use_id: use.id, is_error: true, content: `Not accepted: ${parsed.error.issues.map((i) => `${i.path.join('.') || 'input'}: ${i.message}`).join('; ')}. Fix every problem and call ${use.name} again.` })
         continue
+      }
+      if (use.name === 'create_strict_document' || use.name === 'update_document' || use.name === 'export_version') {
+        const outcome = documentAction(use.name, parsed.data, { ...input, documents: docs }, sourceText)
+        if ('retry' in outcome) {
+          if (retried) return { made: { kind: 'error', message: 'Souvenir couldn’t put this together correctly. Nothing was changed. Try asking again.' }, calls, toolsUsed, storeAnswers }
+          retried = true
+          results.push({ type: 'tool_result', tool_use_id: use.id, is_error: true, content: `Not accepted, nothing was saved: ${outcome.retry.join(' ')} Fix every problem and call ${use.name} again, or answer in chat if it can’t be made.` })
+          continue
+        }
+        return { made: outcome.made, calls, toolsUsed, storeAnswers, ...(outcome.revisions ? { revisions: outcome.revisions } : {}) }
       }
       let made = toMade(use.name, parsed.data, input.upload, input.formats.formats ?? {})
       if (use.name === 'show_chart') {
@@ -178,6 +211,47 @@ export async function runTurn(input: TurnInput): Promise<TurnResult> {
     messages.push({ role: 'user', content: results })
   }
   return { made: { kind: 'error', message: 'This took too many steps, so Souvenir stopped. Try asking in a simpler way.' }, calls, toolsUsed, storeAnswers }
+}
+
+/** Makes, changes or exports a strict document. Problems go back to the model once (`retry`). */
+function documentAction(name: string, data: unknown, input: TurnInput & { documents: NonNullable<TurnInput['documents']> }, sourceText: string): { made: Made; revisions?: RevisionStore } | { retry: string[] } {
+  const ctx = { store: input.store, today: input.today, env: input.env ?? defaultEnv, sourceText, revisions: input.documents.revisions }
+  const followUpOf = (f: string | undefined) => (f && findForbiddenWords(f).length === 0 ? { followUp: f } : {})
+  if (name === 'create_strict_document') {
+    const d = data as StrictDocumentInput
+    if (d.type === 'other') return { made: { kind: 'coming-later', lane: 'strict_document', summary: d.summary ?? 'A document with exact terms.' } }
+    const r = makeStrictDocument({ ...d, type: d.type }, ctx)
+    if (!r.ok) return { retry: r.errors }
+    return { revisions: r.revisions, made: { kind: 'document', docKind: d.type, outputId: r.outputId, revisionId: r.revisionId, version: r.version, changeSummary: r.changeSummary, created: true, ...followUpOf(d.followUp) } }
+  }
+  const outputId = input.documents.current
+  if (!outputId) return { retry: ['Nothing has been made in this conversation that can be changed or exported. Make it first.'] }
+  const current = currentRevision(input.documents.revisions, outputId)
+  if (!isCommercial(current.snapshot)) return { retry: ['The last thing made isn’t a document that has versions.'] }
+  const docKind = current.snapshot.kind
+  if (name === 'update_document') {
+    const d = data as UpdateDocumentInput
+    const r = updateStrictDocument(d, outputId, ctx)
+    if (!r.ok) return { retry: r.errors }
+    return { revisions: r.revisions, made: { kind: 'document', docKind, outputId, revisionId: r.revisionId, version: r.version, changeSummary: r.changeSummary, created: false, ...followUpOf(d.followUp) } }
+  }
+  const d = data as { format: string; version?: number }
+  const versions = history(input.documents.revisions, outputId)
+  const revision = d.version === undefined ? current : versions[d.version - 1]
+  if (!revision) return { retry: [`There is no version ${d.version}; this ${kindName(docKind)} has ${versions.length}.`] }
+  const format = exportFormatOf(d.format)
+  const cap = format ? capability(docKind, format) : null
+  if (!format || !cap?.supported) return { retry: [`A ${kindName(docKind)} can’t be exported as ${d.format}. Offer the closest formats with show_format_options instead.`] }
+  return { made: { kind: 'export', docKind, outputId, revisionId: getRevision(input.documents.revisions, revision.revisionId).revisionId, version: versionNumber(input.documents.revisions, revision.revisionId), format } }
+}
+
+/** "PDF", "pdf", "Word", ".docx" → the engine's export format; anything else is not one. */
+function exportFormatOf(value: string): ExportFormat | null {
+  const v = value.trim().toLowerCase().replace(/^\./, '')
+  if (v === 'pdf') return 'pdf'
+  if (v === 'docx' || v === 'word' || v === 'doc' || v === 'word document') return 'docx'
+  if (v === 'pptx' || v === 'powerpoint' || v === 'slides') return 'pptx'
+  return null
 }
 
 /** "xlsx" or "excel" → "Excel": formats are shown by their names from formats.json. */

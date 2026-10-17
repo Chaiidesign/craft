@@ -1,5 +1,8 @@
 import { z } from "zod"
 
+import type { DocumentEnv } from "@/lib/documents/model"
+import { parseSession, serializeSession } from "@/lib/documents/session"
+import { emptyStore } from "@/lib/documents/revisions"
 import { runTurn } from "@/lib/output-system/agent/loop"
 import { modelCall, ModelUnavailableError, readRepoFiles, SpendLimitError } from "@/lib/output-system/agent/server"
 import { ANCHOR_DATE, sampleStore } from "@/lib/output-system/fixtures/stores"
@@ -14,7 +17,8 @@ import { ANCHOR_DATE, sampleStore } from "@/lib/output-system/fixtures/stores"
 export const dynamic = "force-dynamic"
 export const maxDuration = 300
 
-const MAX_BODY_BYTES = 200_000
+// Room for the conversation's documents and their versions, which the page sends back each turn.
+const MAX_BODY_BYTES = 800_000
 
 const BodySchema = z.object({
   storeId: z.enum(["saffron-loom", "fernhill-goods"]),
@@ -30,7 +34,11 @@ const BodySchema = z.object({
       sampleRows: z.array(z.array(z.unknown())).max(10),
     })
     .optional(),
+  /** The documents made so far, as the engine's own saved-session format, and which one is current. */
+  documents: z.object({ session: z.string().max(700_000), current: z.string().max(100).nullable() }).optional(),
 })
+
+const env: DocumentEnv = { now: () => new Date().toISOString(), nextId: (p) => `${p}-${crypto.randomUUID().slice(0, 8)}` }
 
 export async function POST(request: Request) {
   if (process.env.NODE_ENV === "production") return new Response("Not found", { status: 404 })
@@ -41,6 +49,16 @@ export async function POST(request: Request) {
     body = BodySchema.parse(JSON.parse(raw))
   } catch {
     return Response.json({ error: "This request isn’t in the expected shape." }, { status: 400 })
+  }
+
+  // The page's saved documents are checked like any saved session; a malformed one is refused.
+  let revisions = emptyStore()
+  if (body.documents) {
+    const loaded = parseSession(body.documents.session, env)
+    if (loaded.status !== "loaded" || (body.documents.current && !loaded.session.store.documents.has(body.documents.current))) {
+      return Response.json({ error: "This request isn’t in the expected shape." }, { status: 400 })
+    }
+    revisions = loaded.session.store
   }
 
   const repo = readRepoFiles()
@@ -67,11 +85,14 @@ export async function POST(request: Request) {
           formats: repo.formats,
           call,
           today: ANCHOR_DATE,
+          documents: { revisions, current: body.documents?.current ?? null },
+          env,
           onEvent: (e) => {
             if (e.type === "progress") send(e)
           },
         })
-        send({ type: "result", made: result.made })
+        const documents = result.revisions ? serializeSession({ store: result.revisions, exports: { records: [], events: [] }, deckId: null }) : undefined
+        send({ type: "result", made: result.made, ...(documents ? { documents } : {}) })
       } catch (e) {
         const message =
           e instanceof SpendLimitError

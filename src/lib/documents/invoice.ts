@@ -7,10 +7,24 @@
 // incomplete total is never presented as final.
 
 import { DOCUMENT_DEFAULTS, type RoundingMode } from './defaults'
-import type { Block, CurrencyCode, FieldId, InvoiceLineItem, InvoiceSnapshot, Money } from './model'
+import type { Block, CommercialKind, CurrencyCode, DocumentSnapshot, FieldId, InvoiceLineItem, InvoiceSnapshot, Money } from './model'
 import { lineAmount, money, percentOf, sumMoney } from './money'
 
-/** Stable field IDs for the `invoice@1` template. */
+/** The kinds that share the invoice's structure (see `CommercialKind`). */
+export const COMMERCIAL_KINDS = ['invoice', 'quote', 'purchase-order', 'receipt'] as const satisfies readonly CommercialKind[]
+
+export const isCommercialKind = (kind: string): kind is CommercialKind => (COMMERCIAL_KINDS as readonly string[]).includes(kind)
+
+/** What each kind is called in running text ("this quote"). */
+export const KIND_NOUN: Readonly<Record<CommercialKind, string>> = { invoice: 'invoice', quote: 'quote', 'purchase-order': 'purchase order', receipt: 'receipt' }
+
+/** An invoice, quote, purchase order or receipt. */
+export const isCommercial = (snapshot: DocumentSnapshot): snapshot is InvoiceSnapshot => isCommercialKind(snapshot.kind)
+
+/**
+ * Stable field IDs for the `invoice@1` template and the kinds built like it. The IDs keep
+ * their invoice names for every kind (they are never shown); each kind labels them itself.
+ */
 export const INVOICE_FIELDS = {
   issuerName: 'issuer.name',
   issuerAddress: 'issuer.address',
@@ -26,6 +40,12 @@ export const INVOICE_FIELDS = {
   taxApplicability: 'tax.applicability',
   taxRate: 'tax.rate',
   paymentTerms: 'payment.terms',
+  /** Optional. Added after tax, untaxed, the way the sample stores charge it. */
+  shipping: 'charges.shipping',
+  /** Optional: the store order a document was made from. */
+  orderNumber: 'order.number',
+  /** Optional, receipts: how it was paid. */
+  paymentMethod: 'payment.method',
 } as const satisfies Record<string, FieldId>
 
 export const TAX_OPTIONS = [
@@ -55,6 +75,8 @@ export interface InvoiceTotals {
   discount: Amount
   taxableBase: Amount
   tax: Amount
+  /** `null` when the document has no shipping charge (the field is absent or not supplied). */
+  shipping: Amount | null
   total: Amount
   /** True only when every amount, including tax, is known. */
   complete: boolean
@@ -102,7 +124,7 @@ export function computeInvoiceTotals(
     return {
       currency: null,
       lines: items.map((item) => ({ itemId: item.id, amount: all })),
-      subtotal: all, discount: all, taxableBase: all, tax: all, total: all,
+      subtotal: all, discount: all, taxableBase: all, tax: all, shipping: null, total: all,
       complete: false,
     }
   }
@@ -112,7 +134,7 @@ export function computeInvoiceTotals(
       return { itemId: item.id, amount: unknown({ lineItemId: item.id, message: `Unit price missing for ${item.description !== null ? `“${item.description}”` : `line ${index + 1}`}.` }) }
     }
     if (item.unitPrice.currency !== currency) {
-      return { itemId: item.id, amount: unknown({ lineItemId: item.id, message: `Line priced in ${item.unitPrice.currency}, invoice is in ${currency}.` }) }
+      return { itemId: item.id, amount: unknown({ lineItemId: item.id, message: `Line priced in ${item.unitPrice.currency}, ${KIND_NOUN[snapshot.kind]} is in ${currency}.` }) }
     }
     return { itemId: item.id, amount: { known: true, money: lineAmount(item.quantityMilli, item.unitPrice, rounding) } }
   })
@@ -158,9 +180,18 @@ export function computeInvoiceTotals(
     tax = { known: true, money: percentOf(taxableBase.money, taxRate.basisPoints, rounding) }
   }
 
-  const total: Amount = taxableBase.known && tax.known
-    ? { known: true, money: money(taxableBase.money.amountMinor + tax.money.amountMinor, currency) }
-    : unknown(...reasonsOf(taxableBase, tax))
+  // Shipping: optional, so a document without it simply has none. Charged after tax, untaxed.
+  const shippingValue = providedValue(snapshot, INVOICE_FIELDS.shipping)
+  const shipping: Amount | null = shippingValue?.type !== 'money'
+    ? null
+    : shippingValue.money.currency !== currency
+      ? unknown({ fieldId: INVOICE_FIELDS.shipping, message: `Shipping is in ${shippingValue.money.currency}, but amounts are in ${currency}.` })
+      : { known: true, money: shippingValue.money }
 
-  return { currency, lines, subtotal, discount, taxableBase, tax, total, complete: total.known }
+  const parts = shipping ? [taxableBase, tax, shipping] : [taxableBase, tax]
+  const total: Amount = parts.every((p) => p.known)
+    ? { known: true, money: money(parts.reduce((t, p) => t + (p as { money: Money }).money.amountMinor, 0), currency) }
+    : unknown(...reasonsOf(...parts))
+
+  return { currency, lines, subtotal, discount, taxableBase, tax, shipping, total, complete: total.known }
 }

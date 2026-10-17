@@ -9,6 +9,7 @@
 import React, { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 
 import type { DocumentPlan } from '@/lib/documents/compose'
+import { isCommercialKind } from '@/lib/documents/invoice'
 import { paginate, type PagedDocument } from '@/lib/documents/layout/paginate'
 import { documentCssVariables, PAGE_SIZES } from '@/lib/documents/tokens'
 
@@ -79,7 +80,7 @@ export function PagedDocumentView({ plan, paged, showHints = false }: { plan: Do
     return (
       <div className={styles.emptyState} role="note">
         <p><strong>Nothing to lay out yet.</strong></p>
-        <p>This {plan.kind} has no fields and no content blocks, so there is no page to preview. Supply the {plan.kind === 'invoice' ? 'issuer, buyer, line items and currency' : 'title, summary and sections'} and the preview will build itself from them.</p>
+        <p>This {plan.kind} has no fields and no content blocks, so there is no page to preview. Supply the {isCommercialKind(plan.kind) ? 'issuer, buyer, line items and currency' : 'title, summary and sections'} and the preview will build itself from them.</p>
       </div>
     )
   }

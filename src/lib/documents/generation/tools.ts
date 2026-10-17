@@ -7,6 +7,7 @@
 import { z } from 'zod'
 
 import { ADAPTERS } from '../export/adapters'
+import { isCommercial } from '../invoice'
 import { capability, FORMAT_FILE } from '../export/capabilities'
 import { exportFilename } from '../export/filename'
 import type { ExportResources } from '../export/resources'
@@ -210,7 +211,7 @@ export async function reviseDocument(raw: unknown, ctx: ToolContext): Promise<To
   } catch (e) {
     return revisionError(ctx.store, e)
   }
-  if (base.kind !== 'invoice') return fail(ctx.store, { code: 'unsupported', message: `Revising a ${base.kind} through the generation tools is not supported yet.`, retryable: false })
+  if (!isCommercial(base)) return fail(ctx.store, { code: 'unsupported', message: `Revising a ${base.kind} through the generation tools is not supported yet.`, retryable: false })
   const invoice = base
 
   let gated: Extract<GateResult, { ok: true }>

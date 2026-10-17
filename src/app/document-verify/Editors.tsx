@@ -10,7 +10,7 @@ import React, { useEffect, useId, useRef, useState } from 'react'
 
 import { Button } from '@/components/Button'
 import { CURRENCIES } from '@/lib/documents/defaults'
-import { invoiceCurrency } from '@/lib/documents/invoice'
+import { invoiceCurrency, isCommercial } from '@/lib/documents/invoice'
 import type { Block, CurrencyCode, DocumentSnapshot, Field, FieldValue, InvoiceLineItem, TextRun } from '@/lib/documents/model'
 import { formatQuantity, parseMoneyInput } from '@/lib/documents/money'
 import type { BoundedEdit } from '@/lib/documents/revisions'
@@ -107,7 +107,7 @@ function parseField(field: Field, input: string, snapshot: DocumentSnapshot): Pa
     }
     case 'choice': return { ok: true, value: { type: 'choice', option: input } }
     case 'money': {
-      const currency = field.state.status === 'provided' && field.state.value.type === 'money' ? field.state.value.money.currency : snapshot.kind === 'invoice' ? invoiceCurrency(snapshot) : null
+      const currency = field.state.status === 'provided' && field.state.value.type === 'money' ? field.state.value.money.currency : isCommercial(snapshot) ? invoiceCurrency(snapshot) : null
       if (!currency) return { ok: false, message: 'Set the document currency before entering an amount.' }
       const r = parseMoneyInput(input, currency)
       return r.ok ? { ok: true, value: { type: 'money', money: r.money } } : r
@@ -141,7 +141,7 @@ export function FieldEditor({ field, snapshot, onSave, onClose }: { field: Field
 type LineProperty = 'description' | 'quantity' | 'unitPrice'
 
 export function LineItemEditor({ blockId, item, index, snapshot, onSave, onClose }: { blockId: string; item: InvoiceLineItem; index: number; snapshot: DocumentSnapshot; onSave: SaveEdit; onClose: () => void }) {
-  const currency = snapshot.kind === 'invoice' ? invoiceCurrency(snapshot) : null
+  const currency = isCommercial(snapshot) ? invoiceCurrency(snapshot) : null
   const [property, setProperty] = useState<LineProperty>('quantity')
   const initial = (p: LineProperty) => (p === 'description' ? item.description ?? '' : p === 'quantity' ? milliToInput(item.quantityMilli) : item.unitPrice ? minorToInput(item.unitPrice.amountMinor, item.unitPrice.currency) : '')
   const [input, setInput] = useState(() => initial('quantity'))

@@ -72,6 +72,10 @@ export type Store = {
   /** Default page size for its documents (assumed, D-73). */
   pageSize: 'a4-portrait' | 'letter-portrait'
   brand: BrandProfile
+  /** The store's own postal address, as it prints on its documents. Fictional. */
+  address: readonly string[]
+  /** The tax rate the store charges on sales, in basis points (0 when it charges none). */
+  taxRateBp: number
   products: Product[]
   customers: Customer[]
   orders: Order[]
@@ -128,6 +132,7 @@ type StoreSpec = {
   locale: string
   pageSize: Store['pageSize']
   brand: BrandProfile
+  address: readonly string[]
   skuPrefix: string
   orderPrefix: string
   /** [category, base titles, [min, max] price in major units] */
@@ -155,6 +160,8 @@ const SPECS: StoreSpec[] = [
     locale: 'en-IN',
     pageSize: 'a4-portrait',
     brand: SAFFRON_LOOM,
+    // The address Saffron Loom's fixture invoice already uses (fixtures/invoices.ts).
+    address: ['Plot 22, Weavers’ Colony', 'Bhuj, Gujarat 370001', 'India'],
     skuPrefix: 'SLT',
     orderPrefix: 'SL',
     catalog: [
@@ -182,6 +189,7 @@ const SPECS: StoreSpec[] = [
     locale: 'en-US',
     pageSize: 'letter-portrait',
     brand: FERNHILL_GOODS_BRAND,
+    address: ['Unit 4, 210 Alder Street', 'Asheville, NC 28801', 'United States'],
     skuPrefix: 'FHG',
     orderPrefix: 'FH',
     catalog: [
@@ -296,6 +304,8 @@ function makeStore(spec: StoreSpec): Store {
     locale: spec.locale,
     pageSize: spec.pageSize,
     brand: spec.brand,
+    address: spec.address,
+    taxRateBp: spec.taxRateBp,
     products,
     customers,
     orders,

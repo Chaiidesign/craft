@@ -25,6 +25,9 @@ export const StoreQuerySchema = z.discriminatedUnion('question', [
   z.object({ question: z.literal('top_products'), period: PeriodSchema, limit: z.number().int().min(1).max(20), rankBy: z.enum(['units', 'sales']).optional() }),
   z.object({ question: z.literal('low_stock') }),
   z.object({ question: z.literal('orders_by_status'), period: PeriodSchema }),
+  z.object({ question: z.literal('find_order'), orderNumber: z.string().min(1).max(40) }),
+  z.object({ question: z.literal('customer_orders'), customer: z.string().min(1).max(80), limit: z.number().int().min(1).max(20).optional() }),
+  z.object({ question: z.literal('find_products'), search: z.string().max(80).optional(), category: z.string().max(40).optional(), limit: z.number().int().min(1).max(60).optional() }),
 ])
 
 export type StoreQuery = z.infer<typeof StoreQuerySchema>
@@ -35,18 +38,22 @@ export type StoreQuery = z.infer<typeof StoreQuerySchema>
  * strictly against StoreQuerySchema, per question.
  */
 export const StoreToolInputSchema = z.object({
-  question: z.enum(['sales_summary', 'sales_by_month', 'sales_by_week', 'top_products', 'low_stock', 'orders_by_status']),
+  question: z.enum(['sales_summary', 'sales_by_month', 'sales_by_week', 'top_products', 'low_stock', 'orders_by_status', 'find_order', 'customer_orders', 'find_products']),
   period: PeriodSchema.optional().describe('Needed for sales_summary, top_products and orders_by_status; optional for sales_by_month.'),
   weeks: z.number().int().min(1).max(26).optional().describe('sales_by_week only.'),
   limit: z.number().int().min(1).max(20).optional().describe('top_products only.'),
   rankBy: z.enum(['units', 'sales']).optional().describe('top_products only; default units.'),
+  orderNumber: z.string().min(1).max(40).optional().describe('find_order only: the order number, e.g. FH-01042.'),
+  customer: z.string().min(1).max(80).optional().describe('customer_orders only: the customer’s name, or part of it.'),
+  search: z.string().max(80).optional().describe('find_products only: words in the product title or its SKU.'),
+  category: z.string().max(40).optional().describe('find_products only.'),
 })
 
 /** JSON Schema for the tool's input (D-66: offered, not forced). */
 export const STORE_TOOL = {
   name: 'ask_store',
   description:
-    'Ask the connected store one question and get exact figures back. Periods: last_week (the last full Monday–Sunday week), last_month, last_3_months, last_quarter, this_year (1 January to today), last_12_months, or { from, to } as YYYY-MM-DD. Only fulfilled orders count as sales.',
+    'Ask the connected store one question and get exact figures back. Periods: last_week (the last full Monday–Sunday week), last_month, last_3_months, last_quarter, this_year (1 January to today), last_12_months, or { from, to } as YYYY-MM-DD. Only fulfilled orders count as sales. find_order gives one order in full; customer_orders lists a customer’s most recent orders; find_products searches the catalogue (titles, SKUs, prices, stock) and lists every product when given no search.',
   input_schema: z.toJSONSchema(StoreToolInputSchema) as Record<string, unknown>,
 }
 
@@ -123,6 +130,25 @@ function summary(store: Store, s: SalesSummary) {
   }
 }
 
+const plain = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+
+function orderDetail(store: Store, o: Store['orders'][number]) {
+  const customer = store.customers.find((c) => c.id === o.customerId)
+  return {
+    orderNumber: o.number,
+    date: o.date,
+    status: o.status,
+    customer: customer ? { name: customer.name, city: customer.city, country: customer.country } : null,
+    lines: o.lines.map((l) => ({ sku: l.sku, title: l.title, quantity: l.quantity, unitPrice: money(store, l.unitPriceMinor), lineTotal: money(store, l.lineTotalMinor) })),
+    subtotal: money(store, o.subtotalMinor),
+    discount: money(store, o.discountMinor),
+    shipping: money(store, o.shippingMinor),
+    tax: money(store, o.taxMinor),
+    taxRatePercent: o.taxRateBp / 100,
+    total: money(store, o.totalMinor),
+  }
+}
+
 /** Answers one store question. The result is plain JSON the model reads. */
 export function askStore(store: Store, query: StoreQuery, today = ANCHOR_DATE): Record<string, unknown> {
   const base = { store: store.name, currency: store.currency, today, sampleData: true }
@@ -180,6 +206,36 @@ export function askStore(store: Store, query: StoreQuery, today = ANCHOR_DATE): 
       const orders = store.orders.filter((o) => o.date >= p.from && o.date <= p.to)
       const count = (status: string) => orders.filter((o) => o.status === status).length
       return { ...base, period: p, totalOrders: orders.length, fulfilled: orders.filter(countsAsSale).length, refunded: count('refunded'), cancelled: count('cancelled') }
+    }
+    case 'find_order': {
+      // "FH-01042", "fh01042" or just "1042" (digits alone match the number part).
+      const key = (t: string) => t.toUpperCase().replace(/[^A-Z0-9]/g, '')
+      const digitsOnly = /^\d+$/.test(key(query.orderNumber))
+      const order = store.orders.find((o) => key(o.number) === key(query.orderNumber) || (digitsOnly && Number(o.number.replace(/\D/g, '')) === Number(key(query.orderNumber))))
+      if (!order) return { ...base, found: false, orderNumber: query.orderNumber, note: `There is no order ${query.orderNumber}. Order numbers look like ${store.orders[0].number} to ${store.orders[store.orders.length - 1].number}.` }
+      return { ...base, found: true, order: orderDetail(store, order) }
+    }
+    case 'customer_orders': {
+      const wanted = plain(query.customer)
+      const matches = store.customers.filter((c) => plain(c.name).includes(wanted))
+      const ids = new Set(matches.map((c) => c.id))
+      const orders = store.orders.filter((o) => ids.has(o.customerId)).sort((a, b) => b.date.localeCompare(a.date) || b.number.localeCompare(a.number))
+      return {
+        ...base,
+        customersMatched: matches.map((c) => c.name),
+        orders: orders.slice(0, query.limit ?? 5).map((o) => ({ orderNumber: o.number, date: o.date, status: o.status, customer: store.customers.find((c) => c.id === o.customerId)?.name, total: money(store, o.totalMinor) })),
+      }
+    }
+    case 'find_products': {
+      const words = query.search ? plain(query.search).split(' ').filter(Boolean) : []
+      const rows = store.products.filter((p) => (!query.category || plain(p.category) === plain(query.category)) && words.every((w) => plain(`${p.title} ${p.sku}`).includes(w)))
+      const limit = query.limit ?? 20
+      return {
+        ...base,
+        matched: rows.length,
+        products: rows.slice(0, limit).map((p) => ({ sku: p.sku, title: p.title, category: p.category, price: money(store, p.priceMinor), inStock: p.stock })),
+        ...(rows.length > limit ? { note: `Showing ${limit} of ${rows.length}. Narrow the search or raise the limit (up to 60).` } : {}),
+      }
     }
   }
 }

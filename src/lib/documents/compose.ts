@@ -11,11 +11,12 @@
 
 import { BRIEF_FIELDS } from './brief'
 import { describeFieldState, formatDate, formatFieldValue } from './display'
-import { computeInvoiceTotals, INVOICE_FIELDS as F, type Amount } from './invoice'
+import { computeInvoiceTotals, INVOICE_FIELDS as F, isCommercial, type Amount } from './invoice'
 import type { Block, BriefSnapshot, CalloutTone, ChartSeries, Citation, DocumentSnapshot, Field, FieldId, ImageAsset, InvoiceSnapshot, Money, TableColumn, TextRun } from './model'
 import { formatMoney, formatPercent, formatQuantity } from './money'
 import { contentWidthPt, type PrintTypeKey } from './tokens'
 import { isUnbranded } from './templates/brand'
+import { templateFor } from './templates/invoice'
 import { validateSnapshot, type Readiness } from './validation'
 
 // ── Plan types ───────────────────────────────────────────────────────────────
@@ -168,7 +169,7 @@ function footer(identification: string): PlanNode {
   return { primitive: 'page-footer', id: 'footer', identification, pageLabel: 'Page {n} of {total}' }
 }
 
-// ── Invoice template (invoice@1) ─────────────────────────────────────────────
+// ── Invoice template (invoice@1) and the kinds built like it ─────────────────
 
 const INVOICE_BLOCK_ROLES: Readonly<Record<string, string>> = {
   'blk-parties': 'Parties: letterhead + From/Bill to',
@@ -192,6 +193,9 @@ function withoutReasons(v: PlanValue): PlanValue {
 
 function composeInvoice(snapshot: InvoiceSnapshot, audience: Audience, readiness: Readiness): Pick<DocumentPlan, 'nodes' | 'placedBlockIds' | 'excludedBlocks'> {
   const { locale, fields } = snapshot
+  const t = templateFor(snapshot.kind)
+  // Fields added after invoice@1 was first made (shipping, order, paid by) are left out when a document doesn't have them.
+  const own = (ids: readonly string[]) => ids.filter((id) => id in fields || !LATER_FIELDS.has(id))
   const totals = computeInvoiceTotals(snapshot)
   const nodes: PlanNode[] = [...letterhead(snapshot)]
   const placed: string[] = []
@@ -201,9 +205,9 @@ function composeInvoice(snapshot: InvoiceSnapshot, audience: Audience, readiness
   nodes.push({
     primitive: 'title-block',
     id: 'title',
-    title: { kind: 'text', text: 'Invoice', style: 'title' },
-    reference: { label: numberField?.label ?? 'Invoice number', value: fieldValue(snapshot, numberField, F.number, 'reference') },
-    meta: entries(snapshot, [F.issueDate, F.dueDate], () => 'label'),
+    title: { kind: 'text', text: t.title, style: 'title' },
+    reference: { label: numberField?.label ?? `${t.title} number`, value: fieldValue(snapshot, numberField, F.number, 'reference') },
+    meta: entries(snapshot, own(t.meta), () => 'label'),
     draft: readiness === 'ready' ? null : DRAFT_TEXT[readiness],
   })
 
@@ -218,16 +222,16 @@ function composeInvoice(snapshot: InvoiceSnapshot, audience: Audience, readiness
       continue
     }
     if (!(block.id in INVOICE_BLOCK_ROLES)) {
-      excluded.push({ blockId: block.id, reason: `invoice@1 has no slot for a ${block.type} block.` })
+      excluded.push({ blockId: block.id, reason: `${snapshot.templateId} has no slot for a ${block.type} block.` })
       continue
     }
     placed.push(block.id)
     switch (block.id) {
       case 'blk-parties':
-        nodes.push({ primitive: 'key-value-group', id: 'parties', layout: 'parties', entries: entries(snapshot, [F.issuerName, F.issuerAddress, F.buyerName, F.buyerAddress]) })
+        nodes.push({ primitive: 'key-value-group', id: 'parties', layout: 'parties', entries: entries(snapshot, t.parties) })
         break
       case 'blk-details':
-        nodes.push({ primitive: 'key-value-group', id: 'details', title: 'Invoice details', layout: 'columns', entries: entries(snapshot, [F.poNumber, F.currency], (f) => (f?.valueType === 'currency' || f?.id === F.poNumber ? 'reference' : 'fieldValue')) })
+        nodes.push({ primitive: 'key-value-group', id: 'details', title: t.detailsTitle, layout: 'columns', entries: entries(snapshot, own(t.details), (f) => (f?.valueType === 'currency' || f?.id === F.poNumber || f?.id === F.orderNumber ? 'reference' : 'fieldValue')) })
         break
       case 'blk-lines': {
         if (block.type !== 'line-items') break
@@ -250,21 +254,26 @@ function composeInvoice(snapshot: InvoiceSnapshot, audience: Audience, readiness
         break
       }
       case 'blk-totals':
-        nodes.push(invoiceTotals(snapshot, totals))
+        nodes.push(invoiceTotals(snapshot, totals, t.grandTotal))
         break
-      case 'blk-payment':
-        nodes.push({ primitive: 'key-value-group', id: 'payment', title: 'Payment', layout: 'stack', entries: entries(snapshot, [F.paymentTerms]), keepWithPrevious: true })
+      case 'blk-payment': {
+        const terms = entries(snapshot, own(t.terms))
+        // An optional terms field left empty leaves no empty block behind.
+        if (t.termsTitle && terms.length > 0) nodes.push({ primitive: 'key-value-group', id: 'payment', title: t.termsTitle, layout: 'stack', entries: terms, keepWithPrevious: true })
         break
+      }
       // blk-adjustments: its fields are shown inside the totals rows they affect.
     }
   }
 
-  const number = numberField?.state.status === 'provided' ? formatFieldValue(numberField.state.value, locale) : 'Invoice (number missing)'
+  const number = numberField?.state.status === 'provided' ? formatFieldValue(numberField.state.value, locale) : t.numberMissing
   nodes.push(footer([issuerLabel(snapshot), number].filter(Boolean).join(' · ')))
   return { nodes, placedBlockIds: placed, excludedBlocks: excluded }
 }
 
-function invoiceTotals(snapshot: InvoiceSnapshot, totals: ReturnType<typeof computeInvoiceTotals>): PlanNode {
+const LATER_FIELDS = new Set<string>([F.shipping, F.orderNumber, F.paymentMethod])
+
+function invoiceTotals(snapshot: InvoiceSnapshot, totals: ReturnType<typeof computeInvoiceTotals>, grandTotal: string): PlanNode {
   const { locale, fields } = snapshot
   const rows: TotalsRow[] = [{ id: 'subtotal', label: 'Subtotal', value: amountValue(totals.subtotal, locale, 'amount') }]
 
@@ -289,8 +298,10 @@ function invoiceTotals(snapshot: InvoiceSnapshot, totals: ReturnType<typeof comp
     rows.push({ id: 'tax', label: `Tax${rate}`, value: taxRate?.state.status === 'missing' ? { kind: 'missing', fieldId: F.taxRate, label: taxRate.label, required: true } : amountValue(totals.tax, locale, 'amount') })
   }
 
+  if (totals.shipping) rows.push({ id: 'shipping', label: fields[F.shipping]?.label ?? 'Shipping', value: amountValue(totals.shipping, locale, 'amount') })
+
   const grand: TotalsRow = totals.total.known
-    ? { id: 'total', label: 'Total due', value: amountValue(totals.total, locale, 'grandTotal') }
+    ? { id: 'total', label: grandTotal, value: amountValue(totals.total, locale, 'grandTotal') }
     : { id: 'total', label: 'Total', value: { kind: 'unknown', text: 'Incomplete — not a final amount', reasons: totals.total.reasons.map((r) => r.message), style: 'tableHeader' } }
   return { primitive: 'totals', id: 'totals', rows, grand, complete: totals.complete }
 }
@@ -403,7 +414,7 @@ export function composeDocument(snapshot: DocumentSnapshot, options: ComposeOpti
     return { kind: snapshot.kind, themeId: snapshot.brand.themeId, layoutPreset: snapshot.layoutPreset, palette: snapshot.brand.palette, locale: snapshot.locale, readiness, audience, empty: true, nodes: [], placedBlockIds: [], excludedBlocks: [] }
   }
   let body
-  if (snapshot.kind === 'invoice') body = composeInvoice(snapshot, audience, readiness)
+  if (isCommercial(snapshot)) body = composeInvoice(snapshot, audience, readiness)
   else if (snapshot.kind === 'brief') body = composeBrief(snapshot, audience, readiness)
   else throw new UnsupportedTemplateError('Decks have no page template: derive one with deriveDeck() and lay it out with layoutDeck().')
   return {

@@ -119,9 +119,98 @@ describe('the output loop', () => {
   })
 })
 
+describe('strict documents in the loop', () => {
+  let n = 0
+  const env = { now: () => '2026-09-30T10:00:00.000Z', nextId: (p: string) => `${p}-t${++n}` }
+  const order = store.orders.find((o) => o.status === 'fulfilled')!
+
+  it('makes a receipt from an order, says what it is making, and returns the new version', async () => {
+    const { call, seen } = scripted(
+      [{ type: 'tool_use', name: 'read_guide', input: { type: 'strict_document' } }],
+      [{ type: 'tool_use', name: 'create_strict_document', input: { type: 'receipt', fromOrder: order.number, followUp: 'What receipt number should it have?' } }],
+    )
+    const events: string[] = []
+    const r = await runTurn(base(call, { request: `Receipt for order ${order.number}`, env, onEvent: (e) => e.type === 'progress' && events.push(e.label) }))
+    expect(r.made).toMatchObject({ kind: 'document', docKind: 'receipt', version: 1, created: true, followUp: 'What receipt number should it have?' })
+    expect(events).toContain('Making your receipt')
+    expect(r.revisions?.revisions.size).toBe(1)
+    expect(seen).toHaveLength(2)
+  })
+
+  it('a document is made only after its guide is read', async () => {
+    const { call } = scripted(
+      [{ type: 'tool_use', name: 'create_strict_document', input: { type: 'receipt', fromOrder: order.number } }],
+      [{ type: 'tool_use', name: 'read_guide', input: { type: 'strict_document' } }],
+      [{ type: 'tool_use', name: 'create_strict_document', input: { type: 'receipt', fromOrder: order.number } }],
+    )
+    expect((await runTurn(base(call, { env }))).made.kind).toBe('document')
+  })
+
+  it('sends gate errors back once, then gives an honest error and saves nothing', async () => {
+    const bad = { type: 'quote', products: [{ sku: 'NOPE-1', quantity: 1 }] }
+    const { call, seen } = scripted(
+      [{ type: 'tool_use', name: 'read_guide', input: { type: 'strict_document' } }],
+      [{ type: 'tool_use', name: 'create_strict_document', input: bad }],
+      [{ type: 'tool_use', name: 'create_strict_document', input: bad }],
+    )
+    const r = await runTurn(base(call, { env }))
+    expect(r.made.kind).toBe('error')
+    expect(r.revisions).toBeUndefined()
+    expect(JSON.stringify(seen[2].messages)).toContain('no product with SKU NOPE-1')
+  })
+
+  it('a follow-up changes the current document; its digests are in the context', async () => {
+    const first = await runTurn(base(scripted(
+      [{ type: 'tool_use', name: 'read_guide', input: { type: 'strict_document' } }],
+      [{ type: 'tool_use', name: 'create_strict_document', input: { type: 'receipt', fromOrder: order.number } }],
+    ).call, { env }))
+    if (first.made.kind !== 'document') throw new Error('no document')
+    const documents = { revisions: first.revisions!, current: first.made.outputId }
+    const { call, seen } = scripted(
+      [{ type: 'tool_use', name: 'update_document', input: { operations: [{ op: 'setField', fieldId: 'invoice.number', value: { type: 'text', text: 'R-77' }, provenance: { source: 'prompt', evidence: 'number it R-77' }, expectedDigest: 'deadbeef' }] } }],
+      [{ type: 'tool_use', name: 'update_document', input: { operations: [] } }],
+    )
+    const r = await runTurn(base(call, { request: 'Number it R-77', env, documents }))
+    expect(seen[0].system[1].text).toContain('Made earlier in this conversation: a receipt, now at version 1')
+    expect(JSON.stringify(seen[1].messages)).toContain('has changed since it was read')
+    expect(r.made.kind).toBe('error')
+  })
+
+  it('exports the version asked for, and refuses a format the kind has no export for', async () => {
+    const first = await runTurn(base(scripted(
+      [{ type: 'tool_use', name: 'read_guide', input: { type: 'strict_document' } }],
+      [{ type: 'tool_use', name: 'create_strict_document', input: { type: 'receipt', fromOrder: order.number } }],
+    ).call, { env }))
+    if (first.made.kind !== 'document') throw new Error('no document')
+    const documents = { revisions: first.revisions!, current: first.made.outputId }
+    const pdf = await runTurn(base(scripted([{ type: 'tool_use', name: 'export_version', input: { format: 'PDF' } }]).call, { request: 'Make it a PDF', env, documents }))
+    expect(pdf.made).toMatchObject({ kind: 'export', format: 'pdf', version: 1, revisionId: first.made.revisionId })
+    const { call, seen } = scripted(
+      [{ type: 'tool_use', name: 'export_version', input: { format: 'PowerPoint' } }],
+      [{ type: 'tool_use', name: 'show_format_options', input: { thing: 'strict_document', requestedFormat: 'PowerPoint', offered: ['PDF', 'Word'], message: 'A receipt can’t be slides; it can be a PDF or Word file.' } }],
+    )
+    const slides = await runTurn(base(call, { request: 'As slides', env, documents }))
+    expect(JSON.stringify(seen[1].messages)).toContain('show_format_options')
+    expect(slides.made.kind).toBe('format-options')
+  })
+
+  it('a policy is coming later', async () => {
+    const { call } = scripted(
+      [{ type: 'tool_use', name: 'read_guide', input: { type: 'strict_document' } }],
+      [{ type: 'tool_use', name: 'create_strict_document', input: { type: 'other', summary: 'A returns policy' } }],
+    )
+    expect((await runTurn(base(call, { env }))).made).toEqual({ kind: 'coming-later', lane: 'strict_document', summary: 'A returns policy' })
+  })
+})
+
 describe('progress labels', () => {
   it('never use system words', () => {
-    const labels = new Set([progressLabel('ask_store', {}), ...LANES.map((l) => progressLabel('read_guide', { type: l })), ...Object.keys(TERMINAL).map((t) => progressLabel(t, {}))])
+    const labels = new Set([
+      progressLabel('ask_store', {}), ...LANES.map((l) => progressLabel('read_guide', { type: l })), ...Object.keys(TERMINAL).map((t) => progressLabel(t, {})),
+      ...['invoice', 'quote', 'purchase-order', 'receipt'].map((type) => progressLabel('create_strict_document', { type })),
+      progressLabel('update_document', {}, 'quote'), progressLabel('export_version', {}, 'purchase order'),
+    ])
+    expect(labels).toContain('Making your purchase order')
     for (const l of labels) expect(findForbiddenWords(l), l).toEqual([])
   })
 })

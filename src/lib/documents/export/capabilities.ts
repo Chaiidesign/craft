@@ -18,9 +18,14 @@ export type Capability = { supported: true } | { supported: false; reason: strin
 
 const NO_SLIDES = 'Invoices and briefs have no slide format.'
 const DECK_ONLY = 'Decks export as PowerPoint or PDF.'
+const NO_SLIDES_FAMILY = 'Quotes, purchase orders and receipts have no slide format.'
+const PAGES_ONLY: Record<ExportFormat, Capability> = { pdf: { supported: true }, docx: { supported: true }, pptx: { supported: false, reason: NO_SLIDES_FAMILY } }
 
 const TABLE: Record<DocumentKind, Record<ExportFormat, Capability>> = {
   invoice: { pdf: { supported: true }, docx: { supported: true }, pptx: { supported: false, reason: NO_SLIDES } },
+  quote: PAGES_ONLY,
+  'purchase-order': PAGES_ONLY,
+  receipt: PAGES_ONLY,
   brief: { pdf: { supported: true }, docx: { supported: true }, pptx: { supported: false, reason: NO_SLIDES } },
   deck: { pptx: { supported: true }, pdf: { supported: true }, docx: { supported: false, reason: DECK_ONLY } },
 }

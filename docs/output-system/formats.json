@@ -89,7 +89,7 @@
       "label": "Strict document",
       "status": "built",
       "built": {
-        "covers": "Invoices",
+        "covers": "Invoices, quotes, purchase orders and receipts",
         "engineKind": "invoice",
         "exports": [
           {
@@ -109,9 +109,8 @@
       },
       "planned": {
         "types": [
-          "quote",
-          "purchase order",
-          "receipt",
+          "credit note",
+          "packing slip",
           "returns policy"
         ],
         "formats": [

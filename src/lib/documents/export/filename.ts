@@ -4,7 +4,7 @@
 
 import { BRIEF_FIELDS } from '../brief'
 import { formatFieldValue } from '../display'
-import { INVOICE_FIELDS } from '../invoice'
+import { INVOICE_FIELDS, isCommercial } from '../invoice'
 import type { DocumentSnapshot, ExportFormat, RevisionId } from '../model'
 import { FORMAT_FILE } from './capabilities'
 
@@ -38,8 +38,8 @@ function provided(snapshot: DocumentSnapshot, fieldId: string): string | null {
 export function exportFilename(snapshot: DocumentSnapshot, format: ExportFormat, version: number, revisionId: RevisionId): string {
   // An unbranded document (D-61) names its issuer only in the issuer field, if at all.
   const issuer = slug(snapshot.brand.issuerDisplayName || provided(snapshot, INVOICE_FIELDS.issuerName) || '', false) || 'issuer'
-  const number = snapshot.kind === 'invoice' ? provided(snapshot, INVOICE_FIELDS.number) : null
-  const title = snapshot.kind === 'invoice' ? null : provided(snapshot, BRIEF_FIELDS.title)
+  const number = isCommercial(snapshot) ? provided(snapshot, INVOICE_FIELDS.number) : null
+  const title = isCommercial(snapshot) ? null : provided(snapshot, BRIEF_FIELDS.title)
   const what = (number ? slug(number, true) : title ? slug(title, false) : '') || snapshot.kind
   return `${issuer}_${what}_v${version}_${shortRevisionId(revisionId)}.${FORMAT_FILE[format].extension}`
 }

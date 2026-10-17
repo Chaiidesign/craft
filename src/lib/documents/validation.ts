@@ -11,7 +11,7 @@
 
 import { BRIEF_FIELDS } from './brief'
 import { CURRENCIES } from './defaults'
-import { computeInvoiceTotals, INVOICE_FIELDS } from './invoice'
+import { computeInvoiceTotals, INVOICE_FIELDS, isCommercial, KIND_NOUN } from './invoice'
 import type {
   BlockId,
   CitationId,
@@ -110,8 +110,8 @@ function valueProblems(field: Field, snapshot: DocumentSnapshot): string[] {
     }
     case 'money': {
       if (!Number.isSafeInteger(value.money.amountMinor)) return ['Amount must be an integer number of minor units.']
-      const currency = snapshot.kind === 'invoice' ? choiceCurrency(snapshot) : undefined
-      return currency && value.money.currency !== currency ? [`Amount is in ${value.money.currency}; this invoice is in ${currency}.`] : []
+      const currency = isCommercial(snapshot) ? choiceCurrency(snapshot) : undefined
+      return currency && isCommercial(snapshot) && value.money.currency !== currency ? [`Amount is in ${value.money.currency}; this ${KIND_NOUN[snapshot.kind]} is in ${currency}.`] : []
     }
   }
 }
@@ -122,8 +122,13 @@ function choiceCurrency(snapshot: DocumentSnapshot): string | undefined {
 }
 
 /** Fields a template cannot do without. A fixture may add more required fields, never fewer. */
+const COMMERCIAL_CORE: readonly FieldId[] = [INVOICE_FIELDS.issuerName, INVOICE_FIELDS.buyerName, INVOICE_FIELDS.number, INVOICE_FIELDS.issueDate, INVOICE_FIELDS.currency, INVOICE_FIELDS.taxApplicability]
+
 export const TEMPLATE_CORE_FIELDS: Readonly<Record<DocumentSnapshot['kind'], readonly FieldId[]>> = {
-  invoice: [INVOICE_FIELDS.issuerName, INVOICE_FIELDS.buyerName, INVOICE_FIELDS.number, INVOICE_FIELDS.issueDate, INVOICE_FIELDS.currency, INVOICE_FIELDS.taxApplicability],
+  invoice: COMMERCIAL_CORE,
+  quote: COMMERCIAL_CORE,
+  'purchase-order': COMMERCIAL_CORE,
+  receipt: COMMERCIAL_CORE,
   brief: [BRIEF_FIELDS.title, BRIEF_FIELDS.audience],
   deck: [],
 }
@@ -186,10 +191,11 @@ export function validateSnapshot(snapshot: DocumentSnapshot): ValidationReport {
 
   // Applicability fields say a rate is needed; a rate marked N/A then contradicts them (caught above).
   // Here: a rate supplied while applicability says it doesn't apply is a contradiction too.
-  if (snapshot.kind === 'invoice') {
+  if (isCommercial(snapshot)) {
+    const noun = KIND_NOUN[snapshot.kind]
     const pairs: [FieldId, FieldId, string, string][] = [
-      [INVOICE_FIELDS.taxApplicability, INVOICE_FIELDS.taxRate, 'exempt', 'A tax rate is supplied, but the invoice is marked tax-exempt.'],
-      [INVOICE_FIELDS.discountApplicability, INVOICE_FIELDS.discountRate, 'none', 'A discount rate is supplied, but the invoice is marked as having no discount.'],
+      [INVOICE_FIELDS.taxApplicability, INVOICE_FIELDS.taxRate, 'exempt', `A tax rate is supplied, but the ${noun} is marked tax-exempt.`],
+      [INVOICE_FIELDS.discountApplicability, INVOICE_FIELDS.discountRate, 'none', `A discount rate is supplied, but the ${noun} is marked as having no discount.`],
     ]
     for (const [applicabilityId, rateId, offOption, message] of pairs) {
       if (choiceOf(snapshot, applicabilityId) === offOption && snapshot.fields[rateId]?.state.status === 'provided') {
@@ -201,7 +207,9 @@ export function validateSnapshot(snapshot: DocumentSnapshot): ValidationReport {
     const due = snapshot.fields[INVOICE_FIELDS.dueDate]?.state
     if (issue?.status === 'provided' && due?.status === 'provided' && issue.value.type === 'date' && due.value.type === 'date'
       && isRealDate(issue.value.iso) && isRealDate(due.value.iso) && due.value.iso < issue.value.iso) {
-      addFieldIssue(INVOICE_FIELDS.dueDate, 'warning', 'Due date is before the invoice date.', 'due-before-issue')
+      const dueLabel = snapshot.fields[INVOICE_FIELDS.dueDate]?.label ?? 'Due date'
+      const issueLabel = snapshot.fields[INVOICE_FIELDS.issueDate]?.label ?? 'Invoice date'
+      addFieldIssue(INVOICE_FIELDS.dueDate, 'warning', `${dueLabel} is before the ${issueLabel.charAt(0).toLowerCase()}${issueLabel.slice(1)}.`, 'due-before-issue')
     }
   }
 
@@ -256,8 +264,8 @@ export function validateSnapshot(snapshot: DocumentSnapshot): ValidationReport {
           else if (!item.description.trim()) issues.push({ id: `line:${item.id}:description`, severity: 'error', target, message: 'Line item has no description.' })
           if (!Number.isSafeInteger(item.quantityMilli) || item.quantityMilli <= 0) issues.push({ id: `line:${item.id}:quantity`, severity: 'error', target, message: 'Quantity must be greater than zero.' })
           if (item.unitPrice === null) issues.push({ id: `line:${item.id}:price`, severity: 'missing', target, message: `Unit price for ${lineName(item, index)} has not been supplied.` })
-          else if (snapshot.kind === 'invoice' && choiceCurrency(snapshot) && item.unitPrice.currency !== choiceCurrency(snapshot)) {
-            issues.push({ id: `line:${item.id}:currency`, severity: 'error', target, message: `Priced in ${item.unitPrice.currency}; this invoice is in ${choiceCurrency(snapshot)}.` })
+          else if (isCommercial(snapshot) && choiceCurrency(snapshot) && item.unitPrice.currency !== choiceCurrency(snapshot)) {
+            issues.push({ id: `line:${item.id}:currency`, severity: 'error', target, message: `Priced in ${item.unitPrice.currency}; this ${KIND_NOUN[snapshot.kind]} is in ${choiceCurrency(snapshot)}.` })
           }
         }
         break
@@ -277,7 +285,7 @@ export function validateSnapshot(snapshot: DocumentSnapshot): ValidationReport {
   }
 
   // ── Derived totals ──
-  if (snapshot.kind === 'invoice') {
+  if (isCommercial(snapshot)) {
     const totalsBlock = snapshot.blocks.find((b) => b.type === 'totals')
     const totals = computeInvoiceTotals(snapshot)
     if (totalsBlock && !totals.total.known) {

@@ -92,7 +92,18 @@ Updated 2026-10-17.
 - **Total row:** the PDF data export has none yet.
 - **Message card:** not built yet.
 
-**Next: Session 2 (strict documents),** in a new conversation. Start with: "Read docs/output-system/build-loop.md and docs/progress.md, then run the next session." Dev server: `OUTPUT_BUILD_SESSION=2 npx next dev --webpack -p 4011` in `~/craft-output`.
+**Session 2 (Strict documents): in progress.** Started in the same conversation as Session 1, at the designer's request. Dev server: `OUTPUT_BUILD_SESSION=2 npx next dev --webpack -p 4011` in `~/craft-output`.
+
+Plan:
+1. **Engine:** quote, purchase order and receipt join the invoice as kinds of the same template family. Each kind has its own title, labels, required fields and totals wording. An optional shipping charge is added after tax, the way the sample orders work. The invoice's own output stays the same; its tests are the check.
+2. **Store lookups:** `ask_store` gains an order lookup and a product lookup (this also covers r25).
+3. **Store values are copied, never typed:** the model names an order number or product SKUs, and the document is filled from the sample data with "store" as the source. Anything else must quote the request, as before. Store address facts are added to the sample stores.
+4. **The strict-document tool becomes real:** gated with one retry; follow-ups revise the current version with digests; exports through the existing PDF and Word exporters, of the selected version.
+5. **/output-verify:** a document card with the preview, version, what is missing, version history and export buttons.
+6. **Evals:** `evals/strict.jsonl`, covering the right kind, numbers matching the store, nothing invented, follow-ups changing only what was asked, and exports of the selected version. Then routing re-checked (34 of 34) and app routing.
+7. **Look** at 390 and 1280 px and at every exported page; gallery; report.
+
+Order: the quote end to end first, then the purchase order and receipt, then the invoice from an order.
 
 ## In progress: output system Phase 1 (Foundations), branch `feat/output-system-foundations`
 
