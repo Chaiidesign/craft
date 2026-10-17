@@ -29,6 +29,36 @@ Checks at Step 7 (final code): typecheck, lint and production build clean; 1,421
 - **Word and PowerPoint in Microsoft's own apps are unverified.** Neither is installed here. Word files were checked only in Apple Pages and PowerPoint files only in Apple Keynote, which both substitute Helvetica; differences are in the feature README's "Unsupported and unverified".
 - **Known limitations and debt:** listed in the feature README (including generated files kept in memory until the page closes).
 
+## In progress: output system Phase 1 (Foundations), branch `feat/output-system-foundations`
+
+Updated 2026-10-17.
+- **Plan:** [output-system/plan.md](output-system/plan.md), updated by Chaitanya with the router change (D-72).
+- **Report:** [reports/output-system-phase-1.md](reports/output-system-phase-1.md).
+- **Decisions:**
+  - D-68 to D-70: proposed
+  - D-72: router change, approved
+  - D-73: guide rules beyond the plan, assumed
+  - D-71 is left for S1.
+- **Branch:** stacked on `feat/chat-document-flow` (D-68).
+
+**What works:**
+- the system prompt, version 2 (the updated plan's draft, word for word)
+- `tokens.json`, generated from the engine
+- nine guides
+- 30 eval requests
+- the routing harness: `npx vite-node scripts/output-system/route-eval.ts -- --env-file <path to .env.local>`
+- 30 tests in `src/lib/output-system/`
+
+**Scores:**
+- **Phase 1 baseline (prompt version 1):** 30, 29 and 29 of 30. The miss was r29.
+- **After D-72 (prompt version 2):** 30, 30 and 30 of 30. This is weak evidence, because the share-this rule quotes r29 (see the report).
+- **Gate:** at least 27 of 30, passed in every run.
+
+**Next:**
+- Chaitanya adds `evals/heldout.jsonl` (about 20 requests). Run it three times, and never tune against it.
+- Chaitanya decides on the four gap fixes in the report.
+- Phase 2 does not start until the held-out set passes.
+
 ## In progress: chat → document flow (S1), branch `feat/chat-document-flow`
 
 Plan: prompt in chat → validated document → refine in conversation → export, agent-first (decisions D-49 to D-62). S1 is the invoice end to end with the real model on a hosted preview (D-54).

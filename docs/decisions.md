@@ -8,6 +8,108 @@ Status is **approved** unless marked otherwise. When a later decision replaces a
 
 ---
 
+## Output system, Phase 1: Foundations (branch `feat/output-system-foundations`)
+
+The plan is [output-system/plan.md](output-system/plan.md) (Chaitanya, 2026-10-17): nine output lanes, a ten-question router, one guide per lane, design tokens and an eval set, built in five gated phases. This branch is Phase 1 only. D-68 to D-70 were made during the build and are **proposed** until Chaitanya approves them. D-71 is left for S1's next decision.
+
+### D-73 · 2026-10-17 · Guide rules that go beyond the plan are assumed
+**Status: assumed.** Chaitanya asked for these to be marked as assumptions, not decisions. They hold until the plan's open questions are answered, and each guide still states them as rules so it reads cleanly. Changing one means editing the guides it appears in and this entry.
+
+| Assumed rule | Where it appears | Open question it waits on |
+|---|---|---|
+| A design opens in an editor, where the person can move and adjust things | `guides/design.md` | plan.md: can people edit directly, or only through chat? |
+| The store's brand (logo, colours, fonts) comes from the store and applies to everything | every guide | plan.md: is brand set per store, and where does it come from (Shopify theme, an upload, manual setup)? |
+| Dashboards read live store data each time they open | `guides/dashboard.md` | plan.md: which store data can be read (catalog, orders, customers)? |
+| Status is **Draft** until every required fact is there, then **Ready** | `guides/strict-document.md`, `design.md`, `file.md` | concept map, Round 1 (readiness): not yet answered |
+| Page size is A4 or US Letter, chosen by the store's country | `guides/strict-document.md`, `file.md` | not in the plan or the engine. The baseline run used US Letter every time. |
+
+### D-72 · 2026-10-17 · Router change: a named format decides delivery, not kind
+**Status: approved** (Chaitanya, 2026-10-17, by updating `docs/output-system/plan.md`). It takes Phase 1 proposals 1 to 4 from [reports/output-system-phase-1.md](reports/output-system-phase-1.md) into the plan.
+
+**Problem.** Under the original router:
+- Step 2 sent any named file format to File, before the strict-document step. So "purchase order as a PDF" lost the fixed layout and exact totals.
+- Step 2 also contradicted the plan's own "make it a PDF exports the current version" rule.
+- "Share this with my team" about a chat reply went to a message card in 2 of 3 baseline runs (r29), because the share-this rule was in the plan but not in the prompt.
+
+**Rule** (the plan's router and draft prompt, word for word in `docs/output-system/system-prompt.md`, version 2):
+- **Step 1** adds: "Make it a PDF" exports the current version.
+- **Step 2** is now: "Is it a raw data export (orders as Excel, products as CSV) or a change to a file the person uploaded?" Only then is it a File. The File lane covers only raw data exports and uploaded files.
+- **Step 3** is now: a message for a particular person or list (a customer, a supplier, subscribers).
+- **New rule:** a named format (PDF, Word, PowerPoint, Excel) decides how something is delivered, not what kind of thing it is. Choose the kind with the questions, then export it in that format. If that kind can't be exported in the named format, say so and offer the closest one.
+- **New rule:** "Share this" or "share this with my team" about a chat reply turns it into a document, not a message.
+- **The opening line** says "calculators and other interactive pages" instead of "tools".
+- **"Words on screen"** now reads: "Never mention guides, templates or code to the person, or how things are made behind the scenes."
+
+**What changed with it:**
+- **Eval set.** Two expected lanes changed, because the new rules change the right answer:
+  - r11 "Purchase order … as a PDF" goes from File to Strict document.
+  - r28 "Make it a PDF" after an invoice goes from File to an export of the invoice's current version (`export:strict_document`).
+
+  r29 was already expected to be a composed document. Only its note changed. No other request changed.
+- **Harness.** It gained a new choice, `export_existing`: export something already made without changing it, scored as `export:<lane>`. Without it, the model had no way to report router step 1's new export case. This changed the test instruction's hash from `b53ddac96b33` to `4f43caf50777`.
+- **Guides.** These were updated: File, Strict document, Message card, Composed document, Design, Chat reply, and the README index.
+
+Applied in: `docs/output-system/system-prompt.md`, `docs/output-system/evals/requests.jsonl`, `docs/output-system/guides/`, `src/lib/output-system/lanes.ts`, `scripts/output-system/route-eval.ts`.
+
+### D-70 · 2026-10-17 · Words on screen are checked by a test
+**Status: proposed.**
+
+**Problem.** The rule says guides and the prompt must use the concept map's words (document, version, file) and must never put system words in text a user would see. A rule nobody checks drifts.
+
+**Rule.**
+- `src/lib/output-system/words.ts` lists two kinds of forbidden word:
+  - **System words:** skill, sandbox, tool, template, code, python, prompt, model, router, routing, lane, engine.
+  - **Names the concept map rejected:** artifact, output, generated file, revision, and draft used as a noun.
+- **A test checks every guide in full,** because Souvenir reads the guides and any line can end up in a reply. References that tell an editor where a value lives (tokens.json keys) are allowed.
+- **Store and business terms pass:** "discount code", "business model", "search engine", and file formats the person names (JSON, CSV).
+- **"Draft" with a capital is the readiness status,** so it passes. "The draft" fails.
+- **The system prompt is not checked.** It is read only by the model and has to name the actions (`build_file` and the rest). Its "Words on screen" rule is what keeps those names out of replies.
+
+Applied in: `src/lib/output-system/words.ts`; tests in `output-system.test.ts`.
+
+### D-69 · 2026-10-17 · `tokens.json` is generated from the engine, not written by hand
+**Status: proposed.**
+
+**Rule.**
+- **Generated from the engine.** `docs/output-system/tokens.json` is written by `scripts/output-system/build-tokens.ts` from three files: `src/lib/documents/tokens.ts`, `theme.ts` and `templates/brand.ts`. None of the three is changed.
+- **The neutral palette** (ink, muted, rule, accent) comes from `UNBRANDED` in `templates/brand.ts`, which is D-61's unbranded profile. `tokens.ts` holds only the state colours. The brief named only `tokens.ts` and `theme.ts`, but `brand.ts` is where the prompt's "neutral default" lives.
+- **Fonts are recorded by role:** voice, display, function and money. Their families are marked as OFL placeholders.
+- **Every size is in points,** as the engine has it.
+- **Not invented:**
+  - radius
+  - screen sizes in px for cards, charts and pages
+  - dark-mode colours
+
+  These are listed under `notDefined` instead, since the engine has no values for them.
+- **A test keeps it in sync:** it fails if the committed file differs from what the generator produces.
+
+Applied in: `src/lib/output-system/tokens.ts`, `scripts/output-system/build-tokens.ts`; test in `output-system.test.ts`.
+
+### D-68 · 2026-10-17 · How Phase 1 is set up and measured
+**Status: proposed.**
+
+**Rule.**
+- **Branch.** `feat/output-system-foundations`, stacked on `feat/chat-document-flow` (`c7dcd12f`).
+  - `origin/main` has neither the model client (`providerFromEnv`, D-65) nor decisions after D-48, so a branch off `main` would lose the client and re-use decision numbers.
+  - The trade-off: until S1 merges, a pull request from this branch also carries S1's commits.
+- **Code location.** Lanes, eval parsing and scoring, token building and the words check live in `src/lib/output-system/`, so Vitest runs their tests (it only collects `src/**`) and Phase 2 can import the lanes. The harness itself is in `scripts/output-system/`.
+- **The prompt is measured as written.**
+  - `docs/output-system/system-prompt.md` is the plan's draft, word for word. Only an editor's comment at the top is added, and the harness strips it before sending.
+  - The eval set was written before the prompt was touched.
+  - Changes suggested by a run are proposed in the phase report, not applied. Tuning the prompt against the same 30 requests would make the score circular.
+- **Expected lanes follow the router as written,** even where the plan contradicts itself. Two cases were flagged as ambiguous (r11, r28), and the conflict was raised in the report rather than resolved in the eval set. The plan resolved it in D-72.
+- **The harness** sends the prompt as the first system block, and a separate, recorded test instruction as the second.
+  - The test instruction asks which action the model would take first. The model answers with a `report_choice` call offered with `tool_choice: auto` (Opus 5.5 rejects forced tool use, D-66).
+  - The harness maps the action to a lane.
+  - "Asking one question" counts as right only where the request is marked `ask_ok`. "Update as a new version" scores as `update:<lane of the thing updated>`. A reply that names no action is retried once and then counted as a miss.
+- **Key handling.** The model key comes from the environment, the same way as D-65. The harness can load `.env.local`, or a file named with `--env-file`, without printing anything. With no key it stops with exit code 3 and names the variable.
+- **The action names** in the prompt (`build_file`, `create_document` and so on) are placeholders for engineering to rename, as the plan says.
+- **Decision numbers.** S1 on `feat/chat-document-flow` is still open, and its last recorded decision is D-67. This branch uses D-68 to D-70 and D-72 onward, and leaves D-71 for S1's next decision (Chaitanya, 2026-10-17).
+
+Applied in: `src/lib/output-system/`, `scripts/output-system/route-eval.ts`, `docs/output-system/`.
+
+---
+
 ## Chat-to-document flow (branch `feat/chat-document-flow`)
 
 The plan for this work is the "chat → document → refine → export" plan approved on 2026-10-15: slice S1 (invoice end to end, real model, hosted) is this branch; S2–S6 follow on later branches. Decisions D-49 to D-58 were settled by Chaitanya and Instinct before building; D-59 onward were made during the build.
