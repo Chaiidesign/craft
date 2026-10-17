@@ -93,8 +93,14 @@ export function modelCall(options: CallOptions): { call: ModelCall; modelId: str
     const ledger = existsSync(ledgerPath) ? parseLedger(readFileSync(ledgerPath, 'utf8')) : []
     const status = spendStatus(summariseSpend(ledger), options.session, parseLimits(existsSync(buildLoop) ? readFileSync(buildLoop, 'utf8') : ''))
     if (status.level === 'stop') throw new SpendLimitError(status.message)
+    // Prompt caching: the tool definitions and the prompt are the same on every call, so they are
+    // marked once (tools, then the first system block) and read back at a tenth of the input price.
+    const cachedTools = tools.map((t, i) => (i === tools.length - 1 ? { ...t, cache_control: { type: 'ephemeral' as const } } : t))
+    const cachedSystem = system.map((b, i) => (i === 0 ? { ...b, cache_control: { type: 'ephemeral' as const } } : b))
     const message = await client.messages.create({
       ...params,
+      tools: cachedTools,
+      system: cachedSystem,
       ...(choice.provider === 'openrouter' ? { ...OPENROUTER_ROUTING, usage: { include: true } } : {}),
     } as Anthropic.MessageCreateParamsNonStreaming)
     record(message, false)

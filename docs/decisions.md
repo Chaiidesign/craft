@@ -12,6 +12,116 @@ Status is **approved** unless marked otherwise. When a later decision replaces a
 
 The plan is [output-system/build-loop.md](output-system/build-loop.md) (Chaitanya, 2026-10-17): four launch kinds (chat reply, strict document, composed document, file), built in Sessions 0 to 4 for a demo on Friday 23 October. Decisions marked **assumed** were made under the loop's rule: "pick the simplest safe option, record it marked assumed, and continue".
 
+### D-94 · 2026-10-17 · Model calls cache the tools and the prompt
+**Status: assumed** (build-loop.md §9: prefer cheaper work).
+
+**Why.** Each call sends the prompt, the chat-reply guide and every tool definition, about 16,000 input tokens. The 34 routing requests through the real loop cost US$5.80.
+
+**Rule.** The last tool definition and the prompt carry an `ephemeral` cache mark, so repeated calls read them back at a tenth of the price. A repeated strict-document call fell from US$0.075 to US$0.011. The local response cache and its keys are unchanged.
+
+Applied in: `src/lib/output-system/agent/server.ts`.
+
+### D-93 · 2026-10-17 · Documents travel with the conversation; follow-ups make versions
+**Status: assumed.**
+
+**Rule.**
+- **Storage.** `/output-verify` keeps every document and version in the engine's own saved-session format (`session.ts`). It sends them back with each request, and the route checks them with `parseSession`, like any saved session. A malformed one is refused. The body limit rose from 200 KB to 800 KB to make room.
+- **Context.** The current document, with the digest of every field and line, goes into the turn's context block, so a follow-up can change it.
+- **Two new actions** in the app (the prompt is unchanged):
+  - `update_document` changes the current document as a new version. Earlier versions are kept and fold away in the thread.
+  - `export_version` is now real for strict documents. It exports the current version or a version the person names, as PDF or Word, made in the browser with the engine's exporters. Any other format goes back to the model, which offers the closest formats.
+- **Not yet built.** A policy or another document with exact terms is `create_strict_document` with type `other`, which shows "coming later".
+- **The document card** is `/document-chat`'s, reused. It shows:
+  - the preview
+  - the version
+  - "Ready to send" or "Draft · n missing"
+  - "Not provided yet"
+  - the downloads
+
+  On a phone the page preview is scaled to the screen, and the downloads are the readable form.
+
+Applied in: `agent/loop.ts`, `agent/tools.ts`, `strict.ts`, `history.ts`, `src/app/output-verify/Conversation.tsx`, `model/route.ts`.
+
+### D-92 · 2026-10-17 · Make the document even when a fact is unclear
+**Status: assumed** (a guide rule beyond the plan, like D-73).
+
+**Why.** Asked for "500 wholesale units of the travel mug" (r10), the model asked in chat which of four colours was meant and what the wholesale price was, and made no quote. The routing set expects a strict document, and asking isn't accepted for that request.
+
+**Rule** (strict-document guide):
+- **Prices.** The store's price is its everyday selling price. A wholesale or special price is stated by the person; if it isn't, the line is made in their words with the price Missing.
+- **Unclear facts.** When a fact is unclear, make the document with it Missing and ask the one question there. Don't answer in chat instead.
+
+**Results.** r10 now makes a quote. Strict eval s13 checks that the wholesale quote has its price Missing. The guide was changed after a result on the development set (requests.jsonl), not the held-out set.
+
+Applied in: `docs/output-system/guides/strict-document.md`, `evals/strict.jsonl` (s13).
+
+### D-91 · 2026-10-17 · What each strict kind requires
+**Status: assumed.**
+
+| Kind | Required beyond the core | Optional | Grand total |
+| --- | --- | --- | --- |
+| Invoice | Unchanged from invoice@1: billing address, due date, payment terms | Purchase order, order, shipping | Total due |
+| Quote | Valid until | Address, terms, shipping | Total |
+| Purchase order | Supplier address | Deliver by, payment terms, shipping | Order total |
+| Receipt | Nothing more | Address, order, paid by, shipping | Total paid |
+
+- **The core, for every kind:** issuer, the other party, number, date, currency and tax applicability.
+- **No document numbers are made up.** The number is Missing until the person gives one, so a new document is a Draft until then. That is the Missing state working as intended, and the follow-up question asks for it.
+
+Applied in: `src/lib/documents/templates/invoice.ts` (`COMMERCIAL_TEMPLATES`), `validation.ts`.
+
+### D-90 · 2026-10-17 · The sample stores' own details
+**Status: assumed.**
+
+- **Saffron Loom's address** is the one its fixture invoice already uses: Plot 22, Weavers' Colony, Bhuj.
+- **Fernhill Goods** gets a fictional address: Unit 4, 210 Alder Street, Asheville, NC 28801.
+- **Each store records the tax rate it charges:** 5% for Saffron, 0% for Fernhill, as the sample orders already did.
+- **GST number and place of supply.** The sample stores hold neither, so documents leave them out. They are not marked Missing, because nobody is asked for them and every Saffron document would stay a Draft.
+
+Applied in: `src/lib/output-system/fixtures/stores.ts`, the strict-document guide ("Based on").
+
+### D-89 · 2026-10-17 · Store values are copied, never typed
+**Status: assumed.**
+
+**Rule.** A strict document has two sources.
+- **The store.** The model names an order number (`fromOrder`) or catalogue SKUs (`products`). Code copies the following from the sample data, with "store" provenance (a new provenance kind):
+  - the customer, lines, prices, discount, tax, shipping and order date
+  - the store's name, address and currency
+  - today's date
+  - its usual tax rate, with no discount on what it sells
+- **The person.** Anything else is a generation operation that quotes their words. The engine's gate checks it unchanged (D-49).
+
+**Limits.**
+- **Purchase orders never carry the store's selling price.** A line has a price only when the person states the cost, quoted. The supplier's tax and discount stay Missing.
+- **Order lookups.** Cancelled orders are refused. Orders are found by number however it's typed ("FH-01042", "fh01042", "1042").
+- **Three new store questions:** `find_order`, `customer_orders` and `find_products`.
+
+**Why.** "Every number matches the fixtures exactly" then holds by construction. A test makes a receipt and an invoice from every order that wasn't cancelled (about 950) and checks each total equals the order's to the cent.
+
+Applied in: `src/lib/output-system/strict.ts`, `storeTool.ts`, `model.ts` (`Provenance`), `strict.test.ts`.
+
+### D-88 · 2026-10-17 · Quote, purchase order and receipt join the invoice in the engine
+**Status: assumed.** This is a change to the document engine: an extension that keeps the invoice's output unchanged, which its 299 tests check.
+
+**Rule.**
+- **One structure.** `CommercialKind` is invoice, quote, purchase order or receipt: one template structure (parties, details, line items, totals, terms) and one composer.
+- **Settings per kind** (`COMMERCIAL_TEMPLATES`): the title, field labels, required fields, which fields each block shows, the totals wording, and whether there is a terms block.
+- **Field IDs** keep their invoice names for every kind. They are never shown.
+- **New optional fields:**
+  - **Shipping:** added after tax and not taxed, as the sample orders charge it.
+  - **Order:** the order number.
+  - **Paid by:** receipts only.
+
+  Fixture invoices made before these fields existed keep exactly the blocks they had.
+- **Exports.** The three new kinds export as PDF and Word, never slides. `formats.json` now lists them as built, under `kinds.strict_document`.
+
+Applied in: `src/lib/documents/model.ts`, `invoice.ts`, `templates/invoice.ts`, `compose.ts`, `validation.ts`, `revisions.ts`, `export/capabilities.ts`, `export/filename.ts`, `session.ts`, `generation/ops.ts`, `src/lib/output-system/formats.ts`.
+
+### D-87 · 2026-10-17 · Session 2 ran in the same conversation as Session 1
+**Status: approved.** Chaitanya said "start" when offered a new conversation.
+
+The build loop asks for one session per conversation. Session 2 started in the same conversation at the designer's request, and still worked only from the repo's state (`progress.md`, `build-loop.md`).
+
 ### D-86 · 2026-10-17 · The inline chart is built in Session 1
 **Status: assumed** (build-loop.md §4 allows message card and chart "if time allows" once chat and file pass).
 

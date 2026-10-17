@@ -1,0 +1,4430 @@
+{
+  "set": "strict",
+  "session": "2",
+  "runs": 3,
+  "useCache": false,
+  "promptVersion": "f368cc732b1b",
+  "guideVersion": "2268ec284014",
+  "right": 39,
+  "total": 39,
+  "results": [
+    {
+      "id": "s01",
+      "run": 1,
+      "store": "fernhill-goods",
+      "seconds": 5.2,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Make a quote for Bloom & Co for 40 ceramic planters in sand",
+          "made": {
+            "kind": "document",
+            "docKind": "quote",
+            "outputId": "out-s01-r1-2",
+            "revisionId": "rev-s01-r1-3",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "How long should the quote be valid for?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a quote",
+              "ok": true,
+              "detail": "quote"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "9 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "1 quotes"
+            },
+            {
+              "name": "1 lines",
+              "ok": true,
+              "detail": "1"
+            },
+            {
+              "name": "line 1 is 40 × Ceramic planter, Sand",
+              "ok": true,
+              "detail": "40 × Ceramic planter, Sand"
+            },
+            {
+              "name": "line 1: the store's price",
+              "ok": true,
+              "detail": "3399"
+            },
+            {
+              "name": "Quote for is Bloom & Co",
+              "ok": true,
+              "detail": "Bloom & Co"
+            },
+            {
+              "name": "Quote number stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "Valid until stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "How long should the quote be valid for?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s02",
+      "run": 1,
+      "store": "saffron-loom",
+      "seconds": 8.6,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Quote for Kavya Iyer: 2 silk-blend sarees in madder red and 4 ikat stoles in indigo. Quote number Q-118, valid for 15 days.",
+          "made": {
+            "kind": "document",
+            "docKind": "quote",
+            "outputId": "out-s02-r1-3",
+            "revisionId": "rev-s02-r1-4",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "What's Kavya Iyer's address for the quote?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → ask_store → create_strict_document"
+            },
+            {
+              "name": "a quote",
+              "ok": true,
+              "detail": "quote"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "12 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "3 quotes"
+            },
+            {
+              "name": "2 lines",
+              "ok": true,
+              "detail": "2"
+            },
+            {
+              "name": "line 1 is 2 × Silk-blend saree, Madder red",
+              "ok": true,
+              "detail": "2 × Silk-blend saree, Madder red"
+            },
+            {
+              "name": "line 1: the store's price",
+              "ok": true,
+              "detail": "468000"
+            },
+            {
+              "name": "line 2 is 4 × Ikat stole, Indigo",
+              "ok": true,
+              "detail": "4 × Ikat stole, Indigo"
+            },
+            {
+              "name": "line 2: the store's price",
+              "ok": true,
+              "detail": "151000"
+            },
+            {
+              "name": "Quote for is Kavya Iyer",
+              "ok": true,
+              "detail": "Kavya Iyer"
+            },
+            {
+              "name": "Quote number is Q-118",
+              "ok": true,
+              "detail": "Q-118"
+            },
+            {
+              "name": "Valid until is 2026-10-15",
+              "ok": true,
+              "detail": "2026-10-15"
+            },
+            {
+              "name": "ready to send",
+              "ok": true,
+              "detail": "ready"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "What's Kavya Iyer's address for the quote?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s)"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s)"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s03",
+      "run": 1,
+      "store": "fernhill-goods",
+      "seconds": 5.8,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Purchase order PO-7731 to Ridgeway Supply for 60 insulated bottles in forest at $11.50 each",
+          "made": {
+            "kind": "document",
+            "docKind": "purchase-order",
+            "outputId": "out-s03-r1-2",
+            "revisionId": "rev-s03-r1-3",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "When do you need Ridgeway Supply to deliver the bottles by?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a purchase-order",
+              "ok": true,
+              "detail": "purchase-order"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "7 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "3 quotes"
+            },
+            {
+              "name": "1 lines",
+              "ok": true,
+              "detail": "1"
+            },
+            {
+              "name": "line 1 is 60 × Insulated bottle, Forest",
+              "ok": true,
+              "detail": "60 × Insulated bottle, Forest"
+            },
+            {
+              "name": "line 1: the stated cost 11.50",
+              "ok": true,
+              "detail": "1150"
+            },
+            {
+              "name": "Supplier is Ridgeway Supply",
+              "ok": true,
+              "detail": "Ridgeway Supply"
+            },
+            {
+              "name": "PO number is PO-7731",
+              "ok": true,
+              "detail": "PO-7731"
+            },
+            {
+              "name": "Supplier address stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "Tax stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "When do you need Ridgeway Supply to deliver the bottles by?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s04",
+      "run": 1,
+      "store": "saffron-loom",
+      "seconds": 5.2,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Raise a PO to Kutch Weavers for 25 cotton bedspreads in ivory",
+          "made": {
+            "kind": "document",
+            "docKind": "purchase-order",
+            "outputId": "out-s04-r1-2",
+            "revisionId": "rev-s04-r1-3",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "What does Kutch Weavers charge per bedspread?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a purchase-order",
+              "ok": true,
+              "detail": "purchase-order"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "6 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "1 quotes"
+            },
+            {
+              "name": "1 lines",
+              "ok": true,
+              "detail": "1"
+            },
+            {
+              "name": "line 1 is 25 × Cotton bedspread, Ivory",
+              "ok": true,
+              "detail": "25 × Cotton bedspread, Ivory"
+            },
+            {
+              "name": "line 1: no price (the store's selling price is never used)",
+              "ok": true,
+              "detail": "null"
+            },
+            {
+              "name": "Supplier is Kutch Weavers",
+              "ok": true,
+              "detail": "Kutch Weavers"
+            },
+            {
+              "name": "PO number stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "Supplier address stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "What does Kutch Weavers charge per bedspread?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s05",
+      "run": 1,
+      "store": "saffron-loom",
+      "seconds": 4.8,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Make a receipt for order SL-01481, receipt number R-1481, paid by UPI",
+          "made": {
+            "kind": "document",
+            "docKind": "receipt",
+            "outputId": "out-s05-r1-2",
+            "revisionId": "rev-s05-r1-3",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a receipt",
+              "ok": true,
+              "detail": "receipt"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "14 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "2 quotes"
+            },
+            {
+              "name": "made from order SL-01481",
+              "ok": true,
+              "detail": "SL-01481"
+            },
+            {
+              "name": "total equals the order’s total",
+              "ok": true,
+              "detail": "133695"
+            },
+            {
+              "name": "Receipt number is R-1481",
+              "ok": true,
+              "detail": "R-1481"
+            },
+            {
+              "name": "Paid by is UPI",
+              "ok": true,
+              "detail": "UPI"
+            },
+            {
+              "name": "Date paid is 2026-09-16",
+              "ok": true,
+              "detail": "2026-09-16"
+            },
+            {
+              "name": "ready to send",
+              "ok": true,
+              "detail": "ready"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s)"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s)"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s06",
+      "run": 1,
+      "store": "fernhill-goods",
+      "seconds": 6.9,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Send Jordan Hughes a receipt for their most recent order",
+          "made": {
+            "kind": "document",
+            "docKind": "receipt",
+            "outputId": "out-s06-r1-4",
+            "revisionId": "rev-s06-r1-5",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "How did Jordan pay for this order (card, PayPal, etc.)?"
+          },
+          "toolsUsed": [
+            "ask_store",
+            "read_guide",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "ask_store → read_guide → create_strict_document"
+            },
+            {
+              "name": "a receipt",
+              "ok": true,
+              "detail": "receipt"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "12 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "0 quotes"
+            },
+            {
+              "name": "made from order FH-01469",
+              "ok": true,
+              "detail": "FH-01469"
+            },
+            {
+              "name": "total equals the order’s total",
+              "ok": true,
+              "detail": "13597"
+            },
+            {
+              "name": "Receipt number stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "How did Jordan pay for this order (card, PayPal, etc.)?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s07",
+      "run": 1,
+      "store": "fernhill-goods",
+      "seconds": 6.5,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Invoice for order FH-01500, due in 14 days",
+          "made": {
+            "kind": "document",
+            "docKind": "invoice",
+            "outputId": "out-s07-r1-3",
+            "revisionId": "rev-s07-r1-4",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "What invoice number should I use?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a invoice",
+              "ok": true,
+              "detail": "invoice"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "13 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "1 quotes"
+            },
+            {
+              "name": "made from order FH-01500",
+              "ok": true,
+              "detail": "FH-01500"
+            },
+            {
+              "name": "total equals the order’s total",
+              "ok": true,
+              "detail": "8998"
+            },
+            {
+              "name": "Due date is 2026-10-14",
+              "ok": true,
+              "detail": "2026-10-14"
+            },
+            {
+              "name": "Invoice number stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "What invoice number should I use?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s08",
+      "run": 1,
+      "store": "fernhill-goods",
+      "seconds": 6.3,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Receipt for order FH-01492",
+          "made": {
+            "kind": "reply",
+            "text": "I haven't made the receipt yet because **order FH-01492 was cancelled**. A receipt shows that money was paid, so it would be wrong to issue one for this order.\n\nHere's what the store has for it:\n- **Customer:** Caleb Ortiz, Portland\n- **Order date:** 26 Sep 2026\n- **Items:** Ridge daypack in Rust, Alpine 30L backpack in Sand, and Insulated bottle in Sand, one of each\n- **Order total:** $194.97, with no discount, shipping or tax\n\nDid you mean a different order number? If Caleb did pay for this order some other way, tell me how and I'll make the receipt.",
+            "usedStore": true,
+            "claims": [
+              {
+                "text": "$194.97",
+                "value": 194.97,
+                "precision": 0.01,
+                "kind": "money"
+              }
+            ]
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: reply",
+              "ok": true,
+              "detail": "reply"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store"
+            },
+            {
+              "name": "no system words on screen",
+              "ok": true
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s09",
+      "run": 1,
+      "store": "fernhill-goods",
+      "seconds": 14.1,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Make a quote for Bloom & Co for 40 ceramic planters in sand",
+          "made": {
+            "kind": "document",
+            "docKind": "quote",
+            "outputId": "out-s09-r1-2",
+            "revisionId": "rev-s09-r1-3",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "How long should the quote be valid for?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a quote",
+              "ok": true,
+              "detail": "quote"
+            },
+            {
+              "name": "version 1",
+              "ok": true,
+              "detail": "1"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "9 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "1 quotes"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "How long should the quote be valid for?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        },
+        {
+          "request": "Valid for 30 days, and number it Q-2041",
+          "made": {
+            "kind": "document",
+            "docKind": "quote",
+            "outputId": "out-s09-r1-2",
+            "revisionId": "rev-s09-r1-4",
+            "version": 2,
+            "changeSummary": "Set Quote number and set Valid until",
+            "created": false
+          },
+          "toolsUsed": [
+            "read_guide",
+            "update_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → update_document"
+            },
+            {
+              "name": "a quote",
+              "ok": true,
+              "detail": "quote"
+            },
+            {
+              "name": "version 2",
+              "ok": true,
+              "detail": "2"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "11 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "3 quotes"
+            },
+            {
+              "name": "Valid until is 2026-10-30",
+              "ok": true,
+              "detail": "2026-10-30"
+            },
+            {
+              "name": "Quote number is Q-2041",
+              "ok": true,
+              "detail": "Q-2041"
+            },
+            {
+              "name": "ready to send",
+              "ok": true,
+              "detail": "ready"
+            },
+            {
+              "name": "only invoice.dueDate, invoice.number changed",
+              "ok": true,
+              "detail": "invoice.number, invoice.dueDate"
+            },
+            {
+              "name": "existing lines unchanged",
+              "ok": true
+            },
+            {
+              "name": "no lines added",
+              "ok": true
+            },
+            {
+              "name": "the earlier version is kept, unchanged",
+              "ok": true
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s)"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s)"
+            }
+          ],
+          "ok": true
+        },
+        {
+          "request": "Make it a PDF",
+          "made": {
+            "kind": "export",
+            "docKind": "quote",
+            "outputId": "out-s09-r1-2",
+            "revisionId": "rev-s09-r1-4",
+            "version": 2,
+            "format": "pdf"
+          },
+          "toolsUsed": [
+            "export_version"
+          ],
+          "calls": 1,
+          "checks": [
+            {
+              "name": "made: export",
+              "ok": true,
+              "detail": "export"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "export_version"
+            },
+            {
+              "name": "exports version 2",
+              "ok": true,
+              "detail": "version 2"
+            },
+            {
+              "name": "as pdf",
+              "ok": true,
+              "detail": "pdf"
+            },
+            {
+              "name": "the file opens",
+              "ok": true,
+              "detail": "fernhill-goods-co_Q-2041_v2_c02c.pdf"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s10",
+      "run": 1,
+      "store": "fernhill-goods",
+      "seconds": 15.3,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Invoice for order FH-01500",
+          "made": {
+            "kind": "document",
+            "docKind": "invoice",
+            "outputId": "out-s10-r1-3",
+            "revisionId": "rev-s10-r1-4",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "What invoice number and due date should I use?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a invoice",
+              "ok": true,
+              "detail": "invoice"
+            },
+            {
+              "name": "version 1",
+              "ok": true,
+              "detail": "1"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "12 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "0 quotes"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "What invoice number and due date should I use?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        },
+        {
+          "request": "Add 2 travel mugs in charcoal",
+          "made": {
+            "kind": "document",
+            "docKind": "invoice",
+            "outputId": "out-s10-r1-3",
+            "revisionId": "rev-s10-r1-6",
+            "version": 2,
+            "changeSummary": "Added line 3",
+            "created": false,
+            "followUp": "What invoice number and due date should I use?"
+          },
+          "toolsUsed": [
+            "ask_store",
+            "update_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "ask_store → update_document"
+            },
+            {
+              "name": "a invoice",
+              "ok": true,
+              "detail": "invoice"
+            },
+            {
+              "name": "version 2",
+              "ok": true,
+              "detail": "2"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "13 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "0 quotes"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "What invoice number and due date should I use?"
+            },
+            {
+              "name": "only no fields changed",
+              "ok": true,
+              "detail": "none"
+            },
+            {
+              "name": "existing lines unchanged",
+              "ok": true
+            },
+            {
+              "name": "1 lines added",
+              "ok": true,
+              "detail": "1"
+            },
+            {
+              "name": "line 1 is 2 × Travel mug, Charcoal",
+              "ok": true,
+              "detail": "2 × Travel mug, Charcoal"
+            },
+            {
+              "name": "line 1: the store's price",
+              "ok": true,
+              "detail": "3699"
+            },
+            {
+              "name": "the earlier version is kept, unchanged",
+              "ok": true
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "2 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "2 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        },
+        {
+          "request": "Export version 1 as a Word file",
+          "made": {
+            "kind": "export",
+            "docKind": "invoice",
+            "outputId": "out-s10-r1-3",
+            "revisionId": "rev-s10-r1-4",
+            "version": 1,
+            "format": "docx"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "export_version"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: export",
+              "ok": true,
+              "detail": "export"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → export_version"
+            },
+            {
+              "name": "exports version 1",
+              "ok": true,
+              "detail": "version 1"
+            },
+            {
+              "name": "as docx",
+              "ok": true,
+              "detail": "docx"
+            },
+            {
+              "name": "the file opens",
+              "ok": true,
+              "detail": "fernhill-goods-co_invoice_v1_62d2.docx"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s11",
+      "run": 1,
+      "store": "saffron-loom",
+      "seconds": 12.7,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Quote for Kavya Iyer: 2 silk-blend sarees in madder red",
+          "made": {
+            "kind": "document",
+            "docKind": "quote",
+            "outputId": "out-s11-r1-2",
+            "revisionId": "rev-s11-r1-3",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "What quote number should I use, and how long should the quote be valid for?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a quote",
+              "ok": true,
+              "detail": "quote"
+            },
+            {
+              "name": "version 1",
+              "ok": true,
+              "detail": "1"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "9 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "1 quotes"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "What quote number should I use, and how long should the quote be valid for?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        },
+        {
+          "request": "Send it to me as an Excel file",
+          "made": {
+            "kind": "format-options",
+            "thing": "strict_document",
+            "requestedFormat": "Excel",
+            "offered": [
+              "PDF",
+              "Word"
+            ],
+            "message": "Quotes can't be exported as Excel files. I can send this one as a PDF or a Word document instead."
+          },
+          "toolsUsed": [
+            "read_guide",
+            "show_format_options"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: format-options",
+              "ok": true,
+              "detail": "format-options"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → show_format_options"
+            },
+            {
+              "name": "offers PDF, Word",
+              "ok": true,
+              "detail": "PDF, Word"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s12",
+      "run": 1,
+      "store": "saffron-loom",
+      "seconds": 4.4,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Write our returns policy: 7 days, unworn, tags on",
+          "made": {
+            "kind": "coming-later",
+            "lane": "strict_document",
+            "summary": "Returns policy for Saffron Loom Textiles: returns accepted within 7 days, items must be unworn with tags on."
+          },
+          "toolsUsed": [
+            "read_guide",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: coming-later",
+              "ok": true,
+              "detail": "coming-later"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → create_strict_document"
+            },
+            {
+              "name": "coming later: strict_document",
+              "ok": true,
+              "detail": "strict_document"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s13",
+      "run": 1,
+      "store": "fernhill-goods",
+      "seconds": 8,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Quote for 500 wholesale units of the travel mug for Northside Outfitters.",
+          "made": {
+            "kind": "document",
+            "docKind": "quote",
+            "outputId": "out-s13-r1-2",
+            "revisionId": "rev-s13-r1-3",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "What wholesale price per mug should I use, and which colour (Forest, Sand, Charcoal or Rust)?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a quote",
+              "ok": true,
+              "detail": "quote"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "9 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "2 quotes"
+            },
+            {
+              "name": "1 line(s) of 500",
+              "ok": true,
+              "detail": "500 × Travel mug, wholesale"
+            },
+            {
+              "name": "no price invented: every price Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "Quote for is Northside Outfitters",
+              "ok": true,
+              "detail": "Northside Outfitters"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "What wholesale price per mug should I use, and which colour (Forest, Sand, Charcoal or Rust)?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s01",
+      "run": 2,
+      "store": "fernhill-goods",
+      "seconds": 4.8,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Make a quote for Bloom & Co for 40 ceramic planters in sand",
+          "made": {
+            "kind": "document",
+            "docKind": "quote",
+            "outputId": "out-s01-r2-2",
+            "revisionId": "rev-s01-r2-3",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "How long should the quote be valid for?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a quote",
+              "ok": true,
+              "detail": "quote"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "9 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "1 quotes"
+            },
+            {
+              "name": "1 lines",
+              "ok": true,
+              "detail": "1"
+            },
+            {
+              "name": "line 1 is 40 × Ceramic planter, Sand",
+              "ok": true,
+              "detail": "40 × Ceramic planter, Sand"
+            },
+            {
+              "name": "line 1: the store's price",
+              "ok": true,
+              "detail": "3399"
+            },
+            {
+              "name": "Quote for is Bloom & Co",
+              "ok": true,
+              "detail": "Bloom & Co"
+            },
+            {
+              "name": "Quote number stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "Valid until stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "How long should the quote be valid for?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s02",
+      "run": 2,
+      "store": "saffron-loom",
+      "seconds": 11.3,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Quote for Kavya Iyer: 2 silk-blend sarees in madder red and 4 ikat stoles in indigo. Quote number Q-118, valid for 15 days.",
+          "made": {
+            "kind": "document",
+            "docKind": "quote",
+            "outputId": "out-s02-r2-3",
+            "revisionId": "rev-s02-r2-4",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "What address should the quote show for Kavya Iyer?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → ask_store → create_strict_document"
+            },
+            {
+              "name": "a quote",
+              "ok": true,
+              "detail": "quote"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "12 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "3 quotes"
+            },
+            {
+              "name": "2 lines",
+              "ok": true,
+              "detail": "2"
+            },
+            {
+              "name": "line 1 is 2 × Silk-blend saree, Madder red",
+              "ok": true,
+              "detail": "2 × Silk-blend saree, Madder red"
+            },
+            {
+              "name": "line 1: the store's price",
+              "ok": true,
+              "detail": "468000"
+            },
+            {
+              "name": "line 2 is 4 × Ikat stole, Indigo",
+              "ok": true,
+              "detail": "4 × Ikat stole, Indigo"
+            },
+            {
+              "name": "line 2: the store's price",
+              "ok": true,
+              "detail": "151000"
+            },
+            {
+              "name": "Quote for is Kavya Iyer",
+              "ok": true,
+              "detail": "Kavya Iyer"
+            },
+            {
+              "name": "Quote number is Q-118",
+              "ok": true,
+              "detail": "Q-118"
+            },
+            {
+              "name": "Valid until is 2026-10-15",
+              "ok": true,
+              "detail": "2026-10-15"
+            },
+            {
+              "name": "ready to send",
+              "ok": true,
+              "detail": "ready"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "What address should the quote show for Kavya Iyer?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s)"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s)"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s03",
+      "run": 2,
+      "store": "fernhill-goods",
+      "seconds": 6.2,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Purchase order PO-7731 to Ridgeway Supply for 60 insulated bottles in forest at $11.50 each",
+          "made": {
+            "kind": "document",
+            "docKind": "purchase-order",
+            "outputId": "out-s03-r2-2",
+            "revisionId": "rev-s03-r2-3",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "When do you need Ridgeway Supply to deliver the bottles?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a purchase-order",
+              "ok": true,
+              "detail": "purchase-order"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "7 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "3 quotes"
+            },
+            {
+              "name": "1 lines",
+              "ok": true,
+              "detail": "1"
+            },
+            {
+              "name": "line 1 is 60 × Insulated bottle, Forest",
+              "ok": true,
+              "detail": "60 × Insulated bottle, Forest"
+            },
+            {
+              "name": "line 1: the stated cost 11.50",
+              "ok": true,
+              "detail": "1150"
+            },
+            {
+              "name": "Supplier is Ridgeway Supply",
+              "ok": true,
+              "detail": "Ridgeway Supply"
+            },
+            {
+              "name": "PO number is PO-7731",
+              "ok": true,
+              "detail": "PO-7731"
+            },
+            {
+              "name": "Supplier address stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "Tax stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "When do you need Ridgeway Supply to deliver the bottles?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s04",
+      "run": 2,
+      "store": "saffron-loom",
+      "seconds": 5.2,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Raise a PO to Kutch Weavers for 25 cotton bedspreads in ivory",
+          "made": {
+            "kind": "document",
+            "docKind": "purchase-order",
+            "outputId": "out-s04-r2-2",
+            "revisionId": "rev-s04-r2-3",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "What does Kutch Weavers charge per bedspread?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a purchase-order",
+              "ok": true,
+              "detail": "purchase-order"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "6 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "1 quotes"
+            },
+            {
+              "name": "1 lines",
+              "ok": true,
+              "detail": "1"
+            },
+            {
+              "name": "line 1 is 25 × Cotton bedspread, Ivory",
+              "ok": true,
+              "detail": "25 × Cotton bedspread, Ivory"
+            },
+            {
+              "name": "line 1: no price (the store's selling price is never used)",
+              "ok": true,
+              "detail": "null"
+            },
+            {
+              "name": "Supplier is Kutch Weavers",
+              "ok": true,
+              "detail": "Kutch Weavers"
+            },
+            {
+              "name": "PO number stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "Supplier address stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "What does Kutch Weavers charge per bedspread?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s05",
+      "run": 2,
+      "store": "saffron-loom",
+      "seconds": 5,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Make a receipt for order SL-01481, receipt number R-1481, paid by UPI",
+          "made": {
+            "kind": "document",
+            "docKind": "receipt",
+            "outputId": "out-s05-r2-2",
+            "revisionId": "rev-s05-r2-3",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a receipt",
+              "ok": true,
+              "detail": "receipt"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "14 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "2 quotes"
+            },
+            {
+              "name": "made from order SL-01481",
+              "ok": true,
+              "detail": "SL-01481"
+            },
+            {
+              "name": "total equals the order’s total",
+              "ok": true,
+              "detail": "133695"
+            },
+            {
+              "name": "Receipt number is R-1481",
+              "ok": true,
+              "detail": "R-1481"
+            },
+            {
+              "name": "Paid by is UPI",
+              "ok": true,
+              "detail": "UPI"
+            },
+            {
+              "name": "Date paid is 2026-09-16",
+              "ok": true,
+              "detail": "2026-09-16"
+            },
+            {
+              "name": "ready to send",
+              "ok": true,
+              "detail": "ready"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s)"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s)"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s06",
+      "run": 2,
+      "store": "fernhill-goods",
+      "seconds": 7,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Send Jordan Hughes a receipt for their most recent order",
+          "made": {
+            "kind": "document",
+            "docKind": "receipt",
+            "outputId": "out-s06-r2-4",
+            "revisionId": "rev-s06-r2-5",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "How did Jordan pay for this order (card, PayPal, etc.)?"
+          },
+          "toolsUsed": [
+            "ask_store",
+            "read_guide",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "ask_store → read_guide → create_strict_document"
+            },
+            {
+              "name": "a receipt",
+              "ok": true,
+              "detail": "receipt"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "12 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "0 quotes"
+            },
+            {
+              "name": "made from order FH-01469",
+              "ok": true,
+              "detail": "FH-01469"
+            },
+            {
+              "name": "total equals the order’s total",
+              "ok": true,
+              "detail": "13597"
+            },
+            {
+              "name": "Receipt number stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "How did Jordan pay for this order (card, PayPal, etc.)?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s07",
+      "run": 2,
+      "store": "fernhill-goods",
+      "seconds": 8,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Invoice for order FH-01500, due in 14 days",
+          "made": {
+            "kind": "document",
+            "docKind": "invoice",
+            "outputId": "out-s07-r2-3",
+            "revisionId": "rev-s07-r2-4",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "What invoice number should this have?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a invoice",
+              "ok": true,
+              "detail": "invoice"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "14 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "2 quotes"
+            },
+            {
+              "name": "made from order FH-01500",
+              "ok": true,
+              "detail": "FH-01500"
+            },
+            {
+              "name": "total equals the order’s total",
+              "ok": true,
+              "detail": "8998"
+            },
+            {
+              "name": "Due date is 2026-10-14",
+              "ok": true,
+              "detail": "2026-10-14"
+            },
+            {
+              "name": "Invoice number stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "What invoice number should this have?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s08",
+      "run": 2,
+      "store": "fernhill-goods",
+      "seconds": 7.2,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Receipt for order FH-01492",
+          "made": {
+            "kind": "reply",
+            "text": "I haven't made the receipt yet, because **order FH-01492 was cancelled**. A receipt says the money was received, so one for a cancelled order could be misleading.\n\nThe order was placed on Sep 26, 2026 by Caleb Ortiz in Portland. It has three items and comes to $194.97.\n\nDo you still want the receipt? For example, the customer may have paid and the order was cancelled afterwards. If you'd rather have a cancellation or refund note for Caleb, I can draft that instead.",
+            "usedStore": true,
+            "claims": [
+              {
+                "text": "$194.97",
+                "value": 194.97,
+                "precision": 0.01,
+                "kind": "money"
+              }
+            ]
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: reply",
+              "ok": true,
+              "detail": "reply"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store"
+            },
+            {
+              "name": "no system words on screen",
+              "ok": true
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s09",
+      "run": 2,
+      "store": "fernhill-goods",
+      "seconds": 17.2,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Make a quote for Bloom & Co for 40 ceramic planters in sand",
+          "made": {
+            "kind": "document",
+            "docKind": "quote",
+            "outputId": "out-s09-r2-2",
+            "revisionId": "rev-s09-r2-3",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "How long should the quote be valid for?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a quote",
+              "ok": true,
+              "detail": "quote"
+            },
+            {
+              "name": "version 1",
+              "ok": true,
+              "detail": "1"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "9 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "1 quotes"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "How long should the quote be valid for?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        },
+        {
+          "request": "Valid for 30 days, and number it Q-2041",
+          "made": {
+            "kind": "document",
+            "docKind": "quote",
+            "outputId": "out-s09-r2-2",
+            "revisionId": "rev-s09-r2-4",
+            "version": 2,
+            "changeSummary": "Set Quote number and set Valid until",
+            "created": false
+          },
+          "toolsUsed": [
+            "read_guide",
+            "update_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → update_document"
+            },
+            {
+              "name": "a quote",
+              "ok": true,
+              "detail": "quote"
+            },
+            {
+              "name": "version 2",
+              "ok": true,
+              "detail": "2"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "11 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "3 quotes"
+            },
+            {
+              "name": "Valid until is 2026-10-30",
+              "ok": true,
+              "detail": "2026-10-30"
+            },
+            {
+              "name": "Quote number is Q-2041",
+              "ok": true,
+              "detail": "Q-2041"
+            },
+            {
+              "name": "ready to send",
+              "ok": true,
+              "detail": "ready"
+            },
+            {
+              "name": "only invoice.dueDate, invoice.number changed",
+              "ok": true,
+              "detail": "invoice.number, invoice.dueDate"
+            },
+            {
+              "name": "existing lines unchanged",
+              "ok": true
+            },
+            {
+              "name": "no lines added",
+              "ok": true
+            },
+            {
+              "name": "the earlier version is kept, unchanged",
+              "ok": true
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s)"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s)"
+            }
+          ],
+          "ok": true
+        },
+        {
+          "request": "Make it a PDF",
+          "made": {
+            "kind": "export",
+            "docKind": "quote",
+            "outputId": "out-s09-r2-2",
+            "revisionId": "rev-s09-r2-4",
+            "version": 2,
+            "format": "pdf"
+          },
+          "toolsUsed": [
+            "export_version"
+          ],
+          "calls": 1,
+          "checks": [
+            {
+              "name": "made: export",
+              "ok": true,
+              "detail": "export"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "export_version"
+            },
+            {
+              "name": "exports version 2",
+              "ok": true,
+              "detail": "version 2"
+            },
+            {
+              "name": "as pdf",
+              "ok": true,
+              "detail": "pdf"
+            },
+            {
+              "name": "the file opens",
+              "ok": true,
+              "detail": "fernhill-goods-co_Q-2041_v2_750d.pdf"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s10",
+      "run": 2,
+      "store": "fernhill-goods",
+      "seconds": 14.6,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Invoice for order FH-01500",
+          "made": {
+            "kind": "document",
+            "docKind": "invoice",
+            "outputId": "out-s10-r2-3",
+            "revisionId": "rev-s10-r2-4",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "What invoice number and due date should it have?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a invoice",
+              "ok": true,
+              "detail": "invoice"
+            },
+            {
+              "name": "version 1",
+              "ok": true,
+              "detail": "1"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "12 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "0 quotes"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "What invoice number and due date should it have?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        },
+        {
+          "request": "Add 2 travel mugs in charcoal",
+          "made": {
+            "kind": "document",
+            "docKind": "invoice",
+            "outputId": "out-s10-r2-3",
+            "revisionId": "rev-s10-r2-6",
+            "version": 2,
+            "changeSummary": "Added line 3",
+            "created": false,
+            "followUp": "What invoice number and due date should it have?"
+          },
+          "toolsUsed": [
+            "ask_store",
+            "read_guide",
+            "update_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "ask_store → read_guide → update_document"
+            },
+            {
+              "name": "a invoice",
+              "ok": true,
+              "detail": "invoice"
+            },
+            {
+              "name": "version 2",
+              "ok": true,
+              "detail": "2"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "13 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "0 quotes"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "What invoice number and due date should it have?"
+            },
+            {
+              "name": "only no fields changed",
+              "ok": true,
+              "detail": "none"
+            },
+            {
+              "name": "existing lines unchanged",
+              "ok": true
+            },
+            {
+              "name": "1 lines added",
+              "ok": true,
+              "detail": "1"
+            },
+            {
+              "name": "line 1 is 2 × Travel mug, Charcoal",
+              "ok": true,
+              "detail": "2 × Travel mug, Charcoal"
+            },
+            {
+              "name": "line 1: the store's price",
+              "ok": true,
+              "detail": "3699"
+            },
+            {
+              "name": "the earlier version is kept, unchanged",
+              "ok": true
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "2 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "2 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        },
+        {
+          "request": "Export version 1 as a Word file",
+          "made": {
+            "kind": "export",
+            "docKind": "invoice",
+            "outputId": "out-s10-r2-3",
+            "revisionId": "rev-s10-r2-4",
+            "version": 1,
+            "format": "docx"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "export_version"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: export",
+              "ok": true,
+              "detail": "export"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → export_version"
+            },
+            {
+              "name": "exports version 1",
+              "ok": true,
+              "detail": "version 1"
+            },
+            {
+              "name": "as docx",
+              "ok": true,
+              "detail": "docx"
+            },
+            {
+              "name": "the file opens",
+              "ok": true,
+              "detail": "fernhill-goods-co_invoice_v1_6a07.docx"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s11",
+      "run": 2,
+      "store": "saffron-loom",
+      "seconds": 10.2,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Quote for Kavya Iyer: 2 silk-blend sarees in madder red",
+          "made": {
+            "kind": "document",
+            "docKind": "quote",
+            "outputId": "out-s11-r2-2",
+            "revisionId": "rev-s11-r2-3",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "How long should the quote be valid for, and what number should it have?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a quote",
+              "ok": true,
+              "detail": "quote"
+            },
+            {
+              "name": "version 1",
+              "ok": true,
+              "detail": "1"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "9 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "1 quotes"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "How long should the quote be valid for, and what number should it have?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        },
+        {
+          "request": "Send it to me as an Excel file",
+          "made": {
+            "kind": "format-options",
+            "thing": "strict_document",
+            "requestedFormat": "Excel",
+            "offered": [
+              "PDF",
+              "Word"
+            ],
+            "message": "Quotes can't be exported as Excel files. I can send this quote to you as a PDF or a Word file instead."
+          },
+          "toolsUsed": [
+            "read_guide",
+            "show_format_options"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: format-options",
+              "ok": true,
+              "detail": "format-options"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → show_format_options"
+            },
+            {
+              "name": "offers PDF, Word",
+              "ok": true,
+              "detail": "PDF, Word"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s12",
+      "run": 2,
+      "store": "saffron-loom",
+      "seconds": 4.4,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Write our returns policy: 7 days, unworn, tags on",
+          "made": {
+            "kind": "coming-later",
+            "lane": "strict_document",
+            "summary": "Returns policy for Saffron Loom Textiles: returns accepted within 7 days, items must be unworn with tags on."
+          },
+          "toolsUsed": [
+            "read_guide",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: coming-later",
+              "ok": true,
+              "detail": "coming-later"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → create_strict_document"
+            },
+            {
+              "name": "coming later: strict_document",
+              "ok": true,
+              "detail": "strict_document"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s13",
+      "run": 2,
+      "store": "fernhill-goods",
+      "seconds": 8.9,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Quote for 500 wholesale units of the travel mug for Northside Outfitters.",
+          "made": {
+            "kind": "document",
+            "docKind": "quote",
+            "outputId": "out-s13-r2-2",
+            "revisionId": "rev-s13-r2-3",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "What wholesale price per mug should I quote, and which colour: Forest, Sand, Charcoal or Rust?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a quote",
+              "ok": true,
+              "detail": "quote"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "9 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "2 quotes"
+            },
+            {
+              "name": "1 line(s) of 500",
+              "ok": true,
+              "detail": "500 × Travel mug, wholesale"
+            },
+            {
+              "name": "no price invented: every price Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "Quote for is Northside Outfitters",
+              "ok": true,
+              "detail": "Northside Outfitters"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "What wholesale price per mug should I quote, and which colour: Forest, Sand, Charcoal or Rust?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s01",
+      "run": 3,
+      "store": "fernhill-goods",
+      "seconds": 5.1,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Make a quote for Bloom & Co for 40 ceramic planters in sand",
+          "made": {
+            "kind": "document",
+            "docKind": "quote",
+            "outputId": "out-s01-r3-2",
+            "revisionId": "rev-s01-r3-3",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "How long should the quote be valid for?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a quote",
+              "ok": true,
+              "detail": "quote"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "9 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "1 quotes"
+            },
+            {
+              "name": "1 lines",
+              "ok": true,
+              "detail": "1"
+            },
+            {
+              "name": "line 1 is 40 × Ceramic planter, Sand",
+              "ok": true,
+              "detail": "40 × Ceramic planter, Sand"
+            },
+            {
+              "name": "line 1: the store's price",
+              "ok": true,
+              "detail": "3399"
+            },
+            {
+              "name": "Quote for is Bloom & Co",
+              "ok": true,
+              "detail": "Bloom & Co"
+            },
+            {
+              "name": "Quote number stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "Valid until stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "How long should the quote be valid for?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s02",
+      "run": 3,
+      "store": "saffron-loom",
+      "seconds": 7.9,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Quote for Kavya Iyer: 2 silk-blend sarees in madder red and 4 ikat stoles in indigo. Quote number Q-118, valid for 15 days.",
+          "made": {
+            "kind": "document",
+            "docKind": "quote",
+            "outputId": "out-s02-r3-3",
+            "revisionId": "rev-s02-r3-4",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "What address should the quote show for Kavya Iyer?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → ask_store → create_strict_document"
+            },
+            {
+              "name": "a quote",
+              "ok": true,
+              "detail": "quote"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "12 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "3 quotes"
+            },
+            {
+              "name": "2 lines",
+              "ok": true,
+              "detail": "2"
+            },
+            {
+              "name": "line 1 is 2 × Silk-blend saree, Madder red",
+              "ok": true,
+              "detail": "2 × Silk-blend saree, Madder red"
+            },
+            {
+              "name": "line 1: the store's price",
+              "ok": true,
+              "detail": "468000"
+            },
+            {
+              "name": "line 2 is 4 × Ikat stole, Indigo",
+              "ok": true,
+              "detail": "4 × Ikat stole, Indigo"
+            },
+            {
+              "name": "line 2: the store's price",
+              "ok": true,
+              "detail": "151000"
+            },
+            {
+              "name": "Quote for is Kavya Iyer",
+              "ok": true,
+              "detail": "Kavya Iyer"
+            },
+            {
+              "name": "Quote number is Q-118",
+              "ok": true,
+              "detail": "Q-118"
+            },
+            {
+              "name": "Valid until is 2026-10-15",
+              "ok": true,
+              "detail": "2026-10-15"
+            },
+            {
+              "name": "ready to send",
+              "ok": true,
+              "detail": "ready"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "What address should the quote show for Kavya Iyer?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s)"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s)"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s03",
+      "run": 3,
+      "store": "fernhill-goods",
+      "seconds": 6.1,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Purchase order PO-7731 to Ridgeway Supply for 60 insulated bottles in forest at $11.50 each",
+          "made": {
+            "kind": "document",
+            "docKind": "purchase-order",
+            "outputId": "out-s03-r3-2",
+            "revisionId": "rev-s03-r3-3",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "When do you need Ridgeway Supply to deliver the bottles by?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a purchase-order",
+              "ok": true,
+              "detail": "purchase-order"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "7 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "3 quotes"
+            },
+            {
+              "name": "1 lines",
+              "ok": true,
+              "detail": "1"
+            },
+            {
+              "name": "line 1 is 60 × Insulated bottle, Forest",
+              "ok": true,
+              "detail": "60 × Insulated bottle, Forest"
+            },
+            {
+              "name": "line 1: the stated cost 11.50",
+              "ok": true,
+              "detail": "1150"
+            },
+            {
+              "name": "Supplier is Ridgeway Supply",
+              "ok": true,
+              "detail": "Ridgeway Supply"
+            },
+            {
+              "name": "PO number is PO-7731",
+              "ok": true,
+              "detail": "PO-7731"
+            },
+            {
+              "name": "Supplier address stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "Tax stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "When do you need Ridgeway Supply to deliver the bottles by?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s04",
+      "run": 3,
+      "store": "saffron-loom",
+      "seconds": 5.6,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Raise a PO to Kutch Weavers for 25 cotton bedspreads in ivory",
+          "made": {
+            "kind": "document",
+            "docKind": "purchase-order",
+            "outputId": "out-s04-r3-2",
+            "revisionId": "rev-s04-r3-3",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "What does Kutch Weavers charge per bedspread?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a purchase-order",
+              "ok": true,
+              "detail": "purchase-order"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "6 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "1 quotes"
+            },
+            {
+              "name": "1 lines",
+              "ok": true,
+              "detail": "1"
+            },
+            {
+              "name": "line 1 is 25 × Cotton bedspread, Ivory",
+              "ok": true,
+              "detail": "25 × Cotton bedspread, Ivory"
+            },
+            {
+              "name": "line 1: no price (the store's selling price is never used)",
+              "ok": true,
+              "detail": "null"
+            },
+            {
+              "name": "Supplier is Kutch Weavers",
+              "ok": true,
+              "detail": "Kutch Weavers"
+            },
+            {
+              "name": "PO number stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "Supplier address stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "What does Kutch Weavers charge per bedspread?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s05",
+      "run": 3,
+      "store": "saffron-loom",
+      "seconds": 5.9,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Make a receipt for order SL-01481, receipt number R-1481, paid by UPI",
+          "made": {
+            "kind": "document",
+            "docKind": "receipt",
+            "outputId": "out-s05-r3-2",
+            "revisionId": "rev-s05-r3-3",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a receipt",
+              "ok": true,
+              "detail": "receipt"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "14 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "2 quotes"
+            },
+            {
+              "name": "made from order SL-01481",
+              "ok": true,
+              "detail": "SL-01481"
+            },
+            {
+              "name": "total equals the order’s total",
+              "ok": true,
+              "detail": "133695"
+            },
+            {
+              "name": "Receipt number is R-1481",
+              "ok": true,
+              "detail": "R-1481"
+            },
+            {
+              "name": "Paid by is UPI",
+              "ok": true,
+              "detail": "UPI"
+            },
+            {
+              "name": "Date paid is 2026-09-16",
+              "ok": true,
+              "detail": "2026-09-16"
+            },
+            {
+              "name": "ready to send",
+              "ok": true,
+              "detail": "ready"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s)"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s)"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s06",
+      "run": 3,
+      "store": "fernhill-goods",
+      "seconds": 9.9,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Send Jordan Hughes a receipt for their most recent order",
+          "made": {
+            "kind": "document",
+            "docKind": "receipt",
+            "outputId": "out-s06-r3-4",
+            "revisionId": "rev-s06-r3-5",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "What receipt number should I use, and how did Jordan pay?"
+          },
+          "toolsUsed": [
+            "ask_store",
+            "read_guide",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "ask_store → read_guide → create_strict_document"
+            },
+            {
+              "name": "a receipt",
+              "ok": true,
+              "detail": "receipt"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "12 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "0 quotes"
+            },
+            {
+              "name": "made from order FH-01469",
+              "ok": true,
+              "detail": "FH-01469"
+            },
+            {
+              "name": "total equals the order’s total",
+              "ok": true,
+              "detail": "13597"
+            },
+            {
+              "name": "Receipt number stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "What receipt number should I use, and how did Jordan pay?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s07",
+      "run": 3,
+      "store": "fernhill-goods",
+      "seconds": 6.6,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Invoice for order FH-01500, due in 14 days",
+          "made": {
+            "kind": "document",
+            "docKind": "invoice",
+            "outputId": "out-s07-r3-3",
+            "revisionId": "rev-s07-r3-4",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "What invoice number should this have?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a invoice",
+              "ok": true,
+              "detail": "invoice"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "13 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "1 quotes"
+            },
+            {
+              "name": "made from order FH-01500",
+              "ok": true,
+              "detail": "FH-01500"
+            },
+            {
+              "name": "total equals the order’s total",
+              "ok": true,
+              "detail": "8998"
+            },
+            {
+              "name": "Due date is 2026-10-14",
+              "ok": true,
+              "detail": "2026-10-14"
+            },
+            {
+              "name": "Invoice number stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "What invoice number should this have?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s08",
+      "run": 3,
+      "store": "fernhill-goods",
+      "seconds": 6.5,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Receipt for order FH-01492",
+          "made": {
+            "kind": "reply",
+            "text": "I haven't made the receipt because **order FH-01492 was cancelled**. A receipt says payment was received, so issuing one for this order could give Caleb Ortiz the wrong idea.\n\nThe order was placed on 26 September 2026 for three items, totalling $194.97:\n- Ridge daypack, Rust\n- Alpine 30L backpack, Sand\n- Insulated bottle, Sand\n\nDid you mean a different order number? Or did Caleb pay for this one some other way? If he did, tell me the payment and I'll make the receipt.",
+            "usedStore": true,
+            "claims": [
+              {
+                "text": "$194.97",
+                "value": 194.97,
+                "precision": 0.01,
+                "kind": "money"
+              }
+            ]
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: reply",
+              "ok": true,
+              "detail": "reply"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store"
+            },
+            {
+              "name": "no system words on screen",
+              "ok": true
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s09",
+      "run": 3,
+      "store": "fernhill-goods",
+      "seconds": 16.1,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Make a quote for Bloom & Co for 40 ceramic planters in sand",
+          "made": {
+            "kind": "document",
+            "docKind": "quote",
+            "outputId": "out-s09-r3-2",
+            "revisionId": "rev-s09-r3-3",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "How long should the quote be valid for?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a quote",
+              "ok": true,
+              "detail": "quote"
+            },
+            {
+              "name": "version 1",
+              "ok": true,
+              "detail": "1"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "9 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "1 quotes"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "How long should the quote be valid for?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        },
+        {
+          "request": "Valid for 30 days, and number it Q-2041",
+          "made": {
+            "kind": "document",
+            "docKind": "quote",
+            "outputId": "out-s09-r3-2",
+            "revisionId": "rev-s09-r3-4",
+            "version": 2,
+            "changeSummary": "Set Quote number and set Valid until",
+            "created": false
+          },
+          "toolsUsed": [
+            "update_document"
+          ],
+          "calls": 1,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "update_document"
+            },
+            {
+              "name": "a quote",
+              "ok": true,
+              "detail": "quote"
+            },
+            {
+              "name": "version 2",
+              "ok": true,
+              "detail": "2"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "11 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "3 quotes"
+            },
+            {
+              "name": "Valid until is 2026-10-30",
+              "ok": true,
+              "detail": "2026-10-30"
+            },
+            {
+              "name": "Quote number is Q-2041",
+              "ok": true,
+              "detail": "Q-2041"
+            },
+            {
+              "name": "ready to send",
+              "ok": true,
+              "detail": "ready"
+            },
+            {
+              "name": "only invoice.dueDate, invoice.number changed",
+              "ok": true,
+              "detail": "invoice.number, invoice.dueDate"
+            },
+            {
+              "name": "existing lines unchanged",
+              "ok": true
+            },
+            {
+              "name": "no lines added",
+              "ok": true
+            },
+            {
+              "name": "the earlier version is kept, unchanged",
+              "ok": true
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s)"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s)"
+            }
+          ],
+          "ok": true
+        },
+        {
+          "request": "Make it a PDF",
+          "made": {
+            "kind": "export",
+            "docKind": "quote",
+            "outputId": "out-s09-r3-2",
+            "revisionId": "rev-s09-r3-4",
+            "version": 2,
+            "format": "pdf"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "export_version"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: export",
+              "ok": true,
+              "detail": "export"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → export_version"
+            },
+            {
+              "name": "exports version 2",
+              "ok": true,
+              "detail": "version 2"
+            },
+            {
+              "name": "as pdf",
+              "ok": true,
+              "detail": "pdf"
+            },
+            {
+              "name": "the file opens",
+              "ok": true,
+              "detail": "fernhill-goods-co_Q-2041_v2_26ee.pdf"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s10",
+      "run": 3,
+      "store": "fernhill-goods",
+      "seconds": 15.2,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Invoice for order FH-01500",
+          "made": {
+            "kind": "document",
+            "docKind": "invoice",
+            "outputId": "out-s10-r3-3",
+            "revisionId": "rev-s10-r3-4",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "What invoice number and due date should this invoice have?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a invoice",
+              "ok": true,
+              "detail": "invoice"
+            },
+            {
+              "name": "version 1",
+              "ok": true,
+              "detail": "1"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "12 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "0 quotes"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "What invoice number and due date should this invoice have?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        },
+        {
+          "request": "Add 2 travel mugs in charcoal",
+          "made": {
+            "kind": "document",
+            "docKind": "invoice",
+            "outputId": "out-s10-r3-3",
+            "revisionId": "rev-s10-r3-6",
+            "version": 2,
+            "changeSummary": "Added line 3",
+            "created": false,
+            "followUp": "What invoice number and due date should this invoice have?"
+          },
+          "toolsUsed": [
+            "ask_store",
+            "read_guide",
+            "update_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "ask_store → read_guide → update_document"
+            },
+            {
+              "name": "a invoice",
+              "ok": true,
+              "detail": "invoice"
+            },
+            {
+              "name": "version 2",
+              "ok": true,
+              "detail": "2"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "13 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "0 quotes"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "What invoice number and due date should this invoice have?"
+            },
+            {
+              "name": "only no fields changed",
+              "ok": true,
+              "detail": "none"
+            },
+            {
+              "name": "existing lines unchanged",
+              "ok": true
+            },
+            {
+              "name": "1 lines added",
+              "ok": true,
+              "detail": "1"
+            },
+            {
+              "name": "line 1 is 2 × Travel mug, Charcoal",
+              "ok": true,
+              "detail": "2 × Travel mug, Charcoal"
+            },
+            {
+              "name": "line 1: the store's price",
+              "ok": true,
+              "detail": "3699"
+            },
+            {
+              "name": "the earlier version is kept, unchanged",
+              "ok": true
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "2 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "2 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        },
+        {
+          "request": "Export version 1 as a Word file",
+          "made": {
+            "kind": "export",
+            "docKind": "invoice",
+            "outputId": "out-s10-r3-3",
+            "revisionId": "rev-s10-r3-4",
+            "version": 1,
+            "format": "docx"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "export_version"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: export",
+              "ok": true,
+              "detail": "export"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → export_version"
+            },
+            {
+              "name": "exports version 1",
+              "ok": true,
+              "detail": "version 1"
+            },
+            {
+              "name": "as docx",
+              "ok": true,
+              "detail": "docx"
+            },
+            {
+              "name": "the file opens",
+              "ok": true,
+              "detail": "fernhill-goods-co_invoice_v1_c920.docx"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s11",
+      "run": 3,
+      "store": "saffron-loom",
+      "seconds": 10.8,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Quote for Kavya Iyer: 2 silk-blend sarees in madder red",
+          "made": {
+            "kind": "document",
+            "docKind": "quote",
+            "outputId": "out-s11-r3-2",
+            "revisionId": "rev-s11-r3-3",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "How long should the quote be valid for, and what number should it have?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a quote",
+              "ok": true,
+              "detail": "quote"
+            },
+            {
+              "name": "version 1",
+              "ok": true,
+              "detail": "1"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "9 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "1 quotes"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "How long should the quote be valid for, and what number should it have?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        },
+        {
+          "request": "Send it to me as an Excel file",
+          "made": {
+            "kind": "format-options",
+            "thing": "strict_document",
+            "requestedFormat": "Excel",
+            "offered": [
+              "PDF",
+              "Word"
+            ],
+            "message": "Quotes can't be exported as Excel files. I can send Kavya Iyer's quote as a PDF or a Word document instead."
+          },
+          "toolsUsed": [
+            "read_guide",
+            "show_format_options"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: format-options",
+              "ok": true,
+              "detail": "format-options"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → show_format_options"
+            },
+            {
+              "name": "offers PDF, Word",
+              "ok": true,
+              "detail": "PDF, Word"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s12",
+      "run": 3,
+      "store": "saffron-loom",
+      "seconds": 4.2,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Write our returns policy: 7 days, unworn, tags on",
+          "made": {
+            "kind": "coming-later",
+            "lane": "strict_document",
+            "summary": "Returns policy for Saffron Loom Textiles: returns accepted within 7 days, items must be unworn with tags on."
+          },
+          "toolsUsed": [
+            "read_guide",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: coming-later",
+              "ok": true,
+              "detail": "coming-later"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → create_strict_document"
+            },
+            {
+              "name": "coming later: strict_document",
+              "ok": true,
+              "detail": "strict_document"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "s13",
+      "run": 3,
+      "store": "fernhill-goods",
+      "seconds": 7.9,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Quote for 500 wholesale units of the travel mug for Northside Outfitters.",
+          "made": {
+            "kind": "document",
+            "docKind": "quote",
+            "outputId": "out-s13-r3-2",
+            "revisionId": "rev-s13-r3-3",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "What wholesale price per mug should I quote, and which colour (Forest, Sand, Charcoal or Rust) or mix?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a quote",
+              "ok": true,
+              "detail": "quote"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "9 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "2 quotes"
+            },
+            {
+              "name": "1 line(s) of 500",
+              "ok": true,
+              "detail": "500 × Travel mug, wholesale"
+            },
+            {
+              "name": "no price invented: every price Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "Quote for is Northside Outfitters",
+              "ok": true,
+              "detail": "Northside Outfitters"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "What wholesale price per mug should I quote, and which colour (Forest, Sand, Charcoal or Rust) or mix?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    }
+  ]
+}

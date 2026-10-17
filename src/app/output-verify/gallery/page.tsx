@@ -2,6 +2,9 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
+import { DocumentPreview } from '@/components/documents/DocumentPreview'
+import { composeDocument } from '@/lib/documents/compose'
+import type { DocumentSnapshot } from '@/lib/documents/model'
 import type { Made } from '@/lib/output-system/agent/loop'
 import { sampleStore, type StoreId } from '@/lib/output-system/fixtures/stores'
 
@@ -9,6 +12,7 @@ import chartItems from '../../../../docs/output-system/gallery/chart.json'
 import chatItems from '../../../../docs/output-system/gallery/chat.json'
 import fileItems from '../../../../docs/output-system/gallery/file.json'
 import scores from '../../../../docs/output-system/gallery/scores.json'
+import strictItems from '../../../../docs/output-system/gallery/strict.json'
 import { ChartView } from '../ChartView'
 import { RichText } from '../RichText'
 import styles from '../outputVerify.module.css'
@@ -32,6 +36,30 @@ type Item = {
   ok: boolean
   checks: { name: string; ok: boolean; detail?: string }[]
   file?: { name: string; path: string; rows: number; bytes: number; preview: unknown[][]; summary?: string[] }
+}
+
+/** A strict-document conversation from the last strict gate run: its requests and the last version made. */
+type StrictItem = { id: string; storeName: string; requests: string[]; made: Made; ok: boolean; checks: { name: string; ok: boolean }[]; snapshot?: DocumentSnapshot; versions?: number }
+
+const STRICT_KINDS: [string, string][] = [['invoice', 'Invoice'], ['quote', 'Quote'], ['purchase-order', 'Purchase order'], ['receipt', 'Receipt']]
+
+function StrictEntry({ item, tag }: { item: StrictItem; tag: string }) {
+  const s = scoreOf(item.id)
+  return (
+    <article className={styles.galleryItem}>
+      <p className={styles.note}>{tag} · {item.id} · {item.storeName}{item.versions && item.versions > 1 ? ` · version ${item.versions}` : ''}</p>
+      {item.requests.map((r) => <p key={r} className={styles.person}>{r}</p>)}
+      {item.snapshot ? <div className={styles.galleryPaper}><DocumentPreview plan={composeDocument(item.snapshot)} /></div> : null}
+      <details className={styles.scoreBox}>
+        <summary>Advisory score {average(item.id).toFixed(1)} of 5 · automatic checks {item.checks.every((c) => c.ok) ? 'all passed' : 'failed'}</summary>
+        <ul>
+          {DIMENSIONS.map(([k, label]) => (
+            <li key={k}>{label}: {s?.scores[k] ?? '—'}{s?.evidence?.[k] ? ` — ${s.evidence[k]}` : ''}</li>
+          ))}
+        </ul>
+      </details>
+    </article>
+  )
 }
 
 type Scored = { scores: Record<string, number>; evidence?: Record<string, string> }
@@ -124,7 +152,10 @@ export default function OutputGalleryPage() {
   if (process.env.NODE_ENV === 'production') notFound()
   const items = [...chatItems, ...chartItems, ...fileItems] as unknown as Item[]
   const best = TEMPLATES.map((t) => ({ t, item: items.filter(t.of).sort((a, b) => average(b.id) - average(a.id) || a.id.localeCompare(b.id))[0] })).filter((x) => x.item)
-  const weakest = [...items].sort((a, b) => average(a.id) - average(b.id) || a.id.localeCompare(b.id)).slice(0, 2)
+  const strict = (strictItems as unknown as StrictItem[]).filter((i) => i.snapshot)
+  const bestStrict = STRICT_KINDS.map(([kind, label]) => ({ label, item: strict.filter((i) => i.snapshot!.kind === kind).sort((a, b) => average(b.id) - average(a.id) || a.id.localeCompare(b.id))[0] })).filter((x) => x.item)
+  const scored = [...items.map((i) => ({ id: i.id, item: i, strict: null })), ...strict.map((i) => ({ id: i.id, item: null, strict: i }))]
+  const weakest = scored.filter((x) => scoreOf(x.id)).sort((a, b) => average(a.id) - average(b.id) || a.id.localeCompare(b.id)).slice(0, 2)
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -135,10 +166,11 @@ export default function OutputGalleryPage() {
       <section className={styles.section} aria-labelledby="best-heading">
         <h2 id="best-heading" className={styles.heading}>Best of each kind</h2>
         {best.map(({ t, item }) => <Entry key={t.id} item={item} tag={t.label} />)}
+        {bestStrict.map(({ label, item }) => <StrictEntry key={label} item={item} tag={label} />)}
       </section>
       <section className={styles.section} aria-labelledby="weak-heading">
         <h2 id="weak-heading" className={styles.heading}>Two weakest results</h2>
-        {weakest.map((item) => <Entry key={item.id} item={item} tag="Weak" />)}
+        {weakest.map((x) => (x.strict ? <StrictEntry key={x.id} item={x.strict} tag="Weak" /> : <Entry key={x.id} item={x.item!} tag="Weak" />))}
       </section>
     </main>
   )

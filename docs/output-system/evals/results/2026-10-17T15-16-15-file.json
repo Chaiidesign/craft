@@ -1,0 +1,594 @@
+{
+  "set": "file",
+  "session": "2",
+  "runs": 1,
+  "useCache": true,
+  "promptVersion": "f368cc732b1b",
+  "guideVersion": "2268ec284014",
+  "right": 10,
+  "total": 10,
+  "results": [
+    {
+      "id": "f01",
+      "run": 1,
+      "store": "fernhill-goods",
+      "request": "Export last month's orders as Excel.",
+      "seconds": 4.1,
+      "calls": 2,
+      "toolsUsed": [
+        "read_guide",
+        "build_file"
+      ],
+      "made": {
+        "kind": "file",
+        "spec": {
+          "dataset": "orders",
+          "format": "xlsx",
+          "period": "last_month"
+        },
+        "note": "All orders from August 2026, every status, one row per order."
+      },
+      "checks": [
+        {
+          "name": "made a file",
+          "ok": true,
+          "detail": "file"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "read_guide → build_file"
+        },
+        {
+          "name": "format xlsx",
+          "ok": true,
+          "detail": "xlsx"
+        },
+        {
+          "name": "dataset orders",
+          "ok": true,
+          "detail": "orders"
+        },
+        {
+          "name": "rows match the sample store (41)",
+          "ok": true,
+          "detail": "41"
+        },
+        {
+          "name": "opens and parses back, one header row",
+          "ok": true
+        },
+        {
+          "name": "dates are real dates (ISO when read)",
+          "ok": true
+        },
+        {
+          "name": "currency in its own column",
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "f02",
+      "run": 1,
+      "store": "saffron-loom",
+      "request": "Give me our product catalog as a CSV.",
+      "seconds": 4.5,
+      "calls": 2,
+      "toolsUsed": [
+        "read_guide",
+        "build_file"
+      ],
+      "made": {
+        "kind": "file",
+        "spec": {
+          "dataset": "products",
+          "format": "csv"
+        },
+        "note": "Full product catalogue: one row per product, with title, SKU, category, price (INR) and stock."
+      },
+      "checks": [
+        {
+          "name": "made a file",
+          "ok": true,
+          "detail": "file"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "read_guide → build_file"
+        },
+        {
+          "name": "format csv",
+          "ok": true,
+          "detail": "csv"
+        },
+        {
+          "name": "dataset products",
+          "ok": true,
+          "detail": "products"
+        },
+        {
+          "name": "rows match the sample store (60)",
+          "ok": true,
+          "detail": "60"
+        },
+        {
+          "name": "opens and parses back, one header row",
+          "ok": true
+        },
+        {
+          "name": "currency in its own column",
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "f03",
+      "run": 1,
+      "store": "fernhill-goods",
+      "request": "Export all our customers as JSON.",
+      "seconds": 4.3,
+      "calls": 2,
+      "toolsUsed": [
+        "read_guide",
+        "build_file"
+      ],
+      "made": {
+        "kind": "file",
+        "spec": {
+          "dataset": "customers",
+          "format": "json"
+        },
+        "note": "Every customer in Fernhill Goods Co., one record each."
+      },
+      "checks": [
+        {
+          "name": "made a file",
+          "ok": true,
+          "detail": "file"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "read_guide → build_file"
+        },
+        {
+          "name": "format json",
+          "ok": true,
+          "detail": "json"
+        },
+        {
+          "name": "dataset customers",
+          "ok": true,
+          "detail": "customers"
+        },
+        {
+          "name": "rows match the sample store (200)",
+          "ok": true,
+          "detail": "200"
+        },
+        {
+          "name": "valid JSON, one record per row",
+          "ok": true
+        },
+        {
+          "name": "currency in its own column",
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "f04",
+      "run": 1,
+      "store": "saffron-loom",
+      "request": "Orders from July to September as a PDF.",
+      "seconds": 4.7,
+      "calls": 2,
+      "toolsUsed": [
+        "read_guide",
+        "build_file"
+      ],
+      "made": {
+        "kind": "file",
+        "spec": {
+          "dataset": "orders",
+          "format": "pdf",
+          "period": {
+            "from": "2026-07-01",
+            "to": "2026-09-30"
+          }
+        },
+        "note": "All orders from 1 July to 30 September 2026, every status, one row per order."
+      },
+      "checks": [
+        {
+          "name": "made a file",
+          "ok": true,
+          "detail": "file"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "read_guide → build_file"
+        },
+        {
+          "name": "format pdf",
+          "ok": true,
+          "detail": "pdf"
+        },
+        {
+          "name": "dataset orders",
+          "ok": true,
+          "detail": "orders"
+        },
+        {
+          "name": "rows match the sample store (126)",
+          "ok": true,
+          "detail": "126"
+        },
+        {
+          "name": "a real PDF",
+          "ok": true
+        },
+        {
+          "name": "currency in its own column",
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "f05",
+      "run": 1,
+      "store": "fernhill-goods",
+      "request": "A CSV of every refunded order this year.",
+      "seconds": 3.8,
+      "calls": 2,
+      "toolsUsed": [
+        "read_guide",
+        "build_file"
+      ],
+      "made": {
+        "kind": "file",
+        "spec": {
+          "dataset": "orders",
+          "format": "csv",
+          "period": "this_year",
+          "status": [
+            "refunded"
+          ]
+        },
+        "note": "Refunded orders, 1 January to 30 September 2026, one row per order."
+      },
+      "checks": [
+        {
+          "name": "made a file",
+          "ok": true,
+          "detail": "file"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "read_guide → build_file"
+        },
+        {
+          "name": "format csv",
+          "ok": true,
+          "detail": "csv"
+        },
+        {
+          "name": "dataset orders",
+          "ok": true,
+          "detail": "orders"
+        },
+        {
+          "name": "rows match the sample store (26)",
+          "ok": true,
+          "detail": "26"
+        },
+        {
+          "name": "opens and parses back, one header row",
+          "ok": true
+        },
+        {
+          "name": "currency in its own column",
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "f06",
+      "run": 1,
+      "store": "saffron-loom",
+      "request": "Products that are low on stock, as an Excel file.",
+      "seconds": 5.1,
+      "calls": 2,
+      "toolsUsed": [
+        "read_guide",
+        "build_file"
+      ],
+      "made": {
+        "kind": "file",
+        "spec": {
+          "dataset": "products",
+          "format": "xlsx",
+          "lowStockOnly": true
+        },
+        "note": "Products at or below their reorder level, as of 30 September 2026."
+      },
+      "checks": [
+        {
+          "name": "made a file",
+          "ok": true,
+          "detail": "file"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "read_guide → build_file"
+        },
+        {
+          "name": "format xlsx",
+          "ok": true,
+          "detail": "xlsx"
+        },
+        {
+          "name": "dataset products",
+          "ok": true,
+          "detail": "products"
+        },
+        {
+          "name": "rows match the sample store (8)",
+          "ok": true,
+          "detail": "8"
+        },
+        {
+          "name": "opens and parses back, one header row",
+          "ok": true
+        },
+        {
+          "name": "dates are real dates (ISO when read)",
+          "ok": true
+        },
+        {
+          "name": "currency in its own column",
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "f07",
+      "run": 1,
+      "store": "fernhill-goods",
+      "request": "I've attached our wholesale price list. Raise every price by 5% and round to the nearest .99.",
+      "seconds": 4.9,
+      "calls": 2,
+      "toolsUsed": [
+        "read_guide",
+        "build_file"
+      ],
+      "made": {
+        "kind": "upload-change",
+        "changes": [
+          {
+            "change": "adjust_numbers",
+            "column": "Wholesale price (USD)",
+            "percent": 5,
+            "rounding": {
+              "mode": "ending",
+              "ending": 0.99
+            }
+          }
+        ],
+        "note": "Wholesale 2026 price list with every wholesale price raised 5% and rounded to the nearest .99; all 8 rows, same columns."
+      },
+      "checks": [
+        {
+          "name": "made a file",
+          "ok": true,
+          "detail": "file"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "read_guide → build_file"
+        },
+        {
+          "name": "opens and parses back",
+          "ok": true
+        },
+        {
+          "name": "same format",
+          "ok": true,
+          "detail": "xlsx"
+        },
+        {
+          "name": "same columns in the same order",
+          "ok": true,
+          "detail": "SKU | Product | Wholesale price (USD) | Case size"
+        },
+        {
+          "name": "same sheet name",
+          "ok": true
+        },
+        {
+          "name": "every price ends in .99 and is 5% higher before rounding",
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "f08",
+      "run": 1,
+      "store": "saffron-loom",
+      "request": "Here's our customer list. Remove the duplicate emails and fix the capitalisation of the names.",
+      "seconds": 6.5,
+      "calls": 2,
+      "toolsUsed": [
+        "read_guide",
+        "build_file"
+      ],
+      "made": {
+        "kind": "upload-change",
+        "changes": [
+          {
+            "change": "trim_spaces",
+            "column": "Email"
+          },
+          {
+            "change": "remove_duplicates",
+            "column": "Email",
+            "ignoreCase": true
+          },
+          {
+            "change": "change_case",
+            "column": "Name",
+            "case": "title"
+          }
+        ],
+        "note": "Your customer list with duplicate emails removed (first one kept) and names in title case."
+      },
+      "checks": [
+        {
+          "name": "made a file",
+          "ok": true,
+          "detail": "file"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "read_guide → build_file"
+        },
+        {
+          "name": "opens and parses back",
+          "ok": true
+        },
+        {
+          "name": "same format",
+          "ok": true,
+          "detail": "csv"
+        },
+        {
+          "name": "same columns in the same order",
+          "ok": true,
+          "detail": "Name | Email | City"
+        },
+        {
+          "name": "rows after the change = 6",
+          "ok": true,
+          "detail": "6"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "f09",
+      "run": 1,
+      "store": "fernhill-goods",
+      "request": "Export all our orders as a Word document.",
+      "seconds": 5.5,
+      "calls": 2,
+      "toolsUsed": [
+        "read_guide",
+        "show_format_options"
+      ],
+      "made": {
+        "kind": "format-options",
+        "thing": "file",
+        "requestedFormat": "Word",
+        "offered": [
+          "Excel",
+          "PDF",
+          "CSV",
+          "JSON"
+        ],
+        "message": "I can't export your orders as a Word document. I can give you every order as an Excel spreadsheet, a PDF, a CSV or a JSON file."
+      },
+      "checks": [
+        {
+          "name": "made a format_not_supported",
+          "ok": true,
+          "detail": "format_not_supported"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "read_guide → show_format_options"
+        },
+        {
+          "name": "offers only formats the file kind exports",
+          "ok": true,
+          "detail": "Excel, PDF, CSV, JSON"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "f10",
+      "run": 1,
+      "store": "saffron-loom",
+      "request": "Our products as JSON, please.",
+      "seconds": 5.6,
+      "calls": 2,
+      "toolsUsed": [
+        "read_guide",
+        "build_file"
+      ],
+      "made": {
+        "kind": "file",
+        "spec": {
+          "dataset": "products",
+          "format": "json"
+        },
+        "note": "Every product in the Saffron Loom Textiles catalogue, with titles, SKUs, prices and stock."
+      },
+      "checks": [
+        {
+          "name": "made a file",
+          "ok": true,
+          "detail": "file"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "read_guide → build_file"
+        },
+        {
+          "name": "format json",
+          "ok": true,
+          "detail": "json"
+        },
+        {
+          "name": "dataset products",
+          "ok": true,
+          "detail": "products"
+        },
+        {
+          "name": "rows match the sample store (60)",
+          "ok": true,
+          "detail": "60"
+        },
+        {
+          "name": "valid JSON, one record per row",
+          "ok": true
+        },
+        {
+          "name": "currency in its own column",
+          "ok": true
+        }
+      ],
+      "ok": true
+    }
+  ]
+}

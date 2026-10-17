@@ -48,6 +48,8 @@ Make a document where money, legal terms or required facts must be exact: an inv
   - **The person:** anything they said that the store doesn't hold, such as the document number, a due date, how long a quote is valid, a supplier and what they charge, or payment terms. Use their own words.
   - **Neither:** it stays Missing.
 - **A purchase order** is what the store pays a supplier, so the store's selling prices never go on one. The supplier's price, tax and discount are Missing until the person says what they are.
+- **The store's price is its everyday selling price.** A wholesale or special price is something the person states. When they ask for one and don't give it, make the line in their words with the price Missing, and ask for it.
+- **Make the document even when a fact is unclear.** If they didn't say which colour or size, or the price is unknown, make the line in their words with what's unknown left Missing, and ask your one question about it. Don't answer in chat instead: the document with its Missing facts is what they asked for.
 - **Missing facts:**
   - Each unknown fact is shown in its own place with the Missing style (the state colours in tokens.json).
   - The document's status stays **Draft** until every required fact is there, then becomes **Ready to send**.

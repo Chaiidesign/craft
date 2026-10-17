@@ -1,0 +1,118 @@
+{
+  "set": "strict",
+  "session": "2",
+  "runs": 1,
+  "useCache": true,
+  "promptVersion": "f368cc732b1b",
+  "guideVersion": "f483f99935aa",
+  "right": 1,
+  "total": 1,
+  "results": [
+    {
+      "id": "s04",
+      "run": 1,
+      "store": "saffron-loom",
+      "seconds": 0,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Raise a PO to Kutch Weavers for 25 cotton bedspreads in ivory",
+          "made": {
+            "kind": "document",
+            "docKind": "purchase-order",
+            "outputId": "out-s04-r1-2",
+            "revisionId": "rev-s04-r1-3",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "What does Kutch Weavers charge per bedspread?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a purchase-order",
+              "ok": true,
+              "detail": "purchase-order"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "6 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "1 quotes"
+            },
+            {
+              "name": "1 lines",
+              "ok": true,
+              "detail": "1"
+            },
+            {
+              "name": "line 1 is 25 × Cotton bedspread, Ivory",
+              "ok": true,
+              "detail": "25 × Cotton bedspread, Ivory"
+            },
+            {
+              "name": "line 1: no price (the store's selling price is never used)",
+              "ok": true,
+              "detail": "null"
+            },
+            {
+              "name": "Supplier is Kutch Weavers",
+              "ok": true,
+              "detail": "Kutch Weavers"
+            },
+            {
+              "name": "PO number stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "Supplier address stays Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "What does Kutch Weavers charge per bedspread?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    }
+  ]
+}

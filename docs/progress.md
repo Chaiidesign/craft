@@ -82,28 +82,48 @@ Updated 2026-10-17.
 | | US$ |
 |---|---|
 | Session 1 | 15.66 of 20 (78%) |
-| Build total, from the ledger | 16.77 of 75 |
+| Session 2 | 13.11 of 20 (66%) |
+| Build total, from the ledger | 29.88 of 75 |
 | Phase 1, before the ledger existed (estimate, not in the ledger) | about 4 |
 
 **Open:**
-- **Product-catalog store question:** for Session 3.
-- **Offers in replies:** replies sometimes offer things that aren't built yet, like a purchase order.
+- **Product-catalog store question:** done in Session 2 (`find_products`). Session 3 uses it for spec sheets and r25.
+- **Offers in replies:** replies sometimes offered things that weren't built yet, like a purchase order. Purchase orders are built now; composed documents arrive in Session 3.
 - **Logos:** whether the sample stores get logos for the demo. The designer decides.
 - **Total row:** the PDF data export has none yet.
 - **Message card:** not built yet.
 
-**Session 2 (Strict documents): in progress.** Started in the same conversation as Session 1, at the designer's request. Dev server: `OUTPUT_BUILD_SESSION=2 npx next dev --webpack -p 4011` in `~/craft-output`.
+**Session 2 (Strict documents): done.** It ran in the same conversation as Session 1, at the designer's request (D-87).
+- **Report:** [reports/output-system-build-session-2.md](reports/output-system-build-session-2.md).
+- **Decisions:** D-87 to D-94. D-87 is approved; the others are assumed.
 
-Plan:
-1. **Engine:** quote, purchase order and receipt join the invoice as kinds of the same template family. Each kind has its own title, labels, required fields and totals wording. An optional shipping charge is added after tax, the way the sample orders work. The invoice's own output stays the same; its tests are the check.
-2. **Store lookups:** `ask_store` gains an order lookup and a product lookup (this also covers r25).
-3. **Store values are copied, never typed:** the model names an order number or product SKUs, and the document is filled from the sample data with "store" as the source. Anything else must quote the request, as before. Store address facts are added to the sample stores.
-4. **The strict-document tool becomes real:** gated with one retry; follow-ups revise the current version with digests; exports through the existing PDF and Word exporters, of the selected version.
-5. **/output-verify:** a document card with the preview, version, what is missing, version history and export buttons.
-6. **Evals:** `evals/strict.jsonl`, covering the right kind, numbers matching the store, nothing invented, follow-ups changing only what was asked, and exports of the selected version. Then routing re-checked (34 of 34) and app routing.
-7. **Look** at 390 and 1280 px and at every exported page; gallery; report.
+**What works:** invoice, quote, purchase order and receipt on `/output-verify`.
+- **How they're made:** from an order (found by its number, or by the customer's name) or from catalogue products. Store facts are copied, never typed (D-89). Anything else quotes the person.
+- **Missing facts** stay Missing, and the document stays a Draft until they're there.
+- **Follow-ups** make new versions and keep the old ones.
+- **Exports:** PDF and Word, of the version asked for.
+- **Not yet built:** policies show "coming later".
+- **The engine:** the quote, purchase order and receipt are kinds of the invoice's template (D-88), and the invoice's own output is unchanged.
 
-Order: the quote end to end first, then the purchase order and receipt, then the invoice from an order.
+**Checks:**
+- **Strict gate:** 39 of 39, three runs of 13 conversations with no cache.
+- **Routing:** 34 of 34. Through the app's real loop: 32 of 34.
+  - r25 belongs to Session 3.
+  - r27's made-up history refers to a composed document, which doesn't exist in the app yet.
+- **Chat, chart and file single runs:** 8/8, 4/4 and 10/10.
+- **Code:** 1,597 tests pass; the only failure is the known `theme.test.tsx`. Typecheck, lint and build are clean.
+
+**For the designer:** six items, listed in the report.
+1. Scaled page preview on phones
+2. A three-line invoice runs to two US Letter pages
+3. The "No logo supplied" box
+4. Billing address always Missing for store orders
+5. Payment terms not filled from "due in 14 days"
+6. A brief "Making your document" label while a document is being changed
+
+**Next: Session 3 (composed documents).** It builds the sales report, campaign plan and spec sheet, with changes by follow-up and exports, and it ends at the first designer gate: stop and show the gallery for all four kinds (build-loop.md §8).
+- **Start with:** "Read docs/output-system/build-loop.md and docs/progress.md, then run the next session."
+- **Dev server:** `OUTPUT_BUILD_SESSION=3 npx next dev --webpack -p 4011` in `~/craft-output`.
 
 ## In progress: output system Phase 1 (Foundations), branch `feat/output-system-foundations`
 

@@ -88,6 +88,7 @@
 /* Documents (Session 2): the lead line, then the engine's document card at full thread width. */
 .documentReply { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-width: 0; width: 100%; }
 .documentLead { margin: 0; max-width: 680px; }
+.galleryPaper { background: var(--wash); border-radius: 10px; padding: 12px; min-width: 0; }
 
 /* Gallery (Session 1) */
 .galleryItem { border-top: 1px solid var(--rule); padding: 20px 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }

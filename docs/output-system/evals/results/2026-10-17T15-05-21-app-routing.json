@@ -1,0 +1,18 @@
+[
+  {
+    "id": "r10",
+    "request": "Quote for 500 wholesale units of the travel mug for Northside Outfitters.",
+    "expected": [
+      "strict_document"
+    ],
+    "ask_ok": false,
+    "chosen": "strict_document",
+    "right": true,
+    "made": "document",
+    "tools": [
+      "read_guide",
+      "ask_store",
+      "create_strict_document"
+    ]
+  }
+]

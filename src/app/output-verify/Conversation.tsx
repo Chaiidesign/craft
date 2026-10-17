@@ -5,20 +5,19 @@ import { useRef, useState } from 'react'
 import { browserExportResources } from '@/components/documents/exportResources'
 import { FORMAT_LABEL } from '@/lib/documents/export/capabilities'
 import { exportDocument } from '@/lib/documents/generation/tools'
-import { INVOICE_FIELDS } from '@/lib/documents/invoice'
-import type { DocumentEnv, DocumentSnapshot, ExportFormat } from '@/lib/documents/model'
+import type { DocumentEnv, ExportFormat } from '@/lib/documents/model'
 import { emptyStore, getRevision, type RevisionStore } from '@/lib/documents/revisions'
 import { parseSession, serializeSession } from '@/lib/documents/session'
-import { templateFor } from '@/lib/documents/templates/invoice'
 import type { Made, Turn, UploadInfo } from '@/lib/output-system/agent/loop'
 import { buildFile, FORMAT_NAME, type BuiltFile } from '@/lib/output-system/files/build'
 import { applyChanges, describeUpload, readUpload, UploadError, writeUpload, type Upload } from '@/lib/output-system/files/upload'
 import { sampleStore, type StoreId } from '@/lib/output-system/fixtures/stores'
 import { LANE_LABELS, type Lane } from '@/lib/output-system/lanes'
+import { documentName, madeText } from '@/lib/output-system/history'
 import { kindName } from '@/lib/output-system/strict'
 import formats from '../../../docs/output-system/formats.json'
 
-import { DocumentCard, notProvided, type DownloadState } from '../document-chat/DocumentCard'
+import { DocumentCard, type DownloadState } from '../document-chat/DocumentCard'
 import { ChartView } from './ChartView'
 import { RichText } from './RichText'
 import styles from './outputVerify.module.css'
@@ -46,13 +45,6 @@ function isBuiltFor(thing: Lane, name: string): boolean {
 
 const env: DocumentEnv = { now: () => new Date().toISOString(), nextId: (p) => `${p}-${crypto.randomUUID().slice(0, 8)}` }
 
-/** "Quote Q-2041", or just "Quote" while the number is missing. */
-export function documentName(snapshot: DocumentSnapshot): string {
-  const name = snapshot.kind === 'brief' || snapshot.kind === 'deck' ? snapshot.kind : templateFor(snapshot.kind).title
-  const n = snapshot.fields[INVOICE_FIELDS.number]?.state
-  return n?.status === 'provided' && n.value.type === 'text' ? `${name} ${n.value.text}` : name
-}
-
 const sizeText = (bytes: number) => (bytes < 1024 ? `${bytes} bytes` : bytes < 1024 * 1024 ? `${(bytes / 1024).toFixed(1)} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`)
 
 function download(file: BuiltFile) {
@@ -67,30 +59,7 @@ function download(file: BuiltFile) {
 /** What Souvenir's turn says when it goes back to the model as history. */
 function historyText(e: Entry, revisions: RevisionStore): string {
   if (e.who === 'person') return e.attachment ? `${e.text}\n(Attached: ${e.attachment})` : e.text
-  const m = e.made
-  switch (m.kind) {
-    case 'reply':
-      return m.text
-    case 'file':
-      return e.file ? `I made the file “${e.file.fileName}” (${e.file.rows} rows).` : 'I tried to make a file, but it couldn’t be built.'
-    case 'upload-change':
-      return e.file ? `I changed the uploaded file and made “${e.file.fileName}”. ${e.changeSummary?.join(' ') ?? ''}` : 'I tried to change the uploaded file, but it couldn’t be done.'
-    case 'chart':
-      return `${m.lead}\n(Chart: ${m.chart.title}: ${m.chart.points.map((p) => `${p.label} ${p.display}`).join(', ')})`
-    case 'format-options':
-      return m.message
-    case 'document': {
-      const snapshot = getRevision(revisions, m.revisionId).snapshot
-      const missing = notProvided(snapshot)
-      return `${m.created ? 'I made' : 'I changed'} the ${documentName(snapshot)} (version ${m.version}${m.created ? '' : `: ${m.changeSummary}`}).${missing.length ? ` Still missing: ${missing.join(', ')}.` : ''}${m.followUp ? ` ${m.followUp}` : ''}`
-    }
-    case 'export':
-      return `Here is version ${m.version} as ${FORMAT_LABEL[m.format]}.`
-    case 'coming-later':
-      return `That would be a ${m.lane === 'export' ? 'new export' : LANE_LABELS[m.lane].toLowerCase()}: ${m.summary}`
-    case 'error':
-      return m.message
-  }
+  return madeText(e.made, revisions, e.file ? { fileName: e.file.fileName, rows: e.file.rows } : undefined, e.changeSummary)
 }
 
 export function Conversation() {

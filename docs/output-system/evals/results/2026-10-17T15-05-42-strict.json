@@ -1,0 +1,103 @@
+{
+  "set": "strict",
+  "session": "2",
+  "runs": 1,
+  "useCache": true,
+  "promptVersion": "f368cc732b1b",
+  "guideVersion": "2268ec284014",
+  "right": 1,
+  "total": 1,
+  "results": [
+    {
+      "id": "s13",
+      "run": 1,
+      "store": "fernhill-goods",
+      "seconds": 7.8,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Quote for 500 wholesale units of the travel mug for Northside Outfitters.",
+          "made": {
+            "kind": "document",
+            "docKind": "quote",
+            "outputId": "out-s13-r1-2",
+            "revisionId": "rev-s13-r1-3",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true,
+            "followUp": "What's the wholesale price per mug, and which colour: Forest, Sand, Charcoal or Rust?"
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a quote",
+              "ok": true,
+              "detail": "quote"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "9 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "2 quotes"
+            },
+            {
+              "name": "1 line(s) of 500",
+              "ok": true,
+              "detail": "500 × Travel mug, wholesale"
+            },
+            {
+              "name": "no price invented: every price Missing",
+              "ok": true,
+              "detail": "missing"
+            },
+            {
+              "name": "Quote for is Northside Outfitters",
+              "ok": true,
+              "detail": "Northside Outfitters"
+            },
+            {
+              "name": "no system words in the question",
+              "ok": true,
+              "detail": "What's the wholesale price per mug, and which colour: Forest, Sand, Charcoal or Rust?"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s), marked Draft"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    }
+  ]
+}

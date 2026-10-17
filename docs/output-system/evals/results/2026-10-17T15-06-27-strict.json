@@ -1,0 +1,112 @@
+{
+  "set": "strict",
+  "session": "2",
+  "runs": 1,
+  "useCache": false,
+  "promptVersion": "f368cc732b1b",
+  "guideVersion": "2268ec284014",
+  "right": 1,
+  "total": 1,
+  "results": [
+    {
+      "id": "s05",
+      "run": 1,
+      "store": "saffron-loom",
+      "seconds": 5.6,
+      "ok": true,
+      "turns": [
+        {
+          "request": "Make a receipt for order SL-01481, receipt number R-1481, paid by UPI",
+          "made": {
+            "kind": "document",
+            "docKind": "receipt",
+            "outputId": "out-s05-r1-2",
+            "revisionId": "rev-s05-r1-3",
+            "version": 1,
+            "changeSummary": "Created",
+            "created": true
+          },
+          "toolsUsed": [
+            "read_guide",
+            "ask_store",
+            "create_strict_document"
+          ],
+          "calls": 2,
+          "checks": [
+            {
+              "name": "made: document",
+              "ok": true,
+              "detail": "document"
+            },
+            {
+              "name": "read the guide before making a new document",
+              "ok": true,
+              "detail": "read_guide → ask_store → create_strict_document"
+            },
+            {
+              "name": "a receipt",
+              "ok": true,
+              "detail": "receipt"
+            },
+            {
+              "name": "every value has a source (the store or the person)",
+              "ok": true,
+              "detail": "14 sourced"
+            },
+            {
+              "name": "store values match the store exactly",
+              "ok": true,
+              "detail": "all match"
+            },
+            {
+              "name": "every quote is in what the person wrote",
+              "ok": true,
+              "detail": "2 quotes"
+            },
+            {
+              "name": "made from order SL-01481",
+              "ok": true,
+              "detail": "SL-01481"
+            },
+            {
+              "name": "total equals the order’s total",
+              "ok": true,
+              "detail": "133695"
+            },
+            {
+              "name": "Receipt number is R-1481",
+              "ok": true,
+              "detail": "R-1481"
+            },
+            {
+              "name": "Paid by is UPI",
+              "ok": true,
+              "detail": "UPI"
+            },
+            {
+              "name": "Date paid is 2026-09-16",
+              "ok": true,
+              "detail": "2026-09-16"
+            },
+            {
+              "name": "ready to send",
+              "ok": true,
+              "detail": "ready"
+            },
+            {
+              "name": "PDF file opens",
+              "ok": true,
+              "detail": "1 page(s)"
+            },
+            {
+              "name": "Word file opens",
+              "ok": true,
+              "detail": "1 page(s)"
+            }
+          ],
+          "ok": true
+        }
+      ]
+    }
+  ]
+}

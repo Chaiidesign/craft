@@ -1,0 +1,548 @@
+[
+  {
+    "id": "r01",
+    "request": "Why did sales drop last week?",
+    "expected": [
+      "chat_reply",
+      "inline_chart"
+    ],
+    "ask_ok": false,
+    "chosen": "inline_chart",
+    "right": true,
+    "made": "chart",
+    "tools": [
+      "ask_store",
+      "ask_store",
+      "ask_store",
+      "ask_store",
+      "show_chart",
+      "read_guide",
+      "show_chart"
+    ]
+  },
+  {
+    "id": "r02",
+    "request": "What's a sensible return window for a small apparel brand?",
+    "expected": [
+      "chat_reply"
+    ],
+    "ask_ok": false,
+    "chosen": "chat_reply",
+    "right": true,
+    "made": "reply",
+    "tools": [],
+    "text": "**30 days from delivery is the sensible default for a small apparel brand.** Most shoppers expect it, it leaves time for a try-on and a second opinion, and it's short enough that returned stock usually comes back while it's still in season and can be sold again.\n\nA few things matter as much as the number of days:\n\n- **Start the clock at delivery, not at purchase.** That's fairer to customers whose parcels arrive late, and it means fewer arguments.\n- **Ask for items unworn, with tags on.** This protects you from \"wear once and return\".\n- **Decide who pays return postage.** Free returns help conversion but cost you on every order. Many small brands offer free exchanges and charge a flat fee for refunds, which pushes people towards keeping the sale.\n- **List exceptions clearly.** Final-sale items, underwear, swimwear and earrings are usually excluded for hygiene reasons.\n\nSome brands stretch the window to 45–60 days in the holiday season so gifts bought in November can still be returned in January. It's a cheap way to win goodwill. Going shorter than 14 days tends to put buyers off, especially first-time customers who haven't tried your sizing yet.\n\nI can also draft a full return policy with these terms, ready to put on your store."
+  },
+  {
+    "id": "r03",
+    "request": "Write a product title for our linen summer dress, under 60 characters.",
+    "expected": [
+      "chat_reply"
+    ],
+    "ask_ok": false,
+    "chosen": "chat_reply",
+    "right": true,
+    "made": "reply",
+    "tools": [
+      "ask_store"
+    ],
+    "text": "> Linen Summer Dress, Lightweight and Breathable, Forest\n\nThat's 54 characters. Your store has this dress in four colours, so put each colour at the end. The longest version, Charcoal, is 56 characters, so every colour fits under 60.\n\n\"Linen\" and \"summer dress\" come first because shoppers usually search for those words. I didn't mention fit or cut because your current titles don't say what they are. If you tell me, I can add one, for example \"Relaxed Fit.\""
+  },
+  {
+    "id": "r04",
+    "request": "Reply to this customer: \"My order #4471 arrived with a cracked mug and I want a refund NOW.\"",
+    "expected": [
+      "message_card"
+    ],
+    "ask_ok": false,
+    "chosen": "message_card",
+    "right": true,
+    "made": "coming-later",
+    "tools": [
+      "read_guide",
+      "ask_store",
+      "show_message_card"
+    ]
+  },
+  {
+    "id": "r05",
+    "request": "Draft the email for our summer sale going to the VIP list on Friday.",
+    "expected": [
+      "message_card"
+    ],
+    "ask_ok": false,
+    "chosen": "message_card",
+    "right": true,
+    "made": "coming-later",
+    "tools": [
+      "read_guide",
+      "show_message_card"
+    ]
+  },
+  {
+    "id": "r06",
+    "request": "Text message reminding customers that their saved cart expires tonight.",
+    "expected": [
+      "message_card"
+    ],
+    "ask_ok": false,
+    "chosen": "message_card",
+    "right": true,
+    "made": "coming-later",
+    "tools": [
+      "read_guide",
+      "show_message_card"
+    ]
+  },
+  {
+    "id": "r07",
+    "request": "Show me sales by week for the last 8 weeks.",
+    "expected": [
+      "inline_chart"
+    ],
+    "ask_ok": false,
+    "chosen": "inline_chart",
+    "right": true,
+    "made": "chart",
+    "tools": [
+      "read_guide",
+      "ask_store",
+      "show_chart"
+    ]
+  },
+  {
+    "id": "r08",
+    "request": "Which five products sold the most in September?",
+    "expected": [
+      "inline_chart",
+      "chat_reply"
+    ],
+    "ask_ok": false,
+    "chosen": "chat_reply",
+    "right": true,
+    "made": "reply",
+    "tools": [
+      "ask_store"
+    ],
+    "text": "The Rust soy candle sold the most in September, with 7 units. These figures are from your store's fulfilled orders for September 1–30:\n\n1. **Soy candle, Rust**: 7 units ($384.93)\n2. Summit duffel, Charcoal: 6 units ($551.94)\n3. Travel mug, Rust: 5 units ($184.95)\n4. Linen summer dress, Rust: 4 units ($267.96)\n5. Insulated bottle, Sand: 4 units ($159.96)\n\nThe Charcoal Summit duffel sold one fewer than the candle but brought in the most money of the five.\n\nWant me to rank them by sales instead, or chart them?"
+  },
+  {
+    "id": "r09",
+    "request": "Invoice Bloom & Co for 40 ceramic planters at $18 each.",
+    "expected": [
+      "strict_document"
+    ],
+    "ask_ok": false,
+    "chosen": "strict_document",
+    "right": true,
+    "made": "document",
+    "tools": [
+      "read_guide",
+      "ask_store",
+      "ask_store",
+      "create_strict_document"
+    ]
+  },
+  {
+    "id": "r10",
+    "request": "Quote for 500 wholesale units of the travel mug for Northside Outfitters.",
+    "expected": [
+      "strict_document"
+    ],
+    "ask_ok": false,
+    "chosen": "strict_document",
+    "right": true,
+    "made": "document",
+    "tools": [
+      "read_guide",
+      "ask_store",
+      "create_strict_document"
+    ]
+  },
+  {
+    "id": "r11",
+    "request": "Purchase order to Packwell for 1,200 kraft mailer boxes, as a PDF.",
+    "expected": [
+      "strict_document"
+    ],
+    "ask_ok": false,
+    "chosen": "strict_document",
+    "right": true,
+    "made": "document",
+    "tools": [
+      "read_guide",
+      "ask_store",
+      "create_strict_document"
+    ]
+  },
+  {
+    "id": "r12",
+    "request": "Write our returns policy: 30 days, unworn items only, the buyer pays return shipping.",
+    "expected": [
+      "strict_document"
+    ],
+    "ask_ok": false,
+    "chosen": "strict_document",
+    "right": true,
+    "made": "coming-later",
+    "tools": [
+      "read_guide",
+      "create_strict_document"
+    ]
+  },
+  {
+    "id": "r13",
+    "request": "Black Friday campaign plan.",
+    "expected": [
+      "composed_document"
+    ],
+    "ask_ok": false,
+    "chosen": "composed_document",
+    "right": true,
+    "made": "coming-later",
+    "tools": [
+      "read_guide",
+      "ask_store",
+      "ask_store",
+      "create_document",
+      "create_document"
+    ]
+  },
+  {
+    "id": "r14",
+    "request": "Write the October sales report I can share with my business partner.",
+    "expected": [
+      "composed_document"
+    ],
+    "ask_ok": false,
+    "chosen": "composed_document",
+    "right": true,
+    "made": "coming-later",
+    "tools": [
+      "read_guide",
+      "ask_store",
+      "ask_store",
+      "ask_store",
+      "ask_store",
+      "create_document",
+      "create_document"
+    ]
+  },
+  {
+    "id": "r15",
+    "request": "Spec sheet for the Alpine 30L backpack for our retail partners.",
+    "expected": [
+      "composed_document"
+    ],
+    "ask_ok": false,
+    "chosen": "composed_document",
+    "right": true,
+    "made": "coming-later",
+    "tools": [
+      "read_guide",
+      "ask_store",
+      "create_document",
+      "create_document"
+    ]
+  },
+  {
+    "id": "r16",
+    "request": "Instagram ad for the summer sale.",
+    "expected": [
+      "design"
+    ],
+    "ask_ok": false,
+    "chosen": "design",
+    "right": true,
+    "made": "coming-later",
+    "tools": [
+      "read_guide",
+      "create_design"
+    ]
+  },
+  {
+    "id": "r17",
+    "request": "Mock up a product page for the new candle line.",
+    "expected": [
+      "design"
+    ],
+    "ask_ok": false,
+    "chosen": "design",
+    "right": true,
+    "made": "coming-later",
+    "tools": [
+      "read_guide",
+      "ask_store",
+      "create_design"
+    ]
+  },
+  {
+    "id": "r18",
+    "request": "Investor pitch deck for our seed round.",
+    "expected": [
+      "design"
+    ],
+    "ask_ok": false,
+    "chosen": "design",
+    "right": true,
+    "made": "coming-later",
+    "tools": [
+      "read_guide",
+      "ask_store",
+      "ask_store",
+      "ask_store",
+      "create_design",
+      "create_design"
+    ]
+  },
+  {
+    "id": "r19",
+    "request": "A weekly sales dashboard I can check every Monday.",
+    "expected": [
+      "dashboard"
+    ],
+    "ask_ok": false,
+    "chosen": "dashboard",
+    "right": true,
+    "made": "coming-later",
+    "tools": [
+      "read_guide",
+      "create_dashboard"
+    ]
+  },
+  {
+    "id": "r20",
+    "request": "I want to keep an eye on stock levels for my top 30 products every day.",
+    "expected": [
+      "dashboard"
+    ],
+    "ask_ok": false,
+    "chosen": "dashboard",
+    "right": true,
+    "made": "coming-later",
+    "tools": [
+      "read_guide",
+      "create_dashboard",
+      "create_dashboard"
+    ]
+  },
+  {
+    "id": "r21",
+    "request": "Shipping cost calculator for my site.",
+    "expected": [
+      "published_page"
+    ],
+    "ask_ok": false,
+    "chosen": "published_page",
+    "right": true,
+    "made": "coming-later",
+    "tools": [
+      "read_guide",
+      "publish_page"
+    ]
+  },
+  {
+    "id": "r22",
+    "request": "A quiz that helps shoppers find their skin type and recommends one of our serums.",
+    "expected": [
+      "published_page"
+    ],
+    "ask_ok": false,
+    "chosen": "published_page",
+    "right": true,
+    "made": "coming-later",
+    "tools": [
+      "read_guide",
+      "ask_store",
+      "ask_store",
+      "ask_store",
+      "ask_store",
+      "publish_page",
+      "publish_page"
+    ]
+  },
+  {
+    "id": "r23",
+    "request": "Export last month's orders as Excel.",
+    "expected": [
+      "file"
+    ],
+    "ask_ok": false,
+    "chosen": "file",
+    "right": true,
+    "made": "file",
+    "tools": [
+      "read_guide",
+      "build_file"
+    ]
+  },
+  {
+    "id": "r24",
+    "request": "Give me our product catalog as a CSV.",
+    "expected": [
+      "file"
+    ],
+    "ask_ok": false,
+    "chosen": "file",
+    "right": true,
+    "made": "file",
+    "tools": [
+      "read_guide",
+      "build_file"
+    ]
+  },
+  {
+    "id": "r25",
+    "request": "Write descriptions for these 20 products: the Alpine backpack, the Ridge daypack, the Summit duffel and 17 more from the spring range.",
+    "expected": [
+      "composed_document"
+    ],
+    "ask_ok": false,
+    "chosen": "chat_reply",
+    "right": false,
+    "made": "reply",
+    "tools": [
+      "ask_store",
+      "ask_store",
+      "ask_store",
+      "ask_store",
+      "ask_store"
+    ],
+    "text": "I can't write all 20 yet. The Alpine backpack, Ridge daypack and Summit duffel are in your catalogue, but nothing is marked as a spring range, so I can't tell which 17 products you mean.\n\nYour 60 products include travel mugs and enamel camp mugs as well as the bags. Each product comes in Forest, Sand, Charcoal and Rust.\n\n**Which 17 products are in the spring range?** Names, SKUs or a category are all fine. The catalogue only has titles, prices and stock, so details like materials, capacity or features would help too. Without them, I'll keep the descriptions to what the titles say rather than guess.\n\nOnce I have the list, I'll put all 20 descriptions in one document you can copy from or share."
+  },
+  {
+    "id": "r26",
+    "request": "A report for Monday's meeting on how Q3 went.",
+    "expected": [
+      "composed_document",
+      "design"
+    ],
+    "ask_ok": true,
+    "chosen": "ask",
+    "right": true,
+    "made": "reply",
+    "tools": [],
+    "text": "Should this be a written report to share, or slides to present on Monday?"
+  },
+  {
+    "id": "r27",
+    "request": "Move the email send to Thursday and add a section on influencer outreach.",
+    "expected": [
+      "update:composed_document"
+    ],
+    "ask_ok": false,
+    "chosen": "chat_reply",
+    "right": false,
+    "made": "reply",
+    "tools": [
+      "read_guide"
+    ],
+    "text": "I haven't changed the plan. I can't edit version 1 directly, so the email date and the influencer section aren't in it yet.\n\nYou can choose how to go ahead:\n- **A new copy of the plan, with both changes:** the email send moves to Thursday 26 November (Thanksgiving) and there's an influencer outreach section after paid social. It would be a separate document, so the other sections might not stay word for word.\n- **The influencer outreach section here in chat**, plus the new email date, so you can paste them into version 1 yourself.\n\nWhich would you like? Also, by \"Thursday\" did you mean Thanksgiving, or a Thursday earlier in the run-up?"
+  },
+  {
+    "id": "r28",
+    "request": "Make it a PDF.",
+    "expected": [
+      "export:strict_document"
+    ],
+    "ask_ok": false,
+    "chosen": "export:strict_document",
+    "right": true,
+    "made": "export",
+    "tools": [
+      "export_version"
+    ]
+  },
+  {
+    "id": "r29",
+    "request": "Share this with my team.",
+    "expected": [
+      "composed_document"
+    ],
+    "ask_ok": false,
+    "chosen": "composed_document",
+    "right": true,
+    "made": "coming-later",
+    "tools": [
+      "read_guide",
+      "create_document"
+    ]
+  },
+  {
+    "id": "r30",
+    "request": "Size guide for our jeans.",
+    "expected": [
+      "published_page",
+      "composed_document"
+    ],
+    "ask_ok": false,
+    "chosen": "published_page",
+    "right": true,
+    "made": "coming-later",
+    "tools": [
+      "read_guide",
+      "ask_store",
+      "publish_page"
+    ]
+  },
+  {
+    "id": "r31",
+    "request": "I've attached our wholesale price list (prices.xlsx). Raise every price by 5% and round to the nearest .99.",
+    "expected": [
+      "file"
+    ],
+    "ask_ok": false,
+    "chosen": "file",
+    "right": true,
+    "made": "upload-change",
+    "tools": [
+      "read_guide",
+      "build_file"
+    ]
+  },
+  {
+    "id": "r32",
+    "request": "Here's our customer list as a CSV I uploaded. Remove the duplicates and fix the capitalisation of the names.",
+    "expected": [
+      "file"
+    ],
+    "ask_ok": false,
+    "chosen": "file",
+    "right": true,
+    "made": "upload-change",
+    "tools": [
+      "read_guide",
+      "build_file"
+    ]
+  },
+  {
+    "id": "r33",
+    "request": "Send it to me as an Excel file.",
+    "expected": [
+      "format_not_supported"
+    ],
+    "ask_ok": false,
+    "chosen": "format_not_supported",
+    "right": true,
+    "made": "format-options",
+    "tools": [
+      "read_guide",
+      "show_format_options"
+    ]
+  },
+  {
+    "id": "r34",
+    "request": "Can I get the shipping calculator as a PowerPoint?",
+    "expected": [
+      "format_not_supported"
+    ],
+    "ask_ok": false,
+    "chosen": "format_not_supported",
+    "right": true,
+    "made": "format-options",
+    "tools": [
+      "read_guide",
+      "show_format_options"
+    ]
+  }
+]

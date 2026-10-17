@@ -11,7 +11,7 @@ import { Button } from '@/components/Button'
 import { DocumentPreview } from '@/components/documents/DocumentPreview'
 import { composeDocument } from '@/lib/documents/compose'
 import { capability, FORMAT_LABEL, formatsFor } from '@/lib/documents/export/capabilities'
-import { INVOICE_FIELDS } from '@/lib/documents/invoice'
+import { notProvided } from '@/lib/documents/missing'
 import type { DocumentSnapshot, ExportFormat } from '@/lib/documents/model'
 import { validateSnapshot } from '@/lib/documents/validation'
 
@@ -19,28 +19,7 @@ import styles from './chat.module.css'
 
 export type DownloadState = { format: ExportFormat; status: 'working' } | { format: ExportFormat; status: 'failed'; message: string } | null
 
-/** Rates that only matter once their applicability is known to be "applies". */
-const RATE_OF: Readonly<Record<string, { applicability: string; on: string }>> = {
-  [INVOICE_FIELDS.taxRate]: { applicability: INVOICE_FIELDS.taxApplicability, on: 'applicable' },
-  [INVOICE_FIELDS.discountRate]: { applicability: INVOICE_FIELDS.discountApplicability, on: 'percent' },
-}
-
-/**
- * Labels of the facts still missing: required fields, then line items with no description.
- * A rate is left out until its applicability says it applies, so the list asks for one thing at a time.
- */
-export function notProvided(snapshot: DocumentSnapshot): string[] {
-  const applies = (id: string) => {
-    const rate = RATE_OF[id]
-    if (!rate) return true
-    const state = snapshot.fields[rate.applicability]?.state
-    return state?.status === 'provided' && state.value.type === 'choice' && state.value.option === rate.on
-  }
-  const fields = snapshot.fieldOrder.filter((id) => snapshot.fields[id].required && snapshot.fields[id].state.status === 'missing' && applies(id)).map((id) => snapshot.fields[id].label)
-  const items = snapshot.blocks.flatMap((b) => (b.type === 'line-items' ? b.items : []))
-  const lines = items.flatMap((item, i) => (item.description === null ? [`Line ${i + 1} description`] : []))
-  return [...fields, ...lines]
-}
+export { notProvided } from '@/lib/documents/missing'
 
 export function ReadinessChip({ snapshot }: { snapshot: DocumentSnapshot }) {
   const report = validateSnapshot(snapshot)
