@@ -4,8 +4,9 @@
 // set. A lane added in a later build loop slots in here; its code lives in its
 // own folder and is registered, never wired in by hand elsewhere.
 //
-// Session 0 registers every lane with no renderer yet. Launch lanes are
-// "being built"; the rest show "coming later" (D-78).
+// Session 0 registered every lane; launch lanes are "being built", the rest show
+// "coming later" (D-78). Sessions 1 and 2 named each built lane's eval set, and
+// Session 2 the strict templates the engine now has (D-88).
 
 import { ACTIONS, LANE_LABELS, LANES, type Action, type Lane } from './lanes'
 
@@ -49,7 +50,7 @@ const SPECS: Record<Lane, Spec> = {
     scope: 'launch',
     status: 'being-built',
     templates: [],
-    evalSet: null,
+    evalSet: 'docs/output-system/evals/chat.jsonl',
   },
   file: {
     makes: 'Store data as Excel, CSV, JSON or PDF, and changes to files you upload.',
@@ -61,7 +62,7 @@ const SPECS: Record<Lane, Spec> = {
       { id: 'customers-export', label: 'Customers export', status: 'planned' },
       { id: 'uploaded-change', label: 'Change to an uploaded file', status: 'planned' },
     ],
-    evalSet: null,
+    evalSet: 'docs/output-system/evals/file.jsonl',
   },
   strict_document: {
     makes: 'Invoices, quotes, purchase orders and receipts, with exact totals.',
@@ -69,14 +70,14 @@ const SPECS: Record<Lane, Spec> = {
     status: 'being-built',
     templates: [
       { id: 'invoice', label: 'Invoice', status: 'exists' },
-      { id: 'quote', label: 'Quote', status: 'planned' },
-      { id: 'purchase-order', label: 'Purchase order', status: 'planned' },
-      { id: 'receipt', label: 'Receipt', status: 'planned' },
+      { id: 'quote', label: 'Quote', status: 'exists' },
+      { id: 'purchase-order', label: 'Purchase order', status: 'exists' },
+      { id: 'receipt', label: 'Receipt', status: 'exists' },
       { id: 'credit-note', label: 'Credit note', status: 'if-time' },
       { id: 'packing-slip', label: 'Packing slip', status: 'if-time' },
       { id: 'returns-policy', label: 'Returns policy', status: 'if-time' },
     ],
-    evalSet: null,
+    evalSet: 'docs/output-system/evals/strict.jsonl',
   },
   composed_document: {
     makes: 'Reports, plans and spec sheets to keep or share.',
@@ -104,7 +105,7 @@ const SPECS: Record<Lane, Spec> = {
     scope: 'if-time',
     status: 'being-built',
     templates: [],
-    evalSet: null,
+    evalSet: 'docs/output-system/evals/chart.jsonl',
   },
   design: { makes: 'Ads, social posts, mockups and slides.', scope: 'later', status: 'coming-later', templates: [], evalSet: null },
   dashboard: { makes: 'Numbers you check every week.', scope: 'later', status: 'coming-later', templates: [], evalSet: null },

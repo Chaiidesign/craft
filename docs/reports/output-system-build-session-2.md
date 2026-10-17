@@ -73,6 +73,11 @@ On `/output-verify`, the four strict documents can be made, changed and exported
 | s12 | Returns policy, coming later |
 | s13 | Wholesale quote with the price Missing |
 
+**Caught in review and fixed:**
+- **The `/document-chat` generator.** Widening the generator's list of kinds would have let `/document-chat` and the agent CLI accept a quote they can't make. They would have saved an invoice, or failed with a retry error. The list is back to invoices only, and a test checks it.
+- **The lane registry** now lists the new templates and each lane's eval set.
+- **`/document-verify`** was checked at 390 and 1280 px after the engine change. The fixture invoices render as before.
+
 **Tests:**
 - `strict.test.ts` makes a receipt and an invoice from every order that wasn't cancelled (about 950) and checks each total equals the order's to the cent.
 - The loop tests cover making, changing, exporting, the one retry, and the "other" type.

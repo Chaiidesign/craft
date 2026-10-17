@@ -79,6 +79,16 @@ describe('generate: the done-condition prompt', () => {
   })
 })
 
+describe('this generator stays invoice-only (D-88)', () => {
+  it('refuses a direct quote, and a model proposal for a quote is "other"', async () => {
+    const out = await generateDocument({ docType: 'quote', operations: [] }, context())
+    expect(out.ok).toBe(false)
+    expect(!out.ok && out.error.code).toBe('invalid-input')
+    const intent = (toolSchemas().tools[0].input_schema as { anyOf?: unknown[] })
+    expect(JSON.stringify(intent)).not.toContain('"quote"')
+  })
+})
+
 describe('unbranded documents (D-61)', () => {
   it('take a stated issuer as an ordinary field and show it in the footer, still with no letterhead', async () => {
     const v1 = await generated()

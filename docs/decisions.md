@@ -115,7 +115,10 @@ Applied in: `src/lib/output-system/strict.ts`, `storeTool.ts`, `model.ts` (`Prov
   Fixture invoices made before these fields existed keep exactly the blocks they had.
 - **Exports.** The three new kinds export as PDF and Word, never slides. `formats.json` now lists them as built, under `kinds.strict_document`.
 
-Applied in: `src/lib/documents/model.ts`, `invoice.ts`, `templates/invoice.ts`, `compose.ts`, `validation.ts`, `revisions.ts`, `export/capabilities.ts`, `export/filename.ts`, `session.ts`, `generation/ops.ts`, `src/lib/output-system/formats.ts`.
+- **The `/document-chat` generator stays invoice-only.** It starts every document from a blank invoice, so `GENERATABLE_KINDS` is still `['invoice']`, and a test checks that it refuses a quote. `/output-verify` makes the other kinds through `output-system/strict.ts`.
+- **The lane registry** lists the four kinds as templates the engine has, and names each built lane's eval set. A test checks that every guide and eval set it names exists.
+
+Applied in: `src/lib/documents/model.ts`, `invoice.ts`, `templates/invoice.ts`, `compose.ts`, `validation.ts`, `revisions.ts`, `export/capabilities.ts`, `export/filename.ts`, `session.ts`, `src/lib/output-system/formats.ts`, `registry.ts`.
 
 ### D-87 · 2026-10-17 · Session 2 ran in the same conversation as Session 1
 **Status: approved.** Chaitanya said "start" when offered a new conversation.

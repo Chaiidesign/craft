@@ -203,3 +203,16 @@ describe('cache keys', () => {
     expect(versionOf('x')).toHaveLength(12)
   })
 })
+
+describe('lane registry', () => {
+  it('names eval sets and guides that exist', async () => {
+    const { existsSync } = await import('node:fs')
+    const { REGISTRY, laneEntry } = await import('./registry')
+    const root = fileURLToPath(new URL('../../../', import.meta.url))
+    for (const entry of REGISTRY) {
+      expect(existsSync(join(root, entry.guide)), entry.guide).toBe(true)
+      if (entry.evalSet) expect(existsSync(join(root, entry.evalSet)), entry.evalSet).toBe(true)
+    }
+    expect(laneEntry('strict_document').templates.filter((t) => t.status === 'exists').map((t) => t.id)).toEqual(['invoice', 'quote', 'purchase-order', 'receipt'])
+  })
+})

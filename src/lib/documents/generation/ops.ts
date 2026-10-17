@@ -9,12 +9,17 @@
 
 import { z } from 'zod'
 
-import { COMMERCIAL_KINDS, INVOICE_FIELDS } from '../invoice'
+import { INVOICE_FIELDS } from '../invoice'
 
 const CURRENCY_CODES = ['USD', 'EUR', 'GBP', 'INR', 'JPY'] as const
 
-/** Documents the generator can make now (D-59 widens this slice by slice; the quote, purchase order and receipt share the invoice's fields). */
-export const GENERATABLE_KINDS = COMMERCIAL_KINDS
+/**
+ * Documents this generator (the /document-chat and agent tool surface) can make now; D-59 widens it
+ * slice by slice. The quote, purchase order and receipt exist in the engine (D-88) and share the
+ * invoice's field IDs below, but this generator still starts every document from a blank invoice,
+ * so it stays invoice-only. /output-verify makes the other kinds through output-system/strict.ts.
+ */
+export const GENERATABLE_KINDS = ['invoice'] as const
 export type GeneratableKind = (typeof GENERATABLE_KINDS)[number]
 
 export const INVOICE_FIELD_IDS = Object.values(INVOICE_FIELDS) as [string, ...string[]]
