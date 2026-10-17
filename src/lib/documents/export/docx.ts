@@ -277,8 +277,11 @@ export async function renderDocx(snapshot: Exclude<DocumentSnapshot, DeckSnapsho
         const values: { id: string; cells: PlanValue[] }[] = node.primitive === 'table'
           ? node.rows.map((r) => ({ id: r.id, cells: r.cells.map((c, k) => ({ kind: 'text', text: c, style: cols[k].numeric ? 'amount' : 'tableText' }) as PlanValue) }))
           : node.rows.map((r) => ({ id: r.id, cells: [r.description, { kind: 'text', text: r.quantity, style: 'amount' }, r.unitPrice, r.amount] }))
-        // The last rows keep with the totals that follow (as many as the engine kept: KEEP.rowsWithTotals).
-        const keepTail = node.primitive === 'invoice-line-items' && next?.primitive === 'totals' ? 2 : 0
+        // The last rows keep with the totals that follow (as many as the engine kept: KEEP.rowsWithTotals),
+        // but only when the engine's own layout splits the table: a table that fits whole on its page
+        // stays whole, and the totals move instead (Session 3).
+        const tableSplit = paged.pages.flatMap((p) => p.fragments).filter((f) => f.nodeId === node.id).length > 1
+        const keepTail = node.primitive === 'invoice-line-items' && next?.primitive === 'totals' && tableSplit ? 2 : 0
         const rows = [
           new d.TableRow({ tableHeader: true, cantSplit: true, children: headers.map((h, k) => cell([para([run(h, PRINT_TYPE.tableHeader)], PRINT_TYPE.tableHeader, { align: cols[k].align, keepNext: true })], cols[k].width, { padX, padY, bottom: { colour: palette.ink, size: eighths(TABLE.headerRuleWidthPt) } })) }),
           ...values.map((r, ri) => new d.TableRow({

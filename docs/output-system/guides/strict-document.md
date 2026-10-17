@@ -49,6 +49,7 @@ Make a document where money, legal terms or required facts must be exact: an inv
   - **Neither:** it stays Missing.
 - **A purchase order** is what the store pays a supplier, so the store's selling prices never go on one. The supplier's price, tax and discount are Missing until the person says what they are.
 - **The store's price is its everyday selling price.** A wholesale or special price is something the person states. When they ask for one and don't give it, make the line in their words with the price Missing, and ask for it.
+- **"Due in 14 days" is two facts:** set the due date to 14 days after the document date, and set the payment terms in the person's words ("Due in 14 days"). Both quote the same words. The same goes for "net 30" or "payable within a week".
 - **Make the document even when a fact is unclear.** If they didn't say which colour or size, or the price is unknown, make the line in their words with what's unknown left Missing, and ask your one question about it. Don't answer in chat instead: the document with its Missing facts is what they asked for.
 - **Missing facts:**
   - Each unknown fact is shown in its own place with the Missing style (the state colours in tokens.json).

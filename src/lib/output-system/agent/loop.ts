@@ -109,6 +109,7 @@ export async function runTurn(input: TurnInput): Promise<TurnResult> {
   const docs = input.documents ?? { revisions: emptyStore(), current: null }
   const currentDoc = docs.current ? currentRevision(docs.revisions, docs.current) : null
   const currentNoun = currentDoc && isCommercial(currentDoc.snapshot) ? kindName(currentDoc.snapshot.kind) : undefined
+  const currentLane = currentDoc && isCommercial(currentDoc.snapshot) ? 'strict_document' : undefined
   const sourceText = [...input.history.filter((h) => h.role === 'person').map((h) => h.text), input.request].join('\n')
 
   while (calls < MAX_CALLS) {
@@ -140,7 +141,9 @@ export async function runTurn(input: TurnInput): Promise<TurnResult> {
     for (const use of uses) {
       toolsUsed.push(use.name)
       input.onEvent?.({ type: 'tool', name: use.name })
-      input.onEvent?.({ type: 'progress', label: progressLabel(use.name, use.input, currentNoun) })
+      // With a document already made, rereading its kind's guide is part of changing it, so the label follows the change.
+      const rereading = use.name === 'read_guide' && currentNoun && (use.input as { type?: string } | null)?.type === currentLane
+      input.onEvent?.({ type: 'progress', label: rereading ? `Changing your ${currentNoun}` : progressLabel(use.name, use.input, currentNoun) })
 
       if (use.name === 'read_guide') {
         const g = GuideInputSchema.safeParse(use.input)

@@ -36,6 +36,8 @@ export type Customer = {
   email: string
   city: string
   country: string
+  /** Full fictional billing address, as it prints: street, then city with region and postcode, then country. */
+  address: readonly string[]
   /** YYYY-MM-DD */
   firstOrderOn: string | null
 }
@@ -81,15 +83,26 @@ export type Store = {
   orders: Order[]
 }
 
-/** A USD store has no brand profile among the document fixtures, so this one is new and fictional (D-77, assumed). */
+/** A USD store has no brand profile among the document fixtures, so this one is new and fictional (D-77, assumed). Version 2 adds its fictional wordmark (Session 3). */
 export const FERNHILL_GOODS_BRAND: BrandProfile = {
   profileId: 'brand-fernhill-goods',
-  version: 1,
+  version: 2,
   issuerDisplayName: 'Fernhill Goods Co.',
-  logo: null,
-  assetStatus: 'missing',
+  logo: { assetId: 'asset-fernhill-goods-wordmark', src: '/document-fixtures/fernhill-goods-wordmark.png', alt: 'Fernhill Goods Co. wordmark (fictional)', widthPx: 480, heightPx: 240 },
+  assetStatus: 'supplied',
   palette: { ink: '#1C1B19', muted: '#5E5A53', rule: '#D9D4CB', accent: '#2F5D50' },
   themeId: 'placeholder',
+}
+
+/**
+ * Saffron Loom's store profile: the document fixtures' SAFFRON_LOOM brand, version 2, with a fictional
+ * wordmark. The fixture brand itself is unchanged, so /document-verify's invoices render as before.
+ */
+export const SAFFRON_LOOM_STORE_BRAND: BrandProfile = {
+  ...SAFFRON_LOOM,
+  version: 2,
+  logo: { assetId: 'asset-saffron-loom-wordmark', src: '/document-fixtures/saffron-loom-wordmark.png', alt: 'Saffron Loom wordmark (fictional)', widthPx: 480, heightPx: 240 },
+  assetStatus: 'supplied',
 }
 
 // ── Seeded generator ─────────────────────────────────────────────────────────
@@ -159,7 +172,7 @@ const SPECS: StoreSpec[] = [
     country: 'India',
     locale: 'en-IN',
     pageSize: 'a4-portrait',
-    brand: SAFFRON_LOOM,
+    brand: SAFFRON_LOOM_STORE_BRAND,
     // The address Saffron Loom's fixture invoice already uses (fixtures/invoices.ts).
     address: ['Plot 22, Weavers’ Colony', 'Bhuj, Gujarat 370001', 'India'],
     skuPrefix: 'SLT',
@@ -237,16 +250,42 @@ function makeProducts(spec: StoreSpec, rand: () => number): Product[] {
   return products
 }
 
+/** Fictional street names and each sample city's region and postcode prefix, for billing addresses. */
+const ADDRESS_PARTS: Record<string, { streets: string[]; areas?: string[]; cities: Record<string, [region: string, postcodePrefix: string]> }> = {
+  India: {
+    streets: ['Gulmohar Lane', 'Peepal Tree Road', 'Mango Grove Street', 'Weavers’ Row', 'Lotus Court Road', 'Banyan Cross'],
+    areas: ['Sector 4', 'Old Market', 'Lake View Colony', 'Station Road', 'Hill Park', 'Green Avenue'],
+    cities: { Bengaluru: ['Karnataka', '560'], Mumbai: ['Maharashtra', '400'], Delhi: ['Delhi', '110'], Chennai: ['Tamil Nadu', '600'], Pune: ['Maharashtra', '411'], Kolkata: ['West Bengal', '700'], Hyderabad: ['Telangana', '500'], Jaipur: ['Rajasthan', '302'] },
+  },
+  'United States': {
+    streets: ['Larch Street', 'Orchard Avenue', 'Millpond Road', 'Cedar Hollow Lane', 'Quarry Street', 'Juniper Way'],
+    cities: { Portland: ['OR', '972'], Denver: ['CO', '802'], Austin: ['TX', '787'], Chicago: ['IL', '606'], Raleigh: ['NC', '276'], Boise: ['ID', '837'], Madison: ['WI', '537'], Tucson: ['AZ', '857'] },
+  },
+}
+
+function billingAddress(country: string, city: string, rand: () => number): string[] {
+  const parts = ADDRESS_PARTS[country]
+  const [region, prefix] = parts.cities[city]
+  const number = int(rand, 2, 480)
+  const street = pick(rand, parts.streets)
+  if (country === 'India') return [`${number}, ${street}, ${pick(rand, parts.areas!)}`, `${city}, ${region} ${prefix}${pad(int(rand, 1, 99), 3)}`, country]
+  return [`${number} ${street}`, `${city}, ${region} ${prefix}${pad(int(rand, 1, 99), 2)}`, country]
+}
+
 function makeCustomers(spec: StoreSpec, rand: () => number): Customer[] {
+  // Addresses come from their own seeded stream, so adding them changed none of the orders.
+  const addressRand = seeded(spec.seed + 7)
   return Array.from({ length: 200 }, (_, i) => {
     const first = pick(rand, spec.firstNames)
     const last = pick(rand, spec.lastNames)
+    const city = pick(rand, spec.cities)
     return {
       id: `${spec.id}-c${pad(i + 1, 3)}`,
       name: `${first} ${last}`,
       email: `${first}.${last}.${i + 1}@example.com`.toLowerCase(),
-      city: pick(rand, spec.cities),
+      city,
       country: spec.country,
+      address: billingAddress(spec.country, city, addressRand),
       firstOrderOn: null,
     }
   })

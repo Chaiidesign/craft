@@ -167,12 +167,15 @@ describe('strict documents in the loop', () => {
     if (first.made.kind !== 'document') throw new Error('no document')
     const documents = { revisions: first.revisions!, current: first.made.outputId }
     const { call, seen } = scripted(
+      [{ type: 'tool_use', name: 'read_guide', input: { type: 'strict_document' } }],
       [{ type: 'tool_use', name: 'update_document', input: { operations: [{ op: 'setField', fieldId: 'invoice.number', value: { type: 'text', text: 'R-77' }, provenance: { source: 'prompt', evidence: 'number it R-77' }, expectedDigest: 'deadbeef' }] } }],
       [{ type: 'tool_use', name: 'update_document', input: { operations: [] } }],
     )
-    const r = await runTurn(base(call, { request: 'Number it R-77', env, documents }))
+    const labels: string[] = []
+    const r = await runTurn(base(call, { request: 'Number it R-77', env, documents, onEvent: (e) => e.type === 'progress' && labels.push(e.label) }))
+    expect(labels[0]).toBe('Changing your receipt')
     expect(seen[0].system[1].text).toContain('Made earlier in this conversation: a receipt, now at version 1')
-    expect(JSON.stringify(seen[1].messages)).toContain('has changed since it was read')
+    expect(JSON.stringify(seen[2].messages)).toContain('has changed since it was read')
     expect(r.made.kind).toBe('error')
   })
 

@@ -138,7 +138,7 @@ function orderDetail(store: Store, o: Store['orders'][number]) {
     orderNumber: o.number,
     date: o.date,
     status: o.status,
-    customer: customer ? { name: customer.name, city: customer.city, country: customer.country } : null,
+    customer: customer ? { name: customer.name, address: customer.address } : null,
     lines: o.lines.map((l) => ({ sku: l.sku, title: l.title, quantity: l.quantity, unitPrice: money(store, l.unitPriceMinor), lineTotal: money(store, l.lineTotalMinor) })),
     subtotal: money(store, o.subtotalMinor),
     discount: money(store, o.discountMinor),

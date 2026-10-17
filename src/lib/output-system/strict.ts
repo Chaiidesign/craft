@@ -135,7 +135,10 @@ function fillFromOrder(d: Draft, kind: CommercialKind, store: Store, number: str
   if (order.status === 'cancelled') { d.errors.push(`fromOrder: order ${order.number} was cancelled, so there is nothing to ${kind === 'receipt' ? 'give a receipt for' : 'invoice'}. Tell the person instead.`); return }
   const ref = `order ${order.number}`
   const customer = store.customers.find((c) => c.id === order.customerId)
-  if (customer) set(d, F.buyerName, text(customer.name), ref)
+  if (customer) {
+    set(d, F.buyerName, text(customer.name), ref)
+    set(d, F.buyerAddress, { status: 'provided', value: { type: 'multiline', lines: [...customer.address] } }, ref)
+  }
   set(d, F.orderNumber, text(order.number), ref)
   if (kind === 'receipt') set(d, F.issueDate, { status: 'provided', value: { type: 'date', iso: order.date } }, ref)
   d.items = []

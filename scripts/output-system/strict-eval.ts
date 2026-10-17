@@ -56,6 +56,8 @@ type Expect = {
   unpricedLines?: number[]
   fromOrder?: string
   provided?: Record<string, string>
+  /** Fields that must be provided, whatever the exact wording (payment terms in the person's words). */
+  providedSet?: string[]
   missing?: string[]
   ready?: boolean
   /** Fields the follow-up may change; nothing else may. Lines are compared separately. */
@@ -185,6 +187,7 @@ async function main() {
             checks.push({ name: 'total equals the order’s total', ok: totals.total.known && totals.total.money.amountMinor === order.totalMinor, detail: totals.total.known ? String(totals.total.money.amountMinor) : 'unknown' })
           }
           for (const [id, want] of Object.entries(e.provided ?? {})) checks.push({ name: `${s.fields[id]?.label ?? id} is ${want}`, ok: valueText(s, id) === want, detail: valueText(s, id) ?? 'missing' })
+          for (const id of e.providedSet ?? []) checks.push({ name: `${s.fields[id]?.label ?? id} is set`, ok: s.fields[id]?.state.status === 'provided', detail: valueText(s, id) ?? s.fields[id]?.state.status })
           for (const id of e.missing ?? []) checks.push({ name: `${s.fields[id]?.label ?? id} stays Missing`, ok: s.fields[id]?.state.status === 'missing', detail: s.fields[id]?.state.status })
           if (e.ready !== undefined) checks.push({ name: e.ready ? 'ready to send' : 'still a draft', ok: (validateSnapshot(s).readiness === 'ready') === e.ready, detail: validateSnapshot(s).readiness })
           if (made.followUp) checks.push({ name: 'no system words in the question', ok: findForbiddenWords(made.followUp).length === 0, detail: made.followUp })

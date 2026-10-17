@@ -197,7 +197,11 @@ function layoutPages(plan: DocumentPlan, fonts: FontSet, preset: keyof typeof PA
       const whole = first === nxt.block.height(0, nxt.block.units)
       return Math.max(cur.block.after, nxt.block.before) + first + (whole ? chainAfter(j) : 0)
     }
-    const reserveFor = (b: MeasuredBlock) => (next && b.keepTail > 0 ? chainAfter(i) : 0)
+    // Keeping rows with the totals is for a table that needs more than one page. A table that fits
+    // whole on the page where it starts stays whole, and the totals follow on the next page if they
+    // must (designer decision, Session 3).
+    const wholeTableFits = (b: MeasuredBlock) => b.primitive === 'invoice-line-items' && b.height(0, b.units) <= remaining() - gapBefore(b) + 1e-6
+    const reserveFor = (b: MeasuredBlock) => (next && b.keepTail > 0 && !wholeTableFits(b) ? chainAfter(i) : 0)
 
     let from = 0
     let continued = false
@@ -230,7 +234,10 @@ function layoutPages(plan: DocumentPlan, fonts: FontSet, preset: keyof typeof PA
             if (block.height(from, k) > page.content.height + 1e-6) throw new LayoutTooTallError(block.id, block.height(from, k), page.content.height)
             to = k
           } else {
-            const reason = tailMoved
+            const lastHere = page.fragments[page.fragments.length - 1]
+            const reason = block.primitive === 'totals' && lastHere?.primitive === 'invoice-line-items' && from === 0
+              ? 'Totals start this page: the whole table fits on the page before, and the totals with what follows them do not'
+              : tailMoved
               ? block.tailReason ?? 'Kept with the next block'
               : block.units === 1
                 ? block.keepReason ?? 'Kept together; it did not fit the space left'

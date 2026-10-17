@@ -159,6 +159,30 @@ describe('rules fire when the content demands it', () => {
     expect([...reasons].some((r) => r.includes('header row repeated'))).toBe(true)
   })
 
+  it('never splits a table that fits whole on its page; the totals move instead, and say why (Session 3)', () => {
+    let moved = 0
+    for (const preset of PRESETS) {
+      for (let n = 1; n <= 10; n++) {
+        const { plan, pages } = pagesOf(withLineItems(completeInvoice(), rows(n)), preset)
+        checkInvariants(plan, pages, preset, `rows=${n}/${preset}`)
+        const parts = pages.flatMap((p) => p.fragments.map((f) => ({ p, f }))).filter(({ f }) => f.primitive === 'invoice-line-items')
+        if (parts.length > 1) {
+          // Split only when the whole table is taller than the space left where it starts.
+          const node = plan.nodes.find((x) => x.primitive === 'invoice-line-items')!
+          const g = pageGeometry(preset)
+          const table = measureNode(node, { fonts, contentWidth: g.width, maxFragmentHeight: g.laterHeight, unavailableAssets: new Set() })!
+          expect(table.height(0, table.units), `rows=${n}/${preset}`).toBeGreaterThan(parts[0].p.content.height - parts[0].f.y)
+        }
+        const totalsPage = pages.find((p) => p.fragments.some((f) => f.primitive === 'totals'))!
+        if (totalsPage.number > 1 && totalsPage.fragments[0].primitive === 'totals') {
+          moved++
+          expect(totalsPage.breakReason).toMatch(/^Totals start this page: the whole table fits on the page before/)
+        }
+      }
+    }
+    expect(moved).toBeGreaterThan(0)
+  })
+
   it('splits a row taller than a page by lines, numbers on its first part and a continued marker after', () => {
     const tall = item('li-tall', Array.from({ length: 90 }, (_, i) => `Clause ${i + 1}: hand-finished panel with documented provenance and care notes.`).join(' '), 1_000, m(900_000, 'USD'))
     for (const preset of PRESETS) {
