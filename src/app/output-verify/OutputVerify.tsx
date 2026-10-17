@@ -13,6 +13,9 @@ export const STATUS_LABEL: Record<LaneStatus, string> = {
   'coming-later': 'Coming later',
 }
 
+/** Ready first, then what is being built, then what comes later; router order within each. */
+const STATUS_ORDER: Record<LaneStatus, number> = { ready: 0, 'being-built': 1, 'coming-later': 2 }
+
 // Session 0 shell: what Souvenir can make, its state, and the sample stores.
 // Making things from a request arrives in Session 1.
 export function OutputVerify() {
@@ -20,7 +23,7 @@ export function OutputVerify() {
   const rows = [
     ...REGISTRY.map((e) => ({ key: e.lane, label: e.label, makes: e.makes, status: e.status })),
     { key: 'format-not-supported', label: 'Format not supported', makes: 'When a format won’t work, the closest formats to choose from.', status: FORMAT_NOT_SUPPORTED.status },
-  ]
+  ].sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status])
   return (
     <main className={styles.page}>
       <header className={styles.header}>

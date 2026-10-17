@@ -53,14 +53,14 @@ Updated 2026-10-17.
 | Build total, from the ledger | 1.11 of the 75 limit |
 | Phase 1, before the ledger existed (estimated, not in the ledger) | about 4 |
 
-**Waiting on the designer:**
-1. Approve Phase 1.
-2. Approve the `/output-verify` proxy line (D-78).
-3. Choose how the worktree's dev server gets the model key: a symlink to `~/craft/.env.local`, or Chai creates the file.
+**Approved by Chaitanya (2026-10-17):**
+- Phase 1.
+- The proxy line, development only (D-78).
+- The key symlink.
 
-**Next: Session 1 (chat and file),** once item 1 is approved. It starts with the look check of the shell if item 2 is approved.
+**Look check done:** the shell and gallery at 390 px and 1280 px, with no sideways scrolling. Screenshots are in `docs/output-system/gallery/screens/`. One fix came out of it: kinds that are being built now come before kinds marked "Coming later".
 
-**Open problems:** none beyond the three waits above.
+**Dev server:** `npx next dev --webpack -p 4011` in `~/craft-output`, then open http://localhost:4011/output-verify.
 
 ## In progress: output system Phase 1 (Foundations), branch `feat/output-system-foundations`
 

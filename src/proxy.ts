@@ -187,6 +187,15 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Output-system prototype: /output-verify and its gallery (sample stores,
+  // local state). Development only (D-78).
+  if (
+    process.env.NODE_ENV !== "production" &&
+    (pathname === "/output-verify" || pathname.startsWith("/output-verify/"))
+  ) {
+    return NextResponse.next();
+  }
+
   // Document-quality demos: /document-verify (fictional fixtures, local state,
   // no service calls) and /document-chat (local state; generation through
   // /api/document-model, which gates itself the same way). Also reachable on

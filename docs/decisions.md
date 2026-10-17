@@ -27,8 +27,10 @@ The plan is [output-system/build-loop.md](output-system/build-loop.md) (Chaitany
 
 Applied in: `src/lib/output-system/spend.ts`, `cache.ts`, `scripts/output-system/route-eval.ts`.
 
-### D-78 · 2026-10-17 · `/output-verify` is development-only, and its proxy line waits for approval
-**Status: proposed** (the proxy line). The page guard is **assumed**.
+### D-78 · 2026-10-17 · `/output-verify` is development-only, with its own proxy line
+**Status: approved** (Chaitanya, 2026-10-17): the proxy line, for development only, with no Vercel previews for now. If Friday's demo needs a shareable link, Chaitanya will ask for preview access separately. Applied in `src/proxy.ts`.
+
+**Dev server.** `next dev` in the worktree reads the model key through a symlink, `.env.local` → `~/craft/.env.local`, which Chaitanya chose as option (a). The symlink is git-ignored, and no second copy of the key exists. Turbopack refuses the worktree's symlinked `node_modules`, so the server runs with webpack: `npx next dev --webpack -p 4011`.
 
 **Problem.**
 - `/output-verify` sits outside the `(app)` group, like `/document-verify`. To open without a signed-in session, it needs one line in `src/proxy.ts`, the auth gate.

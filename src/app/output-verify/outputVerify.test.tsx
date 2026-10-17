@@ -28,6 +28,13 @@ describe('/output-verify shell', () => {
     for (const k of ['Message card', 'Inline chart', 'Design', 'Dashboard', 'Published page']) expect(status(k), k).toBe('Coming later')
   })
 
+  it('lists what is being built before what comes later', () => {
+    const states = [...doc.querySelectorAll('li [data-status]')].map((el) => el.getAttribute('data-status'))
+    const firstLater = states.indexOf('coming-later')
+    expect(firstLater).toBeGreaterThan(0)
+    expect(states.slice(firstLater).every((st) => st === 'coming-later')).toBe(true)
+  })
+
   it('keeps the request box disabled until requests work, and says why', () => {
     const box = doc.querySelector('textarea')
     expect(box?.hasAttribute('disabled')).toBe(true)
