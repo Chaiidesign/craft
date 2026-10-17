@@ -1,0 +1,10 @@
+{"id":"f01","store":"fernhill-goods","request":"Export last month's orders as Excel.","expect":{"lane":"file","format":"xlsx","dataset":"orders","from":"2026-09-01","to":"2026-09-30"}}
+{"id":"f02","store":"saffron-loom","request":"Give me our product catalog as a CSV.","expect":{"lane":"file","format":"csv","dataset":"products"}}
+{"id":"f03","store":"fernhill-goods","request":"Export all our customers as JSON.","expect":{"lane":"file","format":"json","dataset":"customers"}}
+{"id":"f04","store":"saffron-loom","request":"Orders from July to September as a PDF.","expect":{"lane":"file","format":"pdf","dataset":"orders","from":"2026-07-01","to":"2026-09-30"}}
+{"id":"f05","store":"fernhill-goods","request":"A CSV of every refunded order this year.","expect":{"lane":"file","format":"csv","dataset":"orders","from":"2026-01-01","to":"2026-09-30","status":["refunded"]}}
+{"id":"f06","store":"saffron-loom","request":"Products that are low on stock, as an Excel file.","expect":{"lane":"file","format":"xlsx","dataset":"products","lowStockOnly":true}}
+{"id":"f07","store":"fernhill-goods","request":"I've attached our wholesale price list. Raise every price by 5% and round to the nearest .99.","upload":"uploads/fernhill-wholesale-prices.xlsx","expect":{"lane":"file","format":"xlsx","upload":true,"keepsStructure":true}}
+{"id":"f08","store":"saffron-loom","request":"Here's our customer list. Remove the duplicate emails and fix the capitalisation of the names.","upload":"uploads/saffron-customers.csv","expect":{"lane":"file","format":"csv","upload":true,"keepsStructure":true,"rowsAfter":6}}
+{"id":"f09","store":"fernhill-goods","request":"Export all our orders as a Word document.","expect":{"lane":"format_not_supported"},"note":"Raw data exports are Excel, CSV, JSON or PDF (formats.json kinds.file); Word isn't one, so offer the closest formats."}
+{"id":"f10","store":"saffron-loom","request":"Our products as JSON, please.","expect":{"lane":"file","format":"json","dataset":"products"}}

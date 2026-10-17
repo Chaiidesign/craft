@@ -62,6 +62,38 @@ Updated 2026-10-17.
 
 **Dev server:** `npx next dev --webpack -p 4011` in `~/craft-output`, then open http://localhost:4011/output-verify.
 
+**Session 1 (chat and file): done.** Report: [reports/output-system-build-session-1.md](reports/output-system-build-session-1.md). Decisions D-80 to D-86, assumed.
+
+**What works on `/output-verify`:**
+- **Chat replies** about the sample stores, with every store number checked against the sample data.
+- **Files:** orders, products or customers as Excel, CSV, JSON or PDF, plus changes to an uploaded CSV or Excel file.
+- **Inline charts** (built early).
+- **The format-not-supported card.**
+- **"Coming later" cards** for every other kind.
+
+**Gate runs** (three runs, no cache): chat 23 of 24, charts 12 of 12, files 30 of 30. The app's real loop scored 33 of 34 on the routing requests.
+
+**Misses:**
+- **c01:** a chart instead of a chat reply, once in three runs.
+- **r25:** answered in chat, because the store has no product-catalog question yet.
+
+**Spend:**
+
+| | US$ |
+|---|---|
+| Session 1 | 15.66 of 20 (78%) |
+| Build total, from the ledger | 16.77 of 75 |
+| Phase 1, before the ledger existed (estimate, not in the ledger) | about 4 |
+
+**Open:**
+- **Product-catalog store question:** for Session 3.
+- **Offers in replies:** replies sometimes offer things that aren't built yet, like a purchase order.
+- **Logos:** whether the sample stores get logos for the demo. The designer decides.
+- **Total row:** the PDF data export has none yet.
+- **Message card:** not built yet.
+
+**Next: Session 2 (strict documents),** in a new conversation. Start with: "Read docs/output-system/build-loop.md and docs/progress.md, then run the next session." Dev server: `OUTPUT_BUILD_SESSION=2 npx next dev --webpack -p 4011` in `~/craft-output`.
+
 ## In progress: output system Phase 1 (Foundations), branch `feat/output-system-foundations`
 
 Updated 2026-10-17.

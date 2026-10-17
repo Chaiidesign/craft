@@ -24,8 +24,8 @@ describe('/output-verify shell', () => {
   it('shows the four launch kinds as being built and the rest as coming later', () => {
     const status = (label: string) =>
       [...doc.querySelectorAll('li')].find((li) => li.textContent?.startsWith(label))?.querySelector('[data-status]')?.textContent
-    for (const k of ['Chat reply', 'File', 'Strict document', 'Composed document', 'Format not supported']) expect(status(k), k).toBe('Being built')
-    for (const k of ['Message card', 'Inline chart', 'Design', 'Dashboard', 'Published page']) expect(status(k), k).toBe('Coming later')
+    for (const k of ['Chat reply', 'File', 'Strict document', 'Composed document', 'Inline chart', 'Format not supported']) expect(status(k), k).toBe('Being built')
+    for (const k of ['Message card', 'Design', 'Dashboard', 'Published page']) expect(status(k), k).toBe('Coming later')
   })
 
   it('lists what is being built before what comes later', () => {
@@ -35,10 +35,10 @@ describe('/output-verify shell', () => {
     expect(states.slice(firstLater).every((st) => st === 'coming-later')).toBe(true)
   })
 
-  it('keeps the request box disabled until requests work, and says why', () => {
-    const box = doc.querySelector('textarea')
-    expect(box?.hasAttribute('disabled')).toBe(true)
-    expect(text).toContain('Not ready yet. Making things from a request comes next.')
+  it('offers the request box, the store choice and the sample-date note', () => {
+    expect(doc.querySelector('textarea#request')).not.toBeNull()
+    expect(doc.querySelectorAll('input[name="store"]')).toHaveLength(2)
+    expect(text).toContain('Sample data runs to 30 Sept 2026, so “last month” means September 2026.')
   })
 
   it('uses no system words on screen', () => {

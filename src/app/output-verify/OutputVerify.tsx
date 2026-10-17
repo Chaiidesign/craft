@@ -5,6 +5,7 @@ import { salesSummary } from '@/lib/output-system/fixtures/aggregates'
 import { SAMPLE_DATA_LABEL, sampleStores } from '@/lib/output-system/fixtures/stores'
 import { FORMAT_NOT_SUPPORTED, REGISTRY, type LaneStatus } from '@/lib/output-system/registry'
 
+import { Conversation } from './Conversation'
 import styles from './outputVerify.module.css'
 
 export const STATUS_LABEL: Record<LaneStatus, string> = {
@@ -16,8 +17,8 @@ export const STATUS_LABEL: Record<LaneStatus, string> = {
 /** Ready first, then what is being built, then what comes later; router order within each. */
 const STATUS_ORDER: Record<LaneStatus, number> = { ready: 0, 'being-built': 1, 'coming-later': 2 }
 
-// Session 0 shell: what Souvenir can make, its state, and the sample stores.
-// Making things from a request arrives in Session 1.
+// /output-verify: the conversation, the sample stores, and what Souvenir can
+// make with each kind's state (read from the lane registry).
 export function OutputVerify() {
   const stores = Object.values(sampleStores())
   const rows = [
@@ -32,17 +33,7 @@ export function OutputVerify() {
       </header>
       <p className={styles.sample}>{SAMPLE_DATA_LABEL}</p>
 
-      <section aria-labelledby="request-heading" className={styles.section}>
-        <h2 id="request-heading" className={styles.heading}>Your request</h2>
-        <textarea
-          className={styles.request}
-          disabled
-          rows={3}
-          aria-describedby="request-note"
-          placeholder="For example: Invoice Bloom & Co for 40 ceramic planters at $18 each."
-        />
-        <p id="request-note" className={styles.note}>Not ready yet. Making things from a request comes next.</p>
-      </section>
+      <Conversation />
 
       <section aria-labelledby="stores-heading" className={styles.section}>
         <h2 id="stores-heading" className={styles.heading}>Sample stores</h2>

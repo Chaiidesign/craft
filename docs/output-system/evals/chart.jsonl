@@ -1,0 +1,4 @@
+{"id":"k01","store":"fernhill-goods","request":"Show me sales by week for the last 8 weeks.","expect":{"lane":"inline_chart"}}
+{"id":"k02","store":"saffron-loom","request":"Chart my monthly revenue for the last 12 months.","expect":{"lane":"inline_chart"}}
+{"id":"k03","store":"fernhill-goods","request":"What are my top 5 products by units this year? Show it as a chart.","expect":{"lane":"inline_chart"}}
+{"id":"k04","store":"saffron-loom","request":"Which five products sold the most in September?","expect":{"lanes":["inline_chart","chat_reply"]},"note":"The routing set accepts either for this request (r08)."}

@@ -1,0 +1,61 @@
+SKU,Product,Category,Price,Currency,In stock,Reorder level
+SLT-0001,"Handloom cotton saree, Indigo",Sarees,4770.00,INR,22,9
+SLT-0002,"Handloom cotton saree, Madder red",Sarees,9760.00,INR,56,9
+SLT-0003,"Handloom cotton saree, Saffron",Sarees,9620.00,INR,36,22
+SLT-0004,"Handloom cotton saree, Ivory",Sarees,6290.00,INR,25,14
+SLT-0005,"Silk-blend saree, Indigo",Sarees,2550.00,INR,14,17
+SLT-0006,"Silk-blend saree, Madder red",Sarees,4680.00,INR,2,9
+SLT-0007,"Silk-blend saree, Saffron",Sarees,7510.00,INR,96,21
+SLT-0008,"Silk-blend saree, Ivory",Sarees,6070.00,INR,120,21
+SLT-0009,"Block-print saree, Indigo",Sarees,6370.00,INR,10,23
+SLT-0010,"Block-print saree, Madder red",Sarees,4000.00,INR,122,23
+SLT-0011,"Block-print saree, Saffron",Sarees,4960.00,INR,59,8
+SLT-0012,"Block-print saree, Ivory",Sarees,8120.00,INR,48,8
+SLT-0013,"Wool stole, Indigo",Stoles,1610.00,INR,85,20
+SLT-0014,"Wool stole, Madder red",Stoles,1120.00,INR,92,15
+SLT-0015,"Wool stole, Saffron",Stoles,2530.00,INR,75,11
+SLT-0016,"Wool stole, Ivory",Stoles,1190.00,INR,33,19
+SLT-0017,"Cotton stole, Indigo",Stoles,2300.00,INR,116,21
+SLT-0018,"Cotton stole, Madder red",Stoles,2270.00,INR,47,22
+SLT-0019,"Cotton stole, Saffron",Stoles,2580.00,INR,107,24
+SLT-0020,"Cotton stole, Ivory",Stoles,2450.00,INR,76,10
+SLT-0021,"Ikat stole, Indigo",Stoles,1510.00,INR,4,23
+SLT-0022,"Ikat stole, Madder red",Stoles,1220.00,INR,38,24
+SLT-0023,"Ikat stole, Saffron",Stoles,1520.00,INR,107,9
+SLT-0024,"Ikat stole, Ivory",Stoles,1860.00,INR,47,9
+SLT-0025,"Embroidered cushion cover, Indigo",Cushion covers,490.00,INR,117,25
+SLT-0026,"Embroidered cushion cover, Madder red",Cushion covers,1390.00,INR,78,22
+SLT-0027,"Embroidered cushion cover, Saffron",Cushion covers,950.00,INR,76,15
+SLT-0028,"Embroidered cushion cover, Ivory",Cushion covers,780.00,INR,97,11
+SLT-0029,"Kantha cushion cover, Indigo",Cushion covers,1390.00,INR,25,14
+SLT-0030,"Kantha cushion cover, Madder red",Cushion covers,1230.00,INR,127,14
+SLT-0031,"Kantha cushion cover, Saffron",Cushion covers,1030.00,INR,81,9
+SLT-0032,"Kantha cushion cover, Ivory",Cushion covers,1080.00,INR,87,19
+SLT-0033,"Woven cushion cover, Indigo",Cushion covers,1310.00,INR,3,10
+SLT-0034,"Woven cushion cover, Madder red",Cushion covers,1330.00,INR,35,22
+SLT-0035,"Woven cushion cover, Saffron",Cushion covers,480.00,INR,131,8
+SLT-0036,"Woven cushion cover, Ivory",Cushion covers,1090.00,INR,12,8
+SLT-0037,"Table runner, Indigo",Table linen,2610.00,INR,126,25
+SLT-0038,"Table runner, Madder red",Table linen,620.00,INR,44,23
+SLT-0039,"Table runner, Saffron",Table linen,1380.00,INR,92,8
+SLT-0040,"Table runner, Ivory",Table linen,1900.00,INR,58,20
+SLT-0041,"Napkin set of 4, Indigo",Table linen,2150.00,INR,89,12
+SLT-0042,"Napkin set of 4, Madder red",Table linen,1130.00,INR,19,12
+SLT-0043,"Napkin set of 4, Saffron",Table linen,3110.00,INR,29,10
+SLT-0044,"Napkin set of 4, Ivory",Table linen,790.00,INR,77,24
+SLT-0045,"Tablecloth, Indigo",Table linen,2900.00,INR,9,16
+SLT-0046,"Tablecloth, Madder red",Table linen,2780.00,INR,92,19
+SLT-0047,"Tablecloth, Saffron",Table linen,2530.00,INR,30,8
+SLT-0048,"Tablecloth, Ivory",Table linen,2590.00,INR,135,11
+SLT-0049,"Cotton bedspread, Indigo",Bedding,4010.00,INR,24,13
+SLT-0050,"Cotton bedspread, Madder red",Bedding,1460.00,INR,9,21
+SLT-0051,"Cotton bedspread, Saffron",Bedding,4750.00,INR,78,17
+SLT-0052,"Cotton bedspread, Ivory",Bedding,4620.00,INR,121,23
+SLT-0053,"Quilted dohar, Indigo",Bedding,3170.00,INR,60,23
+SLT-0054,"Quilted dohar, Madder red",Bedding,2830.00,INR,17,14
+SLT-0055,"Quilted dohar, Saffron",Bedding,5310.00,INR,79,17
+SLT-0056,"Quilted dohar, Ivory",Bedding,1480.00,INR,6,11
+SLT-0057,"Pillow cover pair, Indigo",Bedding,4130.00,INR,36,13
+SLT-0058,"Pillow cover pair, Madder red",Bedding,1370.00,INR,28,18
+SLT-0059,"Pillow cover pair, Saffron",Bedding,4800.00,INR,130,12
+SLT-0060,"Pillow cover pair, Ivory",Bedding,3850.00,INR,134,16

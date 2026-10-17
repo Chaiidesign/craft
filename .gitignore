@@ -44,3 +44,6 @@ next-env.d.ts
 # local dev logs / editor extension packages
 tmp-*.log
 *.vsix
+
+# Output-system model response cache (D-79)
+/.cache/

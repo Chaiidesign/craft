@@ -1,0 +1,2082 @@
+{
+  "set": "chart",
+  "session": "1",
+  "runs": 3,
+  "useCache": false,
+  "promptVersion": "f368cc732b1b",
+  "guideVersion": "f93e174dc563",
+  "right": 12,
+  "total": 12,
+  "results": [
+    {
+      "id": "k01",
+      "run": 1,
+      "store": "fernhill-goods",
+      "request": "Show me sales by week for the last 8 weeks.",
+      "seconds": 6.1,
+      "calls": 2,
+      "toolsUsed": [
+        "read_guide",
+        "ask_store",
+        "show_chart"
+      ],
+      "made": {
+        "kind": "chart",
+        "spec": {
+          "data": "sales_by_week",
+          "measure": "revenue",
+          "chartType": "bar",
+          "title": "Weekly sales, last 8 weeks",
+          "lead": "Sales peaked in the week of Aug 17 at $3,033.79 and have been lower since. The low point was the week of Sep 14 at $625.86, and sales recovered to $1,613.10 last week.",
+          "weeks": 8
+        },
+        "chart": {
+          "title": "Weekly sales, last 8 weeks",
+          "chartType": "bar",
+          "orientation": "vertical",
+          "measure": "revenue",
+          "unitLabel": "USD",
+          "points": [
+            {
+              "label": "3 Aug",
+              "value": 2466.22,
+              "display": "$2,466.22",
+              "short": "$2.47K"
+            },
+            {
+              "label": "10 Aug",
+              "value": 1177.86,
+              "display": "$1,177.86",
+              "short": "$1.18K"
+            },
+            {
+              "label": "17 Aug",
+              "value": 3033.79,
+              "display": "$3,033.79",
+              "short": "$3.03K"
+            },
+            {
+              "label": "24 Aug",
+              "value": 2549.54,
+              "display": "$2,549.54",
+              "short": "$2.55K"
+            },
+            {
+              "label": "31 Aug",
+              "value": 1111.87,
+              "display": "$1,111.87",
+              "short": "$1.11K"
+            },
+            {
+              "label": "7 Sept",
+              "value": 2181.26,
+              "display": "$2,181.26",
+              "short": "$2.18K"
+            },
+            {
+              "label": "14 Sept",
+              "value": 625.86,
+              "display": "$625.86",
+              "short": "$626"
+            },
+            {
+              "label": "21 Sept",
+              "value": 1613.1,
+              "display": "$1,613.10",
+              "short": "$1.61K"
+            }
+          ],
+          "source": "Source: Fernhill Goods Co. fulfilled orders, weeks starting 3 Aug to 21 Sept. Sample data.",
+          "answer": {
+            "store": "Fernhill Goods Co.",
+            "currency": "USD",
+            "today": "2026-09-30",
+            "sampleData": true,
+            "weeks": [
+              {
+                "weekStarting": "2026-08-03",
+                "weekEnding": "2026-08-09",
+                "orders": 10,
+                "revenue": {
+                  "amount": 2466.22,
+                  "display": "$2,466.22"
+                }
+              },
+              {
+                "weekStarting": "2026-08-10",
+                "weekEnding": "2026-08-16",
+                "orders": 5,
+                "revenue": {
+                  "amount": 1177.86,
+                  "display": "$1,177.86"
+                }
+              },
+              {
+                "weekStarting": "2026-08-17",
+                "weekEnding": "2026-08-23",
+                "orders": 17,
+                "revenue": {
+                  "amount": 3033.79,
+                  "display": "$3,033.79"
+                }
+              },
+              {
+                "weekStarting": "2026-08-24",
+                "weekEnding": "2026-08-30",
+                "orders": 14,
+                "revenue": {
+                  "amount": 2549.54,
+                  "display": "$2,549.54"
+                }
+              },
+              {
+                "weekStarting": "2026-08-31",
+                "weekEnding": "2026-09-06",
+                "orders": 8,
+                "revenue": {
+                  "amount": 1111.87,
+                  "display": "$1,111.87"
+                }
+              },
+              {
+                "weekStarting": "2026-09-07",
+                "weekEnding": "2026-09-13",
+                "orders": 12,
+                "revenue": {
+                  "amount": 2181.26,
+                  "display": "$2,181.26"
+                }
+              },
+              {
+                "weekStarting": "2026-09-14",
+                "weekEnding": "2026-09-20",
+                "orders": 3,
+                "revenue": {
+                  "amount": 625.86,
+                  "display": "$625.86"
+                }
+              },
+              {
+                "weekStarting": "2026-09-21",
+                "weekEnding": "2026-09-27",
+                "orders": 12,
+                "revenue": {
+                  "amount": 1613.1,
+                  "display": "$1,613.10"
+                }
+              }
+            ]
+          }
+        },
+        "lead": "Sales peaked in the week of Aug 17 at $3,033.79 and have been lower since. The low point was the week of Sep 14 at $625.86, and sales recovered to $1,613.10 last week."
+      },
+      "checks": [
+        {
+          "name": "made a inline_chart",
+          "ok": true,
+          "detail": "inline_chart"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "read_guide → ask_store → show_chart"
+        },
+        {
+          "name": "lead numbers match the chart",
+          "ok": true,
+          "detail": "3 checked"
+        },
+        {
+          "name": "title in words, at most 12 bars or 24 points",
+          "ok": true
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "k02",
+      "run": 1,
+      "store": "saffron-loom",
+      "request": "Chart my monthly revenue for the last 12 months.",
+      "seconds": 8.1,
+      "calls": 2,
+      "toolsUsed": [
+        "read_guide",
+        "ask_store",
+        "show_chart"
+      ],
+      "made": {
+        "kind": "chart",
+        "spec": {
+          "data": "sales_by_month",
+          "measure": "revenue",
+          "chartType": "line",
+          "title": "Monthly revenue, Oct 2025 – Sep 2026",
+          "lead": "Revenue peaked in July 2026 at ₹4,31,779.80 and was lowest in October 2025 at ₹2,28,184.80. September came back to ₹3,74,220.90 after a dip in August.",
+          "period": "last_12_months"
+        },
+        "chart": {
+          "title": "Monthly revenue, Oct 2025 – Sep 2026",
+          "chartType": "line",
+          "orientation": "vertical",
+          "measure": "revenue",
+          "unitLabel": "INR",
+          "points": [
+            {
+              "label": "Oct 25",
+              "value": 228184.8,
+              "display": "₹2,28,184.80",
+              "short": "₹2.28L"
+            },
+            {
+              "label": "Nov 25",
+              "value": 392699.1,
+              "display": "₹3,92,699.10",
+              "short": "₹3.93L"
+            },
+            {
+              "label": "Dec 25",
+              "value": 418807.05,
+              "display": "₹4,18,807.05",
+              "short": "₹4.19L"
+            },
+            {
+              "label": "Jan 26",
+              "value": 352029.6,
+              "display": "₹3,52,029.60",
+              "short": "₹3.52L"
+            },
+            {
+              "label": "Feb 26",
+              "value": 302225.25,
+              "display": "₹3,02,225.25",
+              "short": "₹3.02L"
+            },
+            {
+              "label": "Mar 26",
+              "value": 303464.4,
+              "display": "₹3,03,464.40",
+              "short": "₹3.03L"
+            },
+            {
+              "label": "Apr 26",
+              "value": 279351.9,
+              "display": "₹2,79,351.90",
+              "short": "₹2.79L"
+            },
+            {
+              "label": "May 26",
+              "value": 305088.15,
+              "display": "₹3,05,088.15",
+              "short": "₹3.05L"
+            },
+            {
+              "label": "Jun 26",
+              "value": 354248.85,
+              "display": "₹3,54,248.85",
+              "short": "₹3.54L"
+            },
+            {
+              "label": "Jul 26",
+              "value": 431779.8,
+              "display": "₹4,31,779.80",
+              "short": "₹4.32L"
+            },
+            {
+              "label": "Aug 26",
+              "value": 251159.55,
+              "display": "₹2,51,159.55",
+              "short": "₹2.51L"
+            },
+            {
+              "label": "Sept 26",
+              "value": 374220.9,
+              "display": "₹3,74,220.90",
+              "short": "₹3.74L"
+            }
+          ],
+          "source": "Source: Saffron Loom Textiles fulfilled orders, 1 Oct to 30 Sept. Sample data.",
+          "answer": {
+            "store": "Saffron Loom Textiles",
+            "currency": "INR",
+            "today": "2026-09-30",
+            "sampleData": true,
+            "period": {
+              "from": "2025-10-01",
+              "to": "2026-09-30",
+              "label": "the last 12 months"
+            },
+            "months": [
+              {
+                "month": "2025-10",
+                "orders": 30,
+                "revenue": {
+                  "amount": 228184.8,
+                  "display": "₹2,28,184.80"
+                }
+              },
+              {
+                "month": "2025-11",
+                "orders": 36,
+                "revenue": {
+                  "amount": 392699.1,
+                  "display": "₹3,92,699.10"
+                }
+              },
+              {
+                "month": "2025-12",
+                "orders": 45,
+                "revenue": {
+                  "amount": 418807.05,
+                  "display": "₹4,18,807.05"
+                }
+              },
+              {
+                "month": "2026-01",
+                "orders": 42,
+                "revenue": {
+                  "amount": 352029.6,
+                  "display": "₹3,52,029.60"
+                }
+              },
+              {
+                "month": "2026-02",
+                "orders": 28,
+                "revenue": {
+                  "amount": 302225.25,
+                  "display": "₹3,02,225.25"
+                }
+              },
+              {
+                "month": "2026-03",
+                "orders": 36,
+                "revenue": {
+                  "amount": 303464.4,
+                  "display": "₹3,03,464.40"
+                }
+              },
+              {
+                "month": "2026-04",
+                "orders": 43,
+                "revenue": {
+                  "amount": 279351.9,
+                  "display": "₹2,79,351.90"
+                }
+              },
+              {
+                "month": "2026-05",
+                "orders": 41,
+                "revenue": {
+                  "amount": 305088.15,
+                  "display": "₹3,05,088.15"
+                }
+              },
+              {
+                "month": "2026-06",
+                "orders": 41,
+                "revenue": {
+                  "amount": 354248.85,
+                  "display": "₹3,54,248.85"
+                }
+              },
+              {
+                "month": "2026-07",
+                "orders": 43,
+                "revenue": {
+                  "amount": 431779.8,
+                  "display": "₹4,31,779.80"
+                }
+              },
+              {
+                "month": "2026-08",
+                "orders": 36,
+                "revenue": {
+                  "amount": 251159.55,
+                  "display": "₹2,51,159.55"
+                }
+              },
+              {
+                "month": "2026-09",
+                "orders": 39,
+                "revenue": {
+                  "amount": 374220.9,
+                  "display": "₹3,74,220.90"
+                }
+              }
+            ]
+          }
+        },
+        "lead": "Revenue peaked in July 2026 at ₹4,31,779.80 and was lowest in October 2025 at ₹2,28,184.80. September came back to ₹3,74,220.90 after a dip in August."
+      },
+      "checks": [
+        {
+          "name": "made a inline_chart",
+          "ok": true,
+          "detail": "inline_chart"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "read_guide → ask_store → show_chart"
+        },
+        {
+          "name": "lead numbers match the chart",
+          "ok": true,
+          "detail": "3 checked"
+        },
+        {
+          "name": "title in words, at most 12 bars or 24 points",
+          "ok": true
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "k03",
+      "run": 1,
+      "store": "fernhill-goods",
+      "request": "What are my top 5 products by units this year? Show it as a chart.",
+      "seconds": 8.2,
+      "calls": 2,
+      "toolsUsed": [
+        "read_guide",
+        "ask_store",
+        "show_chart"
+      ],
+      "made": {
+        "kind": "chart",
+        "spec": {
+          "data": "top_products",
+          "measure": "units",
+          "chartType": "bar",
+          "title": "Top 5 products by units sold, Jan 1 – Sep 30, 2026",
+          "lead": "The Travel mug, Charcoal led with 29 units sold, followed by the Ceramic planter, Sand at 26. Three products tied for third at 25 units each.",
+          "period": "this_year",
+          "limit": 5
+        },
+        "chart": {
+          "title": "Top 5 products by units sold, Jan 1 – Sep 30, 2026",
+          "chartType": "bar",
+          "orientation": "horizontal",
+          "measure": "units",
+          "unitLabel": "units",
+          "points": [
+            {
+              "label": "Travel mug, Charcoal",
+              "value": 29,
+              "display": "29",
+              "short": "29"
+            },
+            {
+              "label": "Ceramic planter, Sand",
+              "value": 26,
+              "display": "26",
+              "short": "26"
+            },
+            {
+              "label": "Linen summer dress, Forest",
+              "value": 25,
+              "display": "25",
+              "short": "25"
+            },
+            {
+              "label": "Straight-leg jeans, Rust",
+              "value": 25,
+              "display": "25",
+              "short": "25"
+            },
+            {
+              "label": "Merino crew, Rust",
+              "value": 25,
+              "display": "25",
+              "short": "25"
+            }
+          ],
+          "source": "Source: Fernhill Goods Co. fulfilled orders, 1 Jan to 30 Sept. Sample data.",
+          "answer": {
+            "store": "Fernhill Goods Co.",
+            "currency": "USD",
+            "today": "2026-09-30",
+            "sampleData": true,
+            "period": {
+              "from": "2026-01-01",
+              "to": "2026-09-30",
+              "label": "this year so far"
+            },
+            "rankedBy": "units",
+            "products": [
+              {
+                "rank": 1,
+                "title": "Travel mug, Charcoal",
+                "unitsSold": 29,
+                "sales": {
+                  "amount": 1072.71,
+                  "display": "$1,072.71"
+                }
+              },
+              {
+                "rank": 2,
+                "title": "Ceramic planter, Sand",
+                "unitsSold": 26,
+                "sales": {
+                  "amount": 883.74,
+                  "display": "$883.74"
+                }
+              },
+              {
+                "rank": 3,
+                "title": "Linen summer dress, Forest",
+                "unitsSold": 25,
+                "sales": {
+                  "amount": 1849.75,
+                  "display": "$1,849.75"
+                }
+              },
+              {
+                "rank": 4,
+                "title": "Straight-leg jeans, Rust",
+                "unitsSold": 25,
+                "sales": {
+                  "amount": 1349.75,
+                  "display": "$1,349.75"
+                }
+              },
+              {
+                "rank": 5,
+                "title": "Merino crew, Rust",
+                "unitsSold": 25,
+                "sales": {
+                  "amount": 1149.75,
+                  "display": "$1,149.75"
+                }
+              }
+            ]
+          }
+        },
+        "lead": "The Travel mug, Charcoal led with 29 units sold, followed by the Ceramic planter, Sand at 26. Three products tied for third at 25 units each."
+      },
+      "checks": [
+        {
+          "name": "made a inline_chart",
+          "ok": true,
+          "detail": "inline_chart"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "read_guide → ask_store → show_chart"
+        },
+        {
+          "name": "lead numbers match the chart",
+          "ok": true,
+          "detail": "2 checked"
+        },
+        {
+          "name": "title in words, at most 12 bars or 24 points",
+          "ok": true
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "k04",
+      "run": 1,
+      "store": "saffron-loom",
+      "request": "Which five products sold the most in September?",
+      "seconds": 8.5,
+      "calls": 2,
+      "toolsUsed": [
+        "ask_store"
+      ],
+      "made": {
+        "kind": "reply",
+        "text": "Your two best sellers in September were the **Indigo handloom cotton saree and the Madder red cotton stole**, with 7 units each. These figures are from your store's fulfilled orders, 1–30 September 2026:\n\n1. Handloom cotton saree, Indigo: 7 units, ₹33,390.00\n2. Cotton stole, Madder red: 7 units, ₹15,890.00\n3. Silk-blend saree, Ivory: 6 units, ₹36,420.00\n4. Silk-blend saree, Madder red: 6 units, ₹28,080.00\n5. Woven cushion cover, Indigo: 6 units, ₹7,860.00\n\nThe Ivory silk-blend saree sold one fewer unit than the top two but earned the most money of the five. Would you like the list ranked by sales instead?",
+        "usedStore": true,
+        "claims": [
+          {
+            "text": "₹33,390.00",
+            "value": 33390,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹15,890.00",
+            "value": 15890,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹36,420.00",
+            "value": 36420,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹28,080.00",
+            "value": 28080,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹7,860.00",
+            "value": 7860,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "7 units",
+            "value": 7,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "7 units",
+            "value": 7,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "7 units",
+            "value": 7,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "6 units",
+            "value": 6,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "6 units",
+            "value": 6,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "6 units",
+            "value": 6,
+            "precision": 1,
+            "kind": "count"
+          }
+        ]
+      },
+      "checks": [
+        {
+          "name": "made a inline_chart or chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "ask_store"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "11 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "k01",
+      "run": 2,
+      "store": "fernhill-goods",
+      "request": "Show me sales by week for the last 8 weeks.",
+      "seconds": 6.5,
+      "calls": 2,
+      "toolsUsed": [
+        "read_guide",
+        "ask_store",
+        "show_chart"
+      ],
+      "made": {
+        "kind": "chart",
+        "spec": {
+          "data": "sales_by_week",
+          "measure": "revenue",
+          "chartType": "bar",
+          "title": "Weekly sales, last 8 weeks (Aug 3 – Sep 27)",
+          "lead": "Sales peaked in the week of Aug 17 at $3,033.79 and have been lower since. The low point was the week of Sep 14 at $625.86, with a recovery to $1,613.10 last week.",
+          "weeks": 8
+        },
+        "chart": {
+          "title": "Weekly sales, last 8 weeks (Aug 3 – Sep 27)",
+          "chartType": "bar",
+          "orientation": "vertical",
+          "measure": "revenue",
+          "unitLabel": "USD",
+          "points": [
+            {
+              "label": "3 Aug",
+              "value": 2466.22,
+              "display": "$2,466.22",
+              "short": "$2.47K"
+            },
+            {
+              "label": "10 Aug",
+              "value": 1177.86,
+              "display": "$1,177.86",
+              "short": "$1.18K"
+            },
+            {
+              "label": "17 Aug",
+              "value": 3033.79,
+              "display": "$3,033.79",
+              "short": "$3.03K"
+            },
+            {
+              "label": "24 Aug",
+              "value": 2549.54,
+              "display": "$2,549.54",
+              "short": "$2.55K"
+            },
+            {
+              "label": "31 Aug",
+              "value": 1111.87,
+              "display": "$1,111.87",
+              "short": "$1.11K"
+            },
+            {
+              "label": "7 Sept",
+              "value": 2181.26,
+              "display": "$2,181.26",
+              "short": "$2.18K"
+            },
+            {
+              "label": "14 Sept",
+              "value": 625.86,
+              "display": "$625.86",
+              "short": "$626"
+            },
+            {
+              "label": "21 Sept",
+              "value": 1613.1,
+              "display": "$1,613.10",
+              "short": "$1.61K"
+            }
+          ],
+          "source": "Source: Fernhill Goods Co. fulfilled orders, weeks starting 3 Aug to 21 Sept. Sample data.",
+          "answer": {
+            "store": "Fernhill Goods Co.",
+            "currency": "USD",
+            "today": "2026-09-30",
+            "sampleData": true,
+            "weeks": [
+              {
+                "weekStarting": "2026-08-03",
+                "weekEnding": "2026-08-09",
+                "orders": 10,
+                "revenue": {
+                  "amount": 2466.22,
+                  "display": "$2,466.22"
+                }
+              },
+              {
+                "weekStarting": "2026-08-10",
+                "weekEnding": "2026-08-16",
+                "orders": 5,
+                "revenue": {
+                  "amount": 1177.86,
+                  "display": "$1,177.86"
+                }
+              },
+              {
+                "weekStarting": "2026-08-17",
+                "weekEnding": "2026-08-23",
+                "orders": 17,
+                "revenue": {
+                  "amount": 3033.79,
+                  "display": "$3,033.79"
+                }
+              },
+              {
+                "weekStarting": "2026-08-24",
+                "weekEnding": "2026-08-30",
+                "orders": 14,
+                "revenue": {
+                  "amount": 2549.54,
+                  "display": "$2,549.54"
+                }
+              },
+              {
+                "weekStarting": "2026-08-31",
+                "weekEnding": "2026-09-06",
+                "orders": 8,
+                "revenue": {
+                  "amount": 1111.87,
+                  "display": "$1,111.87"
+                }
+              },
+              {
+                "weekStarting": "2026-09-07",
+                "weekEnding": "2026-09-13",
+                "orders": 12,
+                "revenue": {
+                  "amount": 2181.26,
+                  "display": "$2,181.26"
+                }
+              },
+              {
+                "weekStarting": "2026-09-14",
+                "weekEnding": "2026-09-20",
+                "orders": 3,
+                "revenue": {
+                  "amount": 625.86,
+                  "display": "$625.86"
+                }
+              },
+              {
+                "weekStarting": "2026-09-21",
+                "weekEnding": "2026-09-27",
+                "orders": 12,
+                "revenue": {
+                  "amount": 1613.1,
+                  "display": "$1,613.10"
+                }
+              }
+            ]
+          }
+        },
+        "lead": "Sales peaked in the week of Aug 17 at $3,033.79 and have been lower since. The low point was the week of Sep 14 at $625.86, with a recovery to $1,613.10 last week."
+      },
+      "checks": [
+        {
+          "name": "made a inline_chart",
+          "ok": true,
+          "detail": "inline_chart"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "read_guide → ask_store → show_chart"
+        },
+        {
+          "name": "lead numbers match the chart",
+          "ok": true,
+          "detail": "3 checked"
+        },
+        {
+          "name": "title in words, at most 12 bars or 24 points",
+          "ok": true
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "k02",
+      "run": 2,
+      "store": "saffron-loom",
+      "request": "Chart my monthly revenue for the last 12 months.",
+      "seconds": 7.3,
+      "calls": 2,
+      "toolsUsed": [
+        "read_guide",
+        "ask_store",
+        "show_chart"
+      ],
+      "made": {
+        "kind": "chart",
+        "spec": {
+          "data": "sales_by_month",
+          "measure": "revenue",
+          "chartType": "bar",
+          "title": "Monthly revenue, Oct 2025 – Sep 2026",
+          "lead": "July 2026 was your best month at ₹4,31,779.80, just ahead of December's ₹4,18,807.05. September came back to ₹3,74,220.90 after a dip to ₹2,51,159.55 in August.",
+          "period": "last_12_months"
+        },
+        "chart": {
+          "title": "Monthly revenue, Oct 2025 – Sep 2026",
+          "chartType": "bar",
+          "orientation": "vertical",
+          "measure": "revenue",
+          "unitLabel": "INR",
+          "points": [
+            {
+              "label": "Oct 25",
+              "value": 228184.8,
+              "display": "₹2,28,184.80",
+              "short": "₹2.28L"
+            },
+            {
+              "label": "Nov 25",
+              "value": 392699.1,
+              "display": "₹3,92,699.10",
+              "short": "₹3.93L"
+            },
+            {
+              "label": "Dec 25",
+              "value": 418807.05,
+              "display": "₹4,18,807.05",
+              "short": "₹4.19L"
+            },
+            {
+              "label": "Jan 26",
+              "value": 352029.6,
+              "display": "₹3,52,029.60",
+              "short": "₹3.52L"
+            },
+            {
+              "label": "Feb 26",
+              "value": 302225.25,
+              "display": "₹3,02,225.25",
+              "short": "₹3.02L"
+            },
+            {
+              "label": "Mar 26",
+              "value": 303464.4,
+              "display": "₹3,03,464.40",
+              "short": "₹3.03L"
+            },
+            {
+              "label": "Apr 26",
+              "value": 279351.9,
+              "display": "₹2,79,351.90",
+              "short": "₹2.79L"
+            },
+            {
+              "label": "May 26",
+              "value": 305088.15,
+              "display": "₹3,05,088.15",
+              "short": "₹3.05L"
+            },
+            {
+              "label": "Jun 26",
+              "value": 354248.85,
+              "display": "₹3,54,248.85",
+              "short": "₹3.54L"
+            },
+            {
+              "label": "Jul 26",
+              "value": 431779.8,
+              "display": "₹4,31,779.80",
+              "short": "₹4.32L"
+            },
+            {
+              "label": "Aug 26",
+              "value": 251159.55,
+              "display": "₹2,51,159.55",
+              "short": "₹2.51L"
+            },
+            {
+              "label": "Sept 26",
+              "value": 374220.9,
+              "display": "₹3,74,220.90",
+              "short": "₹3.74L"
+            }
+          ],
+          "source": "Source: Saffron Loom Textiles fulfilled orders, 1 Oct to 30 Sept. Sample data.",
+          "answer": {
+            "store": "Saffron Loom Textiles",
+            "currency": "INR",
+            "today": "2026-09-30",
+            "sampleData": true,
+            "period": {
+              "from": "2025-10-01",
+              "to": "2026-09-30",
+              "label": "the last 12 months"
+            },
+            "months": [
+              {
+                "month": "2025-10",
+                "orders": 30,
+                "revenue": {
+                  "amount": 228184.8,
+                  "display": "₹2,28,184.80"
+                }
+              },
+              {
+                "month": "2025-11",
+                "orders": 36,
+                "revenue": {
+                  "amount": 392699.1,
+                  "display": "₹3,92,699.10"
+                }
+              },
+              {
+                "month": "2025-12",
+                "orders": 45,
+                "revenue": {
+                  "amount": 418807.05,
+                  "display": "₹4,18,807.05"
+                }
+              },
+              {
+                "month": "2026-01",
+                "orders": 42,
+                "revenue": {
+                  "amount": 352029.6,
+                  "display": "₹3,52,029.60"
+                }
+              },
+              {
+                "month": "2026-02",
+                "orders": 28,
+                "revenue": {
+                  "amount": 302225.25,
+                  "display": "₹3,02,225.25"
+                }
+              },
+              {
+                "month": "2026-03",
+                "orders": 36,
+                "revenue": {
+                  "amount": 303464.4,
+                  "display": "₹3,03,464.40"
+                }
+              },
+              {
+                "month": "2026-04",
+                "orders": 43,
+                "revenue": {
+                  "amount": 279351.9,
+                  "display": "₹2,79,351.90"
+                }
+              },
+              {
+                "month": "2026-05",
+                "orders": 41,
+                "revenue": {
+                  "amount": 305088.15,
+                  "display": "₹3,05,088.15"
+                }
+              },
+              {
+                "month": "2026-06",
+                "orders": 41,
+                "revenue": {
+                  "amount": 354248.85,
+                  "display": "₹3,54,248.85"
+                }
+              },
+              {
+                "month": "2026-07",
+                "orders": 43,
+                "revenue": {
+                  "amount": 431779.8,
+                  "display": "₹4,31,779.80"
+                }
+              },
+              {
+                "month": "2026-08",
+                "orders": 36,
+                "revenue": {
+                  "amount": 251159.55,
+                  "display": "₹2,51,159.55"
+                }
+              },
+              {
+                "month": "2026-09",
+                "orders": 39,
+                "revenue": {
+                  "amount": 374220.9,
+                  "display": "₹3,74,220.90"
+                }
+              }
+            ]
+          }
+        },
+        "lead": "July 2026 was your best month at ₹4,31,779.80, just ahead of December's ₹4,18,807.05. September came back to ₹3,74,220.90 after a dip to ₹2,51,159.55 in August."
+      },
+      "checks": [
+        {
+          "name": "made a inline_chart",
+          "ok": true,
+          "detail": "inline_chart"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "read_guide → ask_store → show_chart"
+        },
+        {
+          "name": "lead numbers match the chart",
+          "ok": true,
+          "detail": "4 checked"
+        },
+        {
+          "name": "title in words, at most 12 bars or 24 points",
+          "ok": true
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "k03",
+      "run": 2,
+      "store": "fernhill-goods",
+      "request": "What are my top 5 products by units this year? Show it as a chart.",
+      "seconds": 7.1,
+      "calls": 2,
+      "toolsUsed": [
+        "read_guide",
+        "ask_store",
+        "show_chart"
+      ],
+      "made": {
+        "kind": "chart",
+        "spec": {
+          "data": "top_products",
+          "measure": "units",
+          "chartType": "bar",
+          "title": "Top 5 products by units sold, Jan 1 – Sep 30, 2026",
+          "lead": "The Travel mug, Charcoal leads with 29 sold, ahead of the Ceramic planter, Sand at 26. Three products are tied at 25 each.",
+          "period": "this_year",
+          "limit": 5
+        },
+        "chart": {
+          "title": "Top 5 products by units sold, Jan 1 – Sep 30, 2026",
+          "chartType": "bar",
+          "orientation": "horizontal",
+          "measure": "units",
+          "unitLabel": "units",
+          "points": [
+            {
+              "label": "Travel mug, Charcoal",
+              "value": 29,
+              "display": "29",
+              "short": "29"
+            },
+            {
+              "label": "Ceramic planter, Sand",
+              "value": 26,
+              "display": "26",
+              "short": "26"
+            },
+            {
+              "label": "Linen summer dress, Forest",
+              "value": 25,
+              "display": "25",
+              "short": "25"
+            },
+            {
+              "label": "Straight-leg jeans, Rust",
+              "value": 25,
+              "display": "25",
+              "short": "25"
+            },
+            {
+              "label": "Merino crew, Rust",
+              "value": 25,
+              "display": "25",
+              "short": "25"
+            }
+          ],
+          "source": "Source: Fernhill Goods Co. fulfilled orders, 1 Jan to 30 Sept. Sample data.",
+          "answer": {
+            "store": "Fernhill Goods Co.",
+            "currency": "USD",
+            "today": "2026-09-30",
+            "sampleData": true,
+            "period": {
+              "from": "2026-01-01",
+              "to": "2026-09-30",
+              "label": "this year so far"
+            },
+            "rankedBy": "units",
+            "products": [
+              {
+                "rank": 1,
+                "title": "Travel mug, Charcoal",
+                "unitsSold": 29,
+                "sales": {
+                  "amount": 1072.71,
+                  "display": "$1,072.71"
+                }
+              },
+              {
+                "rank": 2,
+                "title": "Ceramic planter, Sand",
+                "unitsSold": 26,
+                "sales": {
+                  "amount": 883.74,
+                  "display": "$883.74"
+                }
+              },
+              {
+                "rank": 3,
+                "title": "Linen summer dress, Forest",
+                "unitsSold": 25,
+                "sales": {
+                  "amount": 1849.75,
+                  "display": "$1,849.75"
+                }
+              },
+              {
+                "rank": 4,
+                "title": "Straight-leg jeans, Rust",
+                "unitsSold": 25,
+                "sales": {
+                  "amount": 1349.75,
+                  "display": "$1,349.75"
+                }
+              },
+              {
+                "rank": 5,
+                "title": "Merino crew, Rust",
+                "unitsSold": 25,
+                "sales": {
+                  "amount": 1149.75,
+                  "display": "$1,149.75"
+                }
+              }
+            ]
+          }
+        },
+        "lead": "The Travel mug, Charcoal leads with 29 sold, ahead of the Ceramic planter, Sand at 26. Three products are tied at 25 each."
+      },
+      "checks": [
+        {
+          "name": "made a inline_chart",
+          "ok": true,
+          "detail": "inline_chart"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "read_guide → ask_store → show_chart"
+        },
+        {
+          "name": "lead numbers match the chart",
+          "ok": true,
+          "detail": "0 checked"
+        },
+        {
+          "name": "title in words, at most 12 bars or 24 points",
+          "ok": true
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "k04",
+      "run": 2,
+      "store": "saffron-loom",
+      "request": "Which five products sold the most in September?",
+      "seconds": 8.9,
+      "calls": 2,
+      "toolsUsed": [
+        "ask_store"
+      ],
+      "made": {
+        "kind": "reply",
+        "text": "In September, the **Indigo handloom cotton saree** and the **Madder red cotton stole** sold the most, with 7 units each. Three products tied just behind them on 6 units:\n\n1. Handloom cotton saree, Indigo: 7 units (₹33,390.00)\n2. Cotton stole, Madder red: 7 units (₹15,890.00)\n3. Silk-blend saree, Ivory: 6 units (₹36,420.00)\n4. Silk-blend saree, Madder red: 6 units (₹28,080.00)\n5. Woven cushion cover, Indigo: 6 units (₹7,860.00)\n\nThese figures come from your store's fulfilled orders from 1 to 30 September 2026. The Ivory silk-blend saree is fifth by units sold but made the most money. Do you want this list ranked by sales instead?",
+        "usedStore": true,
+        "claims": [
+          {
+            "text": "₹33,390.00",
+            "value": 33390,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹15,890.00",
+            "value": 15890,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹36,420.00",
+            "value": 36420,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹28,080.00",
+            "value": 28080,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹7,860.00",
+            "value": 7860,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "7 units",
+            "value": 7,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "6 units",
+            "value": 6,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "7 units",
+            "value": 7,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "7 units",
+            "value": 7,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "6 units",
+            "value": 6,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "6 units",
+            "value": 6,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "6 units",
+            "value": 6,
+            "precision": 1,
+            "kind": "count"
+          }
+        ]
+      },
+      "checks": [
+        {
+          "name": "made a inline_chart or chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "ask_store"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "12 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "k01",
+      "run": 3,
+      "store": "fernhill-goods",
+      "request": "Show me sales by week for the last 8 weeks.",
+      "seconds": 8.5,
+      "calls": 2,
+      "toolsUsed": [
+        "read_guide",
+        "ask_store",
+        "show_chart"
+      ],
+      "made": {
+        "kind": "chart",
+        "spec": {
+          "data": "sales_by_week",
+          "measure": "revenue",
+          "chartType": "bar",
+          "title": "Weekly sales, last 8 weeks (Aug 3 – Sep 27)",
+          "lead": "Sales peaked the week of Aug 17 at $3,033.79 and have been lower since. The weakest week was Sep 14–20 at $625.86, with a partial recovery to $1,613.10 last week.",
+          "weeks": 8
+        },
+        "chart": {
+          "title": "Weekly sales, last 8 weeks (Aug 3 – Sep 27)",
+          "chartType": "bar",
+          "orientation": "vertical",
+          "measure": "revenue",
+          "unitLabel": "USD",
+          "points": [
+            {
+              "label": "3 Aug",
+              "value": 2466.22,
+              "display": "$2,466.22",
+              "short": "$2.47K"
+            },
+            {
+              "label": "10 Aug",
+              "value": 1177.86,
+              "display": "$1,177.86",
+              "short": "$1.18K"
+            },
+            {
+              "label": "17 Aug",
+              "value": 3033.79,
+              "display": "$3,033.79",
+              "short": "$3.03K"
+            },
+            {
+              "label": "24 Aug",
+              "value": 2549.54,
+              "display": "$2,549.54",
+              "short": "$2.55K"
+            },
+            {
+              "label": "31 Aug",
+              "value": 1111.87,
+              "display": "$1,111.87",
+              "short": "$1.11K"
+            },
+            {
+              "label": "7 Sept",
+              "value": 2181.26,
+              "display": "$2,181.26",
+              "short": "$2.18K"
+            },
+            {
+              "label": "14 Sept",
+              "value": 625.86,
+              "display": "$625.86",
+              "short": "$626"
+            },
+            {
+              "label": "21 Sept",
+              "value": 1613.1,
+              "display": "$1,613.10",
+              "short": "$1.61K"
+            }
+          ],
+          "source": "Source: Fernhill Goods Co. fulfilled orders, weeks starting 3 Aug to 21 Sept. Sample data.",
+          "answer": {
+            "store": "Fernhill Goods Co.",
+            "currency": "USD",
+            "today": "2026-09-30",
+            "sampleData": true,
+            "weeks": [
+              {
+                "weekStarting": "2026-08-03",
+                "weekEnding": "2026-08-09",
+                "orders": 10,
+                "revenue": {
+                  "amount": 2466.22,
+                  "display": "$2,466.22"
+                }
+              },
+              {
+                "weekStarting": "2026-08-10",
+                "weekEnding": "2026-08-16",
+                "orders": 5,
+                "revenue": {
+                  "amount": 1177.86,
+                  "display": "$1,177.86"
+                }
+              },
+              {
+                "weekStarting": "2026-08-17",
+                "weekEnding": "2026-08-23",
+                "orders": 17,
+                "revenue": {
+                  "amount": 3033.79,
+                  "display": "$3,033.79"
+                }
+              },
+              {
+                "weekStarting": "2026-08-24",
+                "weekEnding": "2026-08-30",
+                "orders": 14,
+                "revenue": {
+                  "amount": 2549.54,
+                  "display": "$2,549.54"
+                }
+              },
+              {
+                "weekStarting": "2026-08-31",
+                "weekEnding": "2026-09-06",
+                "orders": 8,
+                "revenue": {
+                  "amount": 1111.87,
+                  "display": "$1,111.87"
+                }
+              },
+              {
+                "weekStarting": "2026-09-07",
+                "weekEnding": "2026-09-13",
+                "orders": 12,
+                "revenue": {
+                  "amount": 2181.26,
+                  "display": "$2,181.26"
+                }
+              },
+              {
+                "weekStarting": "2026-09-14",
+                "weekEnding": "2026-09-20",
+                "orders": 3,
+                "revenue": {
+                  "amount": 625.86,
+                  "display": "$625.86"
+                }
+              },
+              {
+                "weekStarting": "2026-09-21",
+                "weekEnding": "2026-09-27",
+                "orders": 12,
+                "revenue": {
+                  "amount": 1613.1,
+                  "display": "$1,613.10"
+                }
+              }
+            ]
+          }
+        },
+        "lead": "Sales peaked the week of Aug 17 at $3,033.79 and have been lower since. The weakest week was Sep 14–20 at $625.86, with a partial recovery to $1,613.10 last week."
+      },
+      "checks": [
+        {
+          "name": "made a inline_chart",
+          "ok": true,
+          "detail": "inline_chart"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "read_guide → ask_store → show_chart"
+        },
+        {
+          "name": "lead numbers match the chart",
+          "ok": true,
+          "detail": "3 checked"
+        },
+        {
+          "name": "title in words, at most 12 bars or 24 points",
+          "ok": true
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "k02",
+      "run": 3,
+      "store": "saffron-loom",
+      "request": "Chart my monthly revenue for the last 12 months.",
+      "seconds": 7.6,
+      "calls": 2,
+      "toolsUsed": [
+        "read_guide",
+        "ask_store",
+        "show_chart"
+      ],
+      "made": {
+        "kind": "chart",
+        "spec": {
+          "data": "sales_by_month",
+          "measure": "revenue",
+          "chartType": "line",
+          "title": "Monthly revenue, last 12 months (Oct 2025 – Sep 2026)",
+          "lead": "July 2026 was your best month at ₹4,31,779.80, and October 2025 was the lowest at ₹2,28,184.80. September came back to ₹3,74,220.90 after a dip in August.",
+          "period": "last_12_months"
+        },
+        "chart": {
+          "title": "Monthly revenue, last 12 months (Oct 2025 – Sep 2026)",
+          "chartType": "line",
+          "orientation": "vertical",
+          "measure": "revenue",
+          "unitLabel": "INR",
+          "points": [
+            {
+              "label": "Oct 25",
+              "value": 228184.8,
+              "display": "₹2,28,184.80",
+              "short": "₹2.28L"
+            },
+            {
+              "label": "Nov 25",
+              "value": 392699.1,
+              "display": "₹3,92,699.10",
+              "short": "₹3.93L"
+            },
+            {
+              "label": "Dec 25",
+              "value": 418807.05,
+              "display": "₹4,18,807.05",
+              "short": "₹4.19L"
+            },
+            {
+              "label": "Jan 26",
+              "value": 352029.6,
+              "display": "₹3,52,029.60",
+              "short": "₹3.52L"
+            },
+            {
+              "label": "Feb 26",
+              "value": 302225.25,
+              "display": "₹3,02,225.25",
+              "short": "₹3.02L"
+            },
+            {
+              "label": "Mar 26",
+              "value": 303464.4,
+              "display": "₹3,03,464.40",
+              "short": "₹3.03L"
+            },
+            {
+              "label": "Apr 26",
+              "value": 279351.9,
+              "display": "₹2,79,351.90",
+              "short": "₹2.79L"
+            },
+            {
+              "label": "May 26",
+              "value": 305088.15,
+              "display": "₹3,05,088.15",
+              "short": "₹3.05L"
+            },
+            {
+              "label": "Jun 26",
+              "value": 354248.85,
+              "display": "₹3,54,248.85",
+              "short": "₹3.54L"
+            },
+            {
+              "label": "Jul 26",
+              "value": 431779.8,
+              "display": "₹4,31,779.80",
+              "short": "₹4.32L"
+            },
+            {
+              "label": "Aug 26",
+              "value": 251159.55,
+              "display": "₹2,51,159.55",
+              "short": "₹2.51L"
+            },
+            {
+              "label": "Sept 26",
+              "value": 374220.9,
+              "display": "₹3,74,220.90",
+              "short": "₹3.74L"
+            }
+          ],
+          "source": "Source: Saffron Loom Textiles fulfilled orders, 1 Oct to 30 Sept. Sample data.",
+          "answer": {
+            "store": "Saffron Loom Textiles",
+            "currency": "INR",
+            "today": "2026-09-30",
+            "sampleData": true,
+            "period": {
+              "from": "2025-10-01",
+              "to": "2026-09-30",
+              "label": "the last 12 months"
+            },
+            "months": [
+              {
+                "month": "2025-10",
+                "orders": 30,
+                "revenue": {
+                  "amount": 228184.8,
+                  "display": "₹2,28,184.80"
+                }
+              },
+              {
+                "month": "2025-11",
+                "orders": 36,
+                "revenue": {
+                  "amount": 392699.1,
+                  "display": "₹3,92,699.10"
+                }
+              },
+              {
+                "month": "2025-12",
+                "orders": 45,
+                "revenue": {
+                  "amount": 418807.05,
+                  "display": "₹4,18,807.05"
+                }
+              },
+              {
+                "month": "2026-01",
+                "orders": 42,
+                "revenue": {
+                  "amount": 352029.6,
+                  "display": "₹3,52,029.60"
+                }
+              },
+              {
+                "month": "2026-02",
+                "orders": 28,
+                "revenue": {
+                  "amount": 302225.25,
+                  "display": "₹3,02,225.25"
+                }
+              },
+              {
+                "month": "2026-03",
+                "orders": 36,
+                "revenue": {
+                  "amount": 303464.4,
+                  "display": "₹3,03,464.40"
+                }
+              },
+              {
+                "month": "2026-04",
+                "orders": 43,
+                "revenue": {
+                  "amount": 279351.9,
+                  "display": "₹2,79,351.90"
+                }
+              },
+              {
+                "month": "2026-05",
+                "orders": 41,
+                "revenue": {
+                  "amount": 305088.15,
+                  "display": "₹3,05,088.15"
+                }
+              },
+              {
+                "month": "2026-06",
+                "orders": 41,
+                "revenue": {
+                  "amount": 354248.85,
+                  "display": "₹3,54,248.85"
+                }
+              },
+              {
+                "month": "2026-07",
+                "orders": 43,
+                "revenue": {
+                  "amount": 431779.8,
+                  "display": "₹4,31,779.80"
+                }
+              },
+              {
+                "month": "2026-08",
+                "orders": 36,
+                "revenue": {
+                  "amount": 251159.55,
+                  "display": "₹2,51,159.55"
+                }
+              },
+              {
+                "month": "2026-09",
+                "orders": 39,
+                "revenue": {
+                  "amount": 374220.9,
+                  "display": "₹3,74,220.90"
+                }
+              }
+            ]
+          }
+        },
+        "lead": "July 2026 was your best month at ₹4,31,779.80, and October 2025 was the lowest at ₹2,28,184.80. September came back to ₹3,74,220.90 after a dip in August."
+      },
+      "checks": [
+        {
+          "name": "made a inline_chart",
+          "ok": true,
+          "detail": "inline_chart"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "read_guide → ask_store → show_chart"
+        },
+        {
+          "name": "lead numbers match the chart",
+          "ok": true,
+          "detail": "3 checked"
+        },
+        {
+          "name": "title in words, at most 12 bars or 24 points",
+          "ok": true
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "k03",
+      "run": 3,
+      "store": "fernhill-goods",
+      "request": "What are my top 5 products by units this year? Show it as a chart.",
+      "seconds": 6.1,
+      "calls": 2,
+      "toolsUsed": [
+        "read_guide",
+        "ask_store",
+        "show_chart"
+      ],
+      "made": {
+        "kind": "chart",
+        "spec": {
+          "data": "top_products",
+          "measure": "units",
+          "chartType": "bar",
+          "title": "Top 5 products by units sold, Jan 1 – Sep 30, 2026",
+          "lead": "The Travel mug, Charcoal leads with 29 units sold this year, ahead of the Ceramic planter, Sand at 26. Three products are tied for third with 25 each.",
+          "period": "this_year",
+          "limit": 5
+        },
+        "chart": {
+          "title": "Top 5 products by units sold, Jan 1 – Sep 30, 2026",
+          "chartType": "bar",
+          "orientation": "horizontal",
+          "measure": "units",
+          "unitLabel": "units",
+          "points": [
+            {
+              "label": "Travel mug, Charcoal",
+              "value": 29,
+              "display": "29",
+              "short": "29"
+            },
+            {
+              "label": "Ceramic planter, Sand",
+              "value": 26,
+              "display": "26",
+              "short": "26"
+            },
+            {
+              "label": "Linen summer dress, Forest",
+              "value": 25,
+              "display": "25",
+              "short": "25"
+            },
+            {
+              "label": "Straight-leg jeans, Rust",
+              "value": 25,
+              "display": "25",
+              "short": "25"
+            },
+            {
+              "label": "Merino crew, Rust",
+              "value": 25,
+              "display": "25",
+              "short": "25"
+            }
+          ],
+          "source": "Source: Fernhill Goods Co. fulfilled orders, 1 Jan to 30 Sept. Sample data.",
+          "answer": {
+            "store": "Fernhill Goods Co.",
+            "currency": "USD",
+            "today": "2026-09-30",
+            "sampleData": true,
+            "period": {
+              "from": "2026-01-01",
+              "to": "2026-09-30",
+              "label": "this year so far"
+            },
+            "rankedBy": "units",
+            "products": [
+              {
+                "rank": 1,
+                "title": "Travel mug, Charcoal",
+                "unitsSold": 29,
+                "sales": {
+                  "amount": 1072.71,
+                  "display": "$1,072.71"
+                }
+              },
+              {
+                "rank": 2,
+                "title": "Ceramic planter, Sand",
+                "unitsSold": 26,
+                "sales": {
+                  "amount": 883.74,
+                  "display": "$883.74"
+                }
+              },
+              {
+                "rank": 3,
+                "title": "Linen summer dress, Forest",
+                "unitsSold": 25,
+                "sales": {
+                  "amount": 1849.75,
+                  "display": "$1,849.75"
+                }
+              },
+              {
+                "rank": 4,
+                "title": "Straight-leg jeans, Rust",
+                "unitsSold": 25,
+                "sales": {
+                  "amount": 1349.75,
+                  "display": "$1,349.75"
+                }
+              },
+              {
+                "rank": 5,
+                "title": "Merino crew, Rust",
+                "unitsSold": 25,
+                "sales": {
+                  "amount": 1149.75,
+                  "display": "$1,149.75"
+                }
+              }
+            ]
+          }
+        },
+        "lead": "The Travel mug, Charcoal leads with 29 units sold this year, ahead of the Ceramic planter, Sand at 26. Three products are tied for third with 25 each."
+      },
+      "checks": [
+        {
+          "name": "made a inline_chart",
+          "ok": true,
+          "detail": "inline_chart"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "read_guide → ask_store → show_chart"
+        },
+        {
+          "name": "lead numbers match the chart",
+          "ok": true,
+          "detail": "1 checked"
+        },
+        {
+          "name": "title in words, at most 12 bars or 24 points",
+          "ok": true
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "k04",
+      "run": 3,
+      "store": "saffron-loom",
+      "request": "Which five products sold the most in September?",
+      "seconds": 7.8,
+      "calls": 2,
+      "toolsUsed": [
+        "ask_store"
+      ],
+      "made": {
+        "kind": "reply",
+        "text": "These were your top five sellers by units in September. The first two tied at 7 units each, and the next three tied at 6. These figures come from your store's fulfilled orders from 1 to 30 September 2026.\n\n1. **Handloom cotton saree, Indigo:** 7 units, ₹33,390.00\n2. **Cotton stole, Madder red:** 7 units, ₹15,890.00\n3. **Silk-blend saree, Ivory:** 6 units, ₹36,420.00\n4. **Silk-blend saree, Madder red:** 6 units, ₹28,080.00\n5. **Woven cushion cover, Indigo:** 6 units, ₹7,860.00\n\nMeasured by money instead of units, the Ivory silk-blend saree brought in the most, even though it sold fewer units. Would you like me to rank them by sales value?",
+        "usedStore": true,
+        "claims": [
+          {
+            "text": "₹33,390.00",
+            "value": 33390,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹15,890.00",
+            "value": 15890,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹36,420.00",
+            "value": 36420,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹28,080.00",
+            "value": 28080,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹7,860.00",
+            "value": 7860,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "7 units",
+            "value": 7,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "7 units",
+            "value": 7,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "7 units",
+            "value": 7,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "6 units",
+            "value": 6,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "6 units",
+            "value": 6,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "6 units",
+            "value": 6,
+            "precision": 1,
+            "kind": "count"
+          }
+        ]
+      },
+      "checks": [
+        {
+          "name": "made a inline_chart or chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "ask_store"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "11 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        }
+      ],
+      "ok": true
+    }
+  ]
+}

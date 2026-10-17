@@ -1,0 +1,29 @@
+{
+  "$comment": "Advisory rubric scores (evals/rubric.md), given by Claude after looking at each output at 390 and 1280 px. Self-scores run high, so they never pass a gate; they help the designer review. Dimensions: hierarchy, brandFit, readability, facts, standard, phone. Evidence is given for every score below 5.",
+  "session": "1",
+  "scoredBy": "Claude (advisory)",
+  "items": {
+    "c01": { "scores": { "hierarchy": 5, "brandFit": 5, "readability": 5, "facts": 5, "standard": 5, "phone": 5 } },
+    "c02": { "scores": { "hierarchy": 4, "brandFit": 5, "readability": 5, "facts": 5, "standard": 5, "phone": 5 }, "evidence": { "hierarchy": "The opening sentence names all three products, and the list right after it repeats them." } },
+    "c03": { "scores": { "hierarchy": 5, "brandFit": 5, "readability": 5, "facts": 5, "standard": 3, "phone": 5 }, "evidence": { "standard": "It ends by offering to draft a purchase order, which the prototype can’t make yet; offers should be limited to what can be made." } },
+    "c04": { "scores": { "hierarchy": 5, "brandFit": 5, "readability": 5, "facts": 5, "standard": 5, "phone": 5 } },
+    "c05": { "scores": { "hierarchy": 5, "brandFit": 5, "readability": 5, "facts": 5, "standard": 4, "phone": 5 }, "evidence": { "standard": "It corrects the premise (sales rose) and charts it, but the chart’s short lead doesn’t say why the week before was low." } },
+    "c06": { "scores": { "hierarchy": 5, "brandFit": 5, "readability": 5, "facts": 5, "standard": 5, "phone": 5 } },
+    "c07": { "scores": { "hierarchy": 5, "brandFit": 4, "readability": 5, "facts": 5, "standard": 4, "phone": 5 }, "evidence": { "brandFit": "“Breathable & Easy to Wear” is generic copy, not the store’s voice.", "standard": "57 characters is within the limit, but the second half adds little a shopper searches for." } },
+    "c08": { "scores": { "hierarchy": 5, "brandFit": 5, "readability": 4, "facts": 4, "standard": 5, "phone": 5 }, "evidence": { "readability": "Long for a chat reply: a short answer then five bullets; could offer the policy as a document instead.", "facts": "The usual return windows and the note on Indian e-commerce rules are general knowledge, not checked against a source." } },
+    "k01": { "scores": { "hierarchy": 5, "brandFit": 5, "readability": 5, "facts": 5, "standard": 5, "phone": 5 } },
+    "k02": { "scores": { "hierarchy": 5, "brandFit": 5, "readability": 5, "facts": 5, "standard": 5, "phone": 4 }, "evidence": { "phone": "At 390 px only every other month is labelled on the axis." } },
+    "k03": { "scores": { "hierarchy": 5, "brandFit": 5, "readability": 5, "facts": 5, "standard": 5, "phone": 5 } },
+    "k04": { "scores": { "hierarchy": 5, "brandFit": 5, "readability": 5, "facts": 5, "standard": 5, "phone": 5 } },
+    "f01": { "scores": { "hierarchy": 5, "brandFit": 5, "readability": 5, "facts": 5, "standard": 5, "phone": 5 } },
+    "f02": { "scores": { "hierarchy": 5, "brandFit": 5, "readability": 5, "facts": 5, "standard": 5, "phone": 5 } },
+    "f03": { "scores": { "hierarchy": 5, "brandFit": 5, "readability": 5, "facts": 5, "standard": 5, "phone": 5 } },
+    "f04": { "scores": { "hierarchy": 5, "brandFit": 4, "readability": 5, "facts": 5, "standard": 4, "phone": 5 }, "evidence": { "brandFit": "The letterhead shows a dashed “No logo supplied” box: honest (D-61), but it looks unfinished in a demo; the sample store has no logo file.", "standard": "No total row under the orders table; a reader has to add up 126 rows." } },
+    "f05": { "scores": { "hierarchy": 5, "brandFit": 5, "readability": 5, "facts": 5, "standard": 5, "phone": 5 } },
+    "f06": { "scores": { "hierarchy": 5, "brandFit": 5, "readability": 5, "facts": 5, "standard": 5, "phone": 5 } },
+    "f07": { "scores": { "hierarchy": 5, "brandFit": 5, "readability": 5, "facts": 5, "standard": 5, "phone": 5 } },
+    "f08": { "scores": { "hierarchy": 5, "brandFit": 5, "readability": 5, "facts": 5, "standard": 5, "phone": 5 } },
+    "f09": { "scores": { "hierarchy": 5, "brandFit": 5, "readability": 5, "facts": 5, "standard": 5, "phone": 5 } },
+    "f10": { "scores": { "hierarchy": 5, "brandFit": 5, "readability": 5, "facts": 5, "standard": 5, "phone": 5 } }
+  }
+}

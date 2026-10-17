@@ -1,0 +1,58 @@
+{
+  "set": "file",
+  "session": "1",
+  "runs": 1,
+  "useCache": true,
+  "promptVersion": "f368cc732b1b",
+  "guideVersion": "6656c44f45d1",
+  "right": 1,
+  "total": 1,
+  "results": [
+    {
+      "id": "f09",
+      "run": 1,
+      "store": "fernhill-goods",
+      "request": "Export all our orders as a Word document.",
+      "seconds": 0,
+      "calls": 2,
+      "toolsUsed": [
+        "read_guide",
+        "show_format_options"
+      ],
+      "made": {
+        "kind": "format-options",
+        "thing": "file",
+        "requestedFormat": "Word",
+        "offered": [
+          "PDF",
+          "Excel",
+          "CSV",
+          "JSON"
+        ],
+        "message": "I can't export orders as a Word document. I can give you all your orders as a PDF, an Excel spreadsheet, a CSV or a JSON file."
+      },
+      "checks": [
+        {
+          "name": "made a format_not_supported",
+          "ok": true,
+          "detail": "format_not_supported"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "read_guide → show_format_options"
+        },
+        {
+          "name": "offers only formats the file kind exports",
+          "ok": true,
+          "detail": "PDF, Excel, CSV, JSON"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        }
+      ],
+      "ok": true
+    }
+  ]
+}

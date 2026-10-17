@@ -12,6 +12,125 @@ Status is **approved** unless marked otherwise. When a later decision replaces a
 
 The plan is [output-system/build-loop.md](output-system/build-loop.md) (Chaitanya, 2026-10-17): four launch kinds (chat reply, strict document, composed document, file), built in Sessions 0 to 4 for a demo on Friday 23 October. Decisions marked **assumed** were made under the loop's rule: "pick the simplest safe option, record it marked assumed, and continue".
 
+### D-86 · 2026-10-17 · The inline chart is built in Session 1
+**Status: assumed** (build-loop.md §4 allows message card and chart "if time allows" once chat and file pass).
+
+**Why now.** Once guides were loaded for real, the model answered some "why did sales drop?" questions with a chart. The plan routes that question to "chat reply + inline chart", and the routing set accepts either (r01). Without a chart, the person got a "coming later" card instead of an answer.
+
+**Rule.**
+- **What the model picks:** the store numbers to chart (weekly sales, monthly sales, or top products), the measure, bar or line, a title in words, and a lead sentence.
+- **Where the numbers come from:** code computes every point from the sample store.
+- **The lead is checked** by the number check. A failure gets one retry, then an honest error.
+- **Drawing:** the chart is drawn as SVG at its container's real width, so text stays 12–13 px on a phone.
+  - Bars start at zero, and values are labelled.
+  - At narrow widths, bars use short values ("$3.03K", "₹4.32L"), and dates are labelled every other bar.
+  - Lines label only the first, last, highest and lowest points.
+  - Top products show as horizontal bars, with each name above its bar on a phone.
+  - One data colour, the store's accent. A source line always says "Sample data".
+- **Downloads:** CSV and PNG. `formats.json` now marks the inline chart as built.
+- **Eval:** c05's expected answer became "chat reply or inline chart" to match r01. It was changed when the chart was built, not after a result. c01 ("How did sales go last month?") still expects a chat reply. A chart there counts as a miss: it happened once in three gate runs, and it is reported.
+
+Applied in: `src/lib/output-system/chart.ts`, `src/app/output-verify/ChartView.tsx`, `agent/tools.ts`, `agent/loop.ts`, `formats.ts`, `registry.ts`, `evals/chart.jsonl`.
+
+### D-85 · 2026-10-17 · Nothing is made before its guide is read
+**Status: assumed.**
+
+**Rule.**
+- **The chat-reply guide is sent with every turn.** A chat reply is the fallback for every request, so its guide always applies. Before this, the model skipped `read_guide` for a simple count (c06, three runs out of three).
+- **Every other kind must have its guide read first.** If the model calls a making action before it has read that kind's guide, the action is refused with "Read the guide for … first", and the model continues within the call limit.
+- **This enforces the prompt's own rule** ("Read the guide for that kind of thing… before you make something") in code. The prompt is unchanged.
+
+Applied in: `agent/loop.ts`; tests in `loop.test.ts`.
+
+### D-84 · 2026-10-17 · Uploaded files are changed by a fixed list of changes
+**Status: assumed.**
+
+**Rule.**
+- **What the model sees of an upload:** the header, five sample rows, the row count, the sheet name and the file name. Never the whole file.
+- **The changes it can pick:**
+  - adjust a number column by a percent, rounded to a price ending such as .99 (nearest, ties up) or to a number of decimals
+  - remove duplicates by a column, optionally ignoring case, keeping the first
+  - change a column to title, upper or lower case
+  - trim spaces
+- **Code applies them to every row** and writes the file back in its own format, with the same header, column order and sheet name.
+- **A column that isn't there** is refused, with its name.
+
+Applied in: `src/lib/output-system/files/upload.ts`.
+
+### D-83 · 2026-10-17 · How data files are written
+**Status: assumed.** The `fflate` declaration is a dependency record (build-loop.md §5).
+
+**Rule.**
+- **The model never writes rows.** It picks a declarative spec: dataset (orders, products or customers), format, period, statuses, low stock only, or category. Code builds every row from the sample store.
+  - Orders lists every status, with the status in its own column, unless a status is asked for.
+- **Data-file rules** (build-loop.md §3):
+  - one header row, one record per row
+  - ISO dates (real date cells in Excel)
+  - money as plain numbers, with the currency in its own column
+  - no merged cells
+- **Formats:**
+  - **CSV** follows RFC 4180, UTF-8 without a byte-order mark.
+  - **Excel** has a bold, frozen header and sensible column widths.
+  - **JSON** is `{ store, title, sampleData, period?, count, records }`.
+  - **PDF** goes through the document engine, as a brief with a table. That gives it the store's letterhead and type, page numbers, and a table header repeated on every page.
+- **File names** say what the file is and when: "{store} {title}.{ext}".
+- **Dependency:**
+  - **Library:** `fflate` 0.8.3, MIT licence, maintained, already installed as a dependency of `jspdf`.
+  - **Why:** it writes and reads Excel's zip container.
+  - **Change made:** it is now declared in `package.json` at the installed version. Nothing new was installed, and the shared `node_modules` is unchanged.
+- **Where files are made:** in the browser. Evals make them in Node from the same code.
+
+Applied in: `src/lib/output-system/files/`.
+
+### D-82 · 2026-10-17 · How store numbers in a reply are checked
+**Status: assumed.**
+
+**Rule.**
+- **What is checked:** the claims a reply makes about the store: money (₹, Rs, INR, $, USD, with k, lakh or crore), percentages, and counts of store things (orders, units, customers, products, items, refunds, sales).
+- **How:** each claim must equal, by value, a number from the store's answers, the request or earlier turns, at the precision it was written with. So "₹39.9 lakh" and "$76k" pass when a source rounds to them.
+- **Percentages** compare by size, so "down 12%" matches −12.
+- **Not checked:** plain numbers that aren't store claims ("30 days", "under 60 characters").
+- **On a failure:** the model gets one more try, told which figures didn't match. Then the person gets an honest error and the reply isn't shown. The same applies to system words in a reply.
+
+Applied in: `src/lib/output-system/numbers.ts`, `agent/loop.ts`.
+
+### D-81 · 2026-10-17 · In sample mode, "today" is the sample data's last day
+**Status: assumed.**
+
+**Rule.**
+- **Today is 30 Sep 2026.** The model is told the store's data is complete up to and including that day, so "last month" is September 2026 and is final.
+- **The page says so under the request box:** "Sample data runs to 30 Sept 2026, so “last month” means September 2026."
+- **Named periods resolve in code:** last week, last month, last 3 months, last quarter, this year, last 12 months.
+- **Comparisons:** a whole month or quarter is compared with the previous calendar month or quarter. Any other period is compared with the same length of time just before.
+
+Applied in: `src/lib/output-system/storeTool.ts`, `agent/loop.ts` (`contextBlock`), `Conversation.tsx`.
+
+### D-80 · 2026-10-17 · How a request becomes something made (Session 1)
+**Status: assumed.**
+
+**Rule.**
+- **Tools:** the model is offered the prompt's own action names as real tools.
+  - `read_guide` returns the kind's guide and its `formats.json` entry.
+  - `ask_store` answers a fixed set of store questions, with no free-form queries.
+  - Every other action ends the turn with one thing to show.
+  - Kinds not built in this build loop still have their tool, and show a "coming later" card.
+- **Bounds:**
+  - At most 6 model calls per request.
+  - Every structured answer is checked against its schema. A failure gets one retry with the error, then an honest error. Nothing earlier is lost.
+- **Tool schemas are flat objects.** The API refuses a union at the top of a tool's input schema, so `ask_store` and `build_file` take one object, checked strictly in code.
+- **Format names come from `formats.json`.** The offered formats on the format card are named from it whatever the model wrote ("xlsx" becomes "Excel"), and only built formats get working buttons.
+- **The model route is `/output-verify/model`, not `/api/output-model`.**
+  - In this app, `/api/*` goes through Auth0's middleware, which fails without Auth0 settings, and the worktree has none.
+  - Under `/output-verify/`, the development-only proxy line approved in D-78 already covers the route, so no auth code changed.
+  - The route returns 404 outside development, caps the request at 200 KB, logs no prompts, and streams progress labels as NDJSON.
+- **Spend and cache:**
+  - Every call is charged to `OUTPUT_BUILD_SESSION`, and the spend limit is checked before every call.
+  - Responses are cached while iterating. Gate runs use `--no-cache` and a per-run key, so three runs are three real samples.
+- **Offline tests:** the loop takes an injected model, so tests never call the network.
+- **Progress labels** name what is being made ("Making your file", "Checking your store data") and are checked for system words.
+
+Applied in: `src/lib/output-system/agent/`, `src/app/output-verify/model/route.ts`, `src/app/output-verify/Conversation.tsx`.
+
 ### D-79 · 2026-10-17 · Spend is tracked per call, with limits read from build-loop.md
 **Status: approved in principle** (build-loop.md §9). The estimate rates are **assumed**.
 

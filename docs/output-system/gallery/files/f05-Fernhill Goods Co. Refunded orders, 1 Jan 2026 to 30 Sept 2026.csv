@@ -1,0 +1,27 @@
+Order number,Date,Customer,Customer email,Status,Channel,Units,Subtotal,Discount,Shipping,Tax,Total,Currency
+FH-01189,2026-02-10,Caleb Coleman,caleb.coleman.32@example.com,Refunded,Online store,2,111.98,0.00,0.00,0.00,111.98,USD
+FH-01193,2026-02-14,Nora Hughes,nora.hughes.10@example.com,Refunded,Online store,4,142.96,0.00,0.00,0.00,142.96,USD
+FH-01197,2026-02-17,Jordan Walsh,jordan.walsh.111@example.com,Refunded,Online store,6,441.94,44.19,0.00,0.00,397.75,USD
+FH-01203,2026-02-22,Marcus Rivera,marcus.rivera.96@example.com,Refunded,Online store,8,710.92,0.00,0.00,0.00,710.92,USD
+FH-01204,2026-02-22,Owen Kim,owen.kim.136@example.com,Refunded,Marketplace,3,157.97,0.00,0.00,0.00,157.97,USD
+FH-01212,2026-03-02,Hannah Bennett,hannah.bennett.104@example.com,Refunded,Online store,8,949.92,94.99,0.00,0.00,854.93,USD
+FH-01221,2026-03-07,Nora Foster,nora.foster.125@example.com,Refunded,Marketplace,5,153.95,0.00,0.00,0.00,153.95,USD
+FH-01226,2026-03-14,Luis Hughes,luis.hughes.167@example.com,Refunded,Online store,1,137.99,0.00,0.00,0.00,137.99,USD
+FH-01237,2026-03-20,Hannah Ortiz,hannah.ortiz.179@example.com,Refunded,Social,6,515.94,0.00,0.00,0.00,515.94,USD
+FH-01255,2026-04-04,Priya Lane,priya.lane.158@example.com,Refunded,Marketplace,1,39.99,0.00,6.00,0.00,45.99,USD
+FH-01270,2026-04-17,Hannah Hughes,hannah.hughes.98@example.com,Refunded,Online store,1,66.99,0.00,6.00,0.00,72.99,USD
+FH-01271,2026-04-17,Theo Rivera,theo.rivera.132@example.com,Refunded,Online store,4,178.96,0.00,0.00,0.00,178.96,USD
+FH-01281,2026-04-26,Owen Nguyen,owen.nguyen.150@example.com,Refunded,Marketplace,1,47.99,0.00,6.00,0.00,53.99,USD
+FH-01291,2026-05-04,Grace Foster,grace.foster.144@example.com,Refunded,Marketplace,1,31.99,0.00,6.00,0.00,37.99,USD
+FH-01295,2026-05-06,Ruth Kim,ruth.kim.172@example.com,Refunded,Online store,3,182.97,0.00,0.00,0.00,182.97,USD
+FH-01302,2026-05-08,Priya Hughes,priya.hughes.137@example.com,Refunded,Online store,6,377.94,0.00,0.00,0.00,377.94,USD
+FH-01305,2026-05-11,June Rivera,june.rivera.115@example.com,Refunded,Online store,3,135.97,0.00,0.00,0.00,135.97,USD
+FH-01308,2026-05-15,Elena Kim,elena.kim.18@example.com,Refunded,Social,5,401.95,0.00,0.00,0.00,401.95,USD
+FH-01362,2026-06-29,Theo Rivera,theo.rivera.132@example.com,Refunded,Online store,4,275.96,0.00,0.00,0.00,275.96,USD
+FH-01363,2026-06-30,Hannah Hughes,hannah.hughes.5@example.com,Refunded,Marketplace,1,33.99,0.00,6.00,0.00,39.99,USD
+FH-01364,2026-07-02,Marcus Ortiz,marcus.ortiz.105@example.com,Refunded,Online store,2,129.98,0.00,0.00,0.00,129.98,USD
+FH-01411,2026-08-04,Nora Kim,nora.kim.159@example.com,Refunded,Online store,3,242.97,24.30,0.00,0.00,218.67,USD
+FH-01415,2026-08-07,Avery Lane,avery.lane.93@example.com,Refunded,Online store,6,217.94,0.00,0.00,0.00,217.94,USD
+FH-01442,2026-08-24,Theo Nguyen,theo.nguyen.59@example.com,Refunded,Online store,5,394.95,39.50,0.00,0.00,355.45,USD
+FH-01470,2026-09-08,June Brooks,june.brooks.194@example.com,Refunded,Online store,2,85.98,0.00,0.00,0.00,85.98,USD
+FH-01471,2026-09-08,Priya Brooks,priya.brooks.80@example.com,Refunded,Online store,3,368.97,36.90,0.00,0.00,332.07,USD

@@ -1,0 +1,1813 @@
+{
+  "set": "chat",
+  "session": "1",
+  "runs": 3,
+  "useCache": false,
+  "promptVersion": "f368cc732b1b",
+  "guideVersion": "6656c44f45d1",
+  "right": 23,
+  "total": 24,
+  "results": [
+    {
+      "id": "c01",
+      "run": 1,
+      "store": "fernhill-goods",
+      "request": "How did sales go last month?",
+      "seconds": 5.8,
+      "calls": 2,
+      "toolsUsed": [
+        "ask_store"
+      ],
+      "made": {
+        "kind": "reply",
+        "text": "Sales were down in September. Revenue came to **$5,709.25**, which is 41.1% lower than August's $9,687.55.\n\n- **Orders:** 38, down 22.4% from 49\n- **Units sold:** 95, down from 135\n- **Average order value:** $150.24, down 24% from $197.70\n- **Net sales:** $5,655.25, down from $9,627.55\n\nSo the drop came from two things: fewer orders, and smaller orders. Revenue fell more than order count because shoppers spent less each time.\n\nThese figures are from your store's fulfilled orders for September 1–30. That's the month ending today, and today's data is complete. This is sample data. Want me to break it down by product to see which ones dropped?",
+        "usedStore": true,
+        "claims": [
+          {
+            "text": "$5,709.25",
+            "value": 5709.25,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$9,687.55",
+            "value": 9687.55,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$150.24",
+            "value": 150.24,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$197.70",
+            "value": 197.7,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$5,655.25",
+            "value": 5655.25,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$9,627.55",
+            "value": 9627.55,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "41.1%",
+            "value": 41.1,
+            "precision": 0.1,
+            "kind": "percent"
+          },
+          {
+            "text": "22.4%",
+            "value": 22.4,
+            "precision": 0.1,
+            "kind": "percent"
+          },
+          {
+            "text": "24%",
+            "value": 24,
+            "precision": 1,
+            "kind": "percent"
+          }
+        ]
+      },
+      "checks": [
+        {
+          "name": "made a chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "ask_store"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "9 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        },
+        {
+          "name": "asked the store",
+          "ok": true,
+          "detail": "asked"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "c02",
+      "run": 1,
+      "store": "saffron-loom",
+      "request": "What were my top 3 products over the last 12 months?",
+      "seconds": 7.2,
+      "calls": 2,
+      "toolsUsed": [
+        "ask_store",
+        "ask_store"
+      ],
+      "made": {
+        "kind": "reply",
+        "text": "Counting units sold, your top 3 over the last 12 months were the **Quilted dohar in Madder red, the Indigo Tablecloth and the Saffron Cotton stole**. These figures come from your store's fulfilled orders, 1 Oct 2025 to 30 Sep 2026.\n\n1. Quilted dohar, Madder red: 40 units, ₹1,13,200.00\n2. Tablecloth, Indigo: 38 units, ₹1,10,200.00\n3. Cotton stole, Saffron: 34 units, ₹87,720.00\n\nCounting sales value instead, your sarees come out on top:\n\n1. Handloom cotton saree, Madder red: ₹2,53,760.00 (26 units)\n2. Silk-blend saree, Saffron: ₹2,17,790.00 (29 units)\n3. Handloom cotton saree, Saffron: ₹1,25,060.00 (13 units)\n\nDo you want me to break either list down by month?",
+        "usedStore": true,
+        "claims": [
+          {
+            "text": "₹1,13,200.00",
+            "value": 113200,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹1,10,200.00",
+            "value": 110200,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹87,720.00",
+            "value": 87720,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹2,53,760.00",
+            "value": 253760,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹2,17,790.00",
+            "value": 217790,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹1,25,060.00",
+            "value": 125060,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "40 units",
+            "value": 40,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "38 units",
+            "value": 38,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "34 units",
+            "value": 34,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "26 units",
+            "value": 26,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "29 units",
+            "value": 29,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "13 units",
+            "value": 13,
+            "precision": 1,
+            "kind": "count"
+          }
+        ]
+      },
+      "checks": [
+        {
+          "name": "made a chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "ask_store → ask_store"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "12 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        },
+        {
+          "name": "asked the store",
+          "ok": true,
+          "detail": "asked"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "c03",
+      "run": 1,
+      "store": "fernhill-goods",
+      "request": "Which products are running low on stock?",
+      "seconds": 5.1,
+      "calls": 2,
+      "toolsUsed": [
+        "ask_store"
+      ],
+      "made": {
+        "kind": "reply",
+        "text": "Your store has **six products at or below their reorder level**. The ones nearest the top of this list are furthest below it:\n\n- Straight-leg jeans, Sand (FHG-0042): 5 in stock, reorder level 17\n- Insulated bottle, Forest (FHG-0021): 8 in stock, reorder level 24\n- Linen summer dress, Forest (FHG-0037): 13 in stock, reorder level 15\n- Merino crew, Charcoal (FHG-0047): 14 in stock, reorder level 23\n- Insulated bottle, Rust (FHG-0024): 19 in stock, reorder level 25\n- Folding stool, Sand (FHG-0054): 23 in stock, reorder level 24\n\nThese figures are your store's stock levels as of today. The jeans and the Forest bottle are the most urgent. I can make a purchase order for any of these, or a spreadsheet of all the low-stock products.",
+        "usedStore": true,
+        "claims": []
+      },
+      "checks": [
+        {
+          "name": "made a chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "ask_store"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "0 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        },
+        {
+          "name": "asked the store",
+          "ok": true,
+          "detail": "asked"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "c04",
+      "run": 1,
+      "store": "saffron-loom",
+      "request": "What's my average order value over the last three months?",
+      "seconds": 6,
+      "calls": 2,
+      "toolsUsed": [
+        "ask_store"
+      ],
+      "made": {
+        "kind": "reply",
+        "text": "Over the last three months (1 July to 30 September 2026), your average order value was **₹8,958.98**. That's up 19.3% from ₹7,509.51 in April to June.\n\nThe increase came from bigger baskets, not more orders. Orders fell 5.6% to 118, but you sold more units (358, up from 338). Revenue still grew 12.6% to ₹10,57,160.25. These figures come from your store's fulfilled orders.\n\nWant me to see which products are driving the bigger baskets?",
+        "usedStore": true,
+        "claims": [
+          {
+            "text": "₹8,958.98",
+            "value": 8958.98,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹7,509.51",
+            "value": 7509.51,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹10,57,160.25",
+            "value": 1057160.25,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "19.3%",
+            "value": 19.3,
+            "precision": 0.1,
+            "kind": "percent"
+          },
+          {
+            "text": "5.6%",
+            "value": 5.6,
+            "precision": 0.1,
+            "kind": "percent"
+          },
+          {
+            "text": "12.6%",
+            "value": 12.6,
+            "precision": 0.1,
+            "kind": "percent"
+          }
+        ]
+      },
+      "checks": [
+        {
+          "name": "made a chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "ask_store"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "6 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        },
+        {
+          "name": "asked the store",
+          "ok": true,
+          "detail": "asked"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "c05",
+      "run": 1,
+      "store": "fernhill-goods",
+      "request": "Why did sales drop last week?",
+      "seconds": 9.8,
+      "calls": 2,
+      "toolsUsed": [
+        "ask_store",
+        "ask_store",
+        "ask_store",
+        "ask_store",
+        "show_chart"
+      ],
+      "made": {
+        "kind": "coming-later",
+        "lane": "inline_chart",
+        "summary": "Weekly revenue for the last 8 full weeks (Aug 3 – Sep 27), with last week (Sep 21–27) and the low week before it (Sep 14–20) highlighted"
+      },
+      "checks": [
+        {
+          "name": "made a chat_reply",
+          "ok": false,
+          "detail": "inline_chart"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": false,
+          "detail": "ask_store → ask_store → ask_store → ask_store → show_chart"
+        }
+      ],
+      "ok": false
+    },
+    {
+      "id": "c06",
+      "run": 1,
+      "store": "saffron-loom",
+      "request": "How many orders were refunded last quarter?",
+      "seconds": 3.9,
+      "calls": 2,
+      "toolsUsed": [
+        "ask_store"
+      ],
+      "made": {
+        "kind": "reply",
+        "text": "**6 orders were refunded** last quarter (1 July to 30 September 2026), according to your store's orders.\n\nThat's 6 out of 126 orders. 118 were fulfilled and 2 were cancelled. Since the quarter ends today, these numbers are final.\n\nDo you want a list of the 6 refunded orders as a spreadsheet?",
+        "usedStore": true,
+        "claims": [
+          {
+            "text": "rs. 118",
+            "value": 118,
+            "precision": 1,
+            "kind": "money"
+          },
+          {
+            "text": "6 orders",
+            "value": 6,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "6 refunded orders",
+            "value": 6,
+            "precision": 1,
+            "kind": "count"
+          }
+        ]
+      },
+      "checks": [
+        {
+          "name": "made a chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "ask_store"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "3 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        },
+        {
+          "name": "asked the store",
+          "ok": true,
+          "detail": "asked"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "c07",
+      "run": 1,
+      "store": "fernhill-goods",
+      "request": "Write a product title for our linen summer dress, under 60 characters.",
+      "seconds": 6.6,
+      "calls": 1,
+      "toolsUsed": [],
+      "made": {
+        "kind": "reply",
+        "text": "> Lightweight Linen Summer Dress, Breathable and Easy to Wear\n\nThat's 59 characters. \"Linen\" and \"summer dress\" come first because shoppers search for those words most. If you tell me the colour, length or fit, I can work those in and keep it under 60.",
+        "usedStore": false,
+        "claims": []
+      },
+      "checks": [
+        {
+          "name": "made a chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "chat-reply guide sent with the turn"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "0 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        },
+        {
+          "name": "needed no store data",
+          "ok": true,
+          "detail": "did not ask"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "c08",
+      "run": 1,
+      "store": "saffron-loom",
+      "request": "What's a sensible return window for handloom sarees?",
+      "seconds": 6.8,
+      "calls": 1,
+      "toolsUsed": [],
+      "made": {
+        "kind": "reply",
+        "text": "**7 days from delivery is a sensible return window for handloom sarees.** It's long enough for a customer to open the parcel, see the colour in daylight and drape it once. It's also short enough that a saree doesn't sit with someone through a wedding or festival and then come back. Many Indian saree sellers use 7–10 days, so 7 matches what shoppers expect.\n\nA few conditions matter more than the exact number of days:\n\n- **Unworn and unwashed,** with tags and the blouse piece uncut.\n- **No returns on customised pieces:** fall and pico done, stitched blouses or made-to-order weaves.\n- **Explain handloom character upfront.** Slight slubs, uneven weave and small colour differences are part of the craft, not defects. Saying this clearly cuts down on \"not as pictured\" returns.\n- **Consider offering an exchange or store credit,** with refunds only for damage or a wrong item. This helps if return costs on high-value pieces are a worry.\n\nWould you like me to draft a full return policy with these terms?",
+        "usedStore": false,
+        "claims": []
+      },
+      "checks": [
+        {
+          "name": "made a chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "chat-reply guide sent with the turn"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "0 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        },
+        {
+          "name": "needed no store data",
+          "ok": true,
+          "detail": "did not ask"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "c01",
+      "run": 2,
+      "store": "fernhill-goods",
+      "request": "How did sales go last month?",
+      "seconds": 8.9,
+      "calls": 3,
+      "toolsUsed": [
+        "ask_store",
+        "ask_store"
+      ],
+      "made": {
+        "kind": "reply",
+        "text": "August was a strong month. Revenue came to **$9,687.55**, up 36.7% on July's $7,085.88. That came from 49 orders, up from 39, and 135 units sold, up from 102 (from your store's fulfilled orders, Aug 1–31).\n\nCustomers also spent more each time. The average order was $197.70, compared with $181.68 in July, which is up 8.8%. Net sales were $9,627.55.\n\nIf you meant September, the month that ends today: revenue was $5,709.25 from 38 orders. That's down 41.1% on August, and the average order dropped to $150.24.\n\nWant me to see which products drove August's jump?",
+        "usedStore": true,
+        "claims": [
+          {
+            "text": "$9,687.55",
+            "value": 9687.55,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$7,085.88",
+            "value": 7085.88,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$197.70",
+            "value": 197.7,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$181.68",
+            "value": 181.68,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$9,627.55",
+            "value": 9627.55,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$5,709.25",
+            "value": 5709.25,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$150.24",
+            "value": 150.24,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "36.7%",
+            "value": 36.7,
+            "precision": 0.1,
+            "kind": "percent"
+          },
+          {
+            "text": "8.8%",
+            "value": 8.8,
+            "precision": 0.1,
+            "kind": "percent"
+          },
+          {
+            "text": "41.1%",
+            "value": 41.1,
+            "precision": 0.1,
+            "kind": "percent"
+          },
+          {
+            "text": "49 orders",
+            "value": 49,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "135 units",
+            "value": 135,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "38 orders",
+            "value": 38,
+            "precision": 1,
+            "kind": "count"
+          }
+        ]
+      },
+      "checks": [
+        {
+          "name": "made a chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "ask_store → ask_store"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "13 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        },
+        {
+          "name": "asked the store",
+          "ok": true,
+          "detail": "asked"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "c02",
+      "run": 2,
+      "store": "saffron-loom",
+      "request": "What were my top 3 products over the last 12 months?",
+      "seconds": 7.3,
+      "calls": 2,
+      "toolsUsed": [
+        "ask_store",
+        "ask_store"
+      ],
+      "made": {
+        "kind": "reply",
+        "text": "Your top 3 by units sold over the last 12 months (1 Oct 2025 to 30 Sep 2026, fulfilled orders) were:\n\n1. **Quilted dohar, Madder red**: 40 units, ₹1,13,200.00\n2. Tablecloth, Indigo: 38 units, ₹1,10,200.00\n3. Cotton stole, Saffron: 34 units, ₹87,720.00\n\nSarees bring in the most money, even though fewer of them sell. Ranked by sales value, the top 3 were the Handloom cotton saree in Madder red (₹2,53,760.00 from 26 units), the Silk-blend saree in Saffron (₹2,17,790.00 from 29 units) and the Handloom cotton saree in Saffron (₹1,25,060.00 from 13 units).\n\nWould you like a chart of these, or a look at a shorter period?",
+        "usedStore": true,
+        "claims": [
+          {
+            "text": "₹1,13,200.00",
+            "value": 113200,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹1,10,200.00",
+            "value": 110200,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹87,720.00",
+            "value": 87720,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹2,53,760.00",
+            "value": 253760,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹2,17,790.00",
+            "value": 217790,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹1,25,060.00",
+            "value": 125060,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "3 by units",
+            "value": 3,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "40 units",
+            "value": 40,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "38 units",
+            "value": 38,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "34 units",
+            "value": 34,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "26 units",
+            "value": 26,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "29 units",
+            "value": 29,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "13 units",
+            "value": 13,
+            "precision": 1,
+            "kind": "count"
+          }
+        ]
+      },
+      "checks": [
+        {
+          "name": "made a chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "ask_store → ask_store"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "13 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        },
+        {
+          "name": "asked the store",
+          "ok": true,
+          "detail": "asked"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "c03",
+      "run": 2,
+      "store": "fernhill-goods",
+      "request": "Which products are running low on stock?",
+      "seconds": 4.6,
+      "calls": 2,
+      "toolsUsed": [
+        "ask_store"
+      ],
+      "made": {
+        "kind": "reply",
+        "text": "Six products are at or below their reorder level in your store's stock as of today. Straight-leg jeans in Sand and the Forest insulated bottle are furthest below:\n\n- **Straight-leg jeans, Sand** (FHG-0042): 5 in stock, reorder level 17\n- Insulated bottle, Forest (FHG-0021): 8 in stock, reorder level 24\n- Linen summer dress, Forest (FHG-0037): 13 in stock, reorder level 15\n- Merino crew, Charcoal (FHG-0047): 14 in stock, reorder level 23\n- Insulated bottle, Rust (FHG-0024): 19 in stock, reorder level 25\n- Folding stool, Sand (FHG-0054): 23 in stock, reorder level 24\n\nI can draft a purchase order to restock these, or make a low-stock spreadsheet you can send to your supplier.",
+        "usedStore": true,
+        "claims": []
+      },
+      "checks": [
+        {
+          "name": "made a chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "ask_store"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "0 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        },
+        {
+          "name": "asked the store",
+          "ok": true,
+          "detail": "asked"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "c04",
+      "run": 2,
+      "store": "saffron-loom",
+      "request": "What's my average order value over the last three months?",
+      "seconds": 5.4,
+      "calls": 2,
+      "toolsUsed": [
+        "ask_store"
+      ],
+      "made": {
+        "kind": "reply",
+        "text": "Your average order value over the last three months was **₹8,958.98**, up 19.3% from ₹7,509.51 in the three months before. These figures are from your store's fulfilled orders, 1 July to 30 September 2026, compared with 1 April to 30 June.\n\nFewer people ordered (118 orders, down from 125), but each order was bigger. That pushed revenue up 12.6% to ₹10,57,160.25.\n\nI can break this down by product if you'd like to see what's behind the bigger orders.",
+        "usedStore": true,
+        "claims": [
+          {
+            "text": "₹8,958.98",
+            "value": 8958.98,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹7,509.51",
+            "value": 7509.51,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹10,57,160.25",
+            "value": 1057160.25,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "19.3%",
+            "value": 19.3,
+            "precision": 0.1,
+            "kind": "percent"
+          },
+          {
+            "text": "12.6%",
+            "value": 12.6,
+            "precision": 0.1,
+            "kind": "percent"
+          },
+          {
+            "text": "118 orders",
+            "value": 118,
+            "precision": 1,
+            "kind": "count"
+          }
+        ]
+      },
+      "checks": [
+        {
+          "name": "made a chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "ask_store"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "6 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        },
+        {
+          "name": "asked the store",
+          "ok": true,
+          "detail": "asked"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "c05",
+      "run": 2,
+      "store": "fernhill-goods",
+      "request": "Why did sales drop last week?",
+      "seconds": 15.8,
+      "calls": 3,
+      "toolsUsed": [
+        "ask_store",
+        "ask_store",
+        "ask_store",
+        "ask_store"
+      ],
+      "made": {
+        "kind": "reply",
+        "text": "Sales actually went up last week. From your store's orders for Sep 21–27, revenue was **$1,613.10 from 12 orders**. That's 157.7% more than the week before, which had $625.86 from 3 orders.\n\nThe real dip was the week of **Sep 14–20**, with only 3 orders. It's the lowest week of the last eight.\n\nLast week still looks soft for two reasons:\n\n- **Smaller baskets:** the average order was $134.42, down 35.6% from $208.62. More people ordered, but each spent less. The top sellers were mostly lower-priced items like the Soy candle in Rust (5 sold, $274.95) and the Insulated bottle in Sand (4 sold, $159.96).\n- **Below August's best weeks:** Aug 3–9 brought in $2,466.22, Aug 17–23 brought in $3,033.79 and Aug 24–30 brought in $2,549.54. Last week did beat Aug 10–16 ($1,177.86) and Aug 31–Sep 6 ($1,111.87).\n\nOne order was cancelled last week and none were refunded, so returns aren't the cause.\n\nYour store's data shows what dropped, but not why. If you ran a promotion in August or traffic changed in mid-September, that would probably explain it. Should I chart the last eight weeks or compare September with August by product?",
+        "usedStore": true,
+        "claims": [
+          {
+            "text": "$1,613.10",
+            "value": 1613.1,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$625.86",
+            "value": 625.86,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$134.42",
+            "value": 134.42,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$208.62",
+            "value": 208.62,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$274.95",
+            "value": 274.95,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$159.96",
+            "value": 159.96,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$2,466.22",
+            "value": 2466.22,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$3,033.79",
+            "value": 3033.79,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$2,549.54",
+            "value": 2549.54,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$1,177.86",
+            "value": 1177.86,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$1,111.87",
+            "value": 1111.87,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "157.7%",
+            "value": 157.7,
+            "precision": 0.1,
+            "kind": "percent"
+          },
+          {
+            "text": "35.6%",
+            "value": 35.6,
+            "precision": 0.1,
+            "kind": "percent"
+          },
+          {
+            "text": "12 orders",
+            "value": 12,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "3 orders",
+            "value": 3,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "3 orders",
+            "value": 3,
+            "precision": 1,
+            "kind": "count"
+          }
+        ]
+      },
+      "checks": [
+        {
+          "name": "made a chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "ask_store → ask_store → ask_store → ask_store"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "16 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        },
+        {
+          "name": "asked the store",
+          "ok": true,
+          "detail": "asked"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "c06",
+      "run": 2,
+      "store": "saffron-loom",
+      "request": "How many orders were refunded last quarter?",
+      "seconds": 4.1,
+      "calls": 2,
+      "toolsUsed": [
+        "ask_store"
+      ],
+      "made": {
+        "kind": "reply",
+        "text": "**6 orders were refunded last quarter** (1 July to 30 September 2026), according to your store's orders.\n\nThat's 6 of 126 orders. The rest were 118 fulfilled and 2 cancelled.\n\nDo you want the refunded orders as a spreadsheet so you can see which ones they were?",
+        "usedStore": true,
+        "claims": [
+          {
+            "text": "6 orders",
+            "value": 6,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "126 orders",
+            "value": 126,
+            "precision": 1,
+            "kind": "count"
+          }
+        ]
+      },
+      "checks": [
+        {
+          "name": "made a chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "ask_store"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "2 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        },
+        {
+          "name": "asked the store",
+          "ok": true,
+          "detail": "asked"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "c07",
+      "run": 2,
+      "store": "fernhill-goods",
+      "request": "Write a product title for our linen summer dress, under 60 characters.",
+      "seconds": 5.2,
+      "calls": 1,
+      "toolsUsed": [],
+      "made": {
+        "kind": "reply",
+        "text": "> Breathable Linen Summer Dress for Warm Days\n\nThat's 43 characters. I put \"linen\" and \"summer dress\" near the start because shoppers search for those words first. You still have about 15 characters to spare. Tell me the colour or cut, such as midi or wrap, and I'll add it.",
+        "usedStore": false,
+        "claims": []
+      },
+      "checks": [
+        {
+          "name": "made a chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "chat-reply guide sent with the turn"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "0 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        },
+        {
+          "name": "needed no store data",
+          "ok": true,
+          "detail": "did not ask"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "c08",
+      "run": 2,
+      "store": "saffron-loom",
+      "request": "What's a sensible return window for handloom sarees?",
+      "seconds": 8.9,
+      "calls": 1,
+      "toolsUsed": [],
+      "made": {
+        "kind": "reply",
+        "text": "**7 days from delivery is a sensible return window for handloom sarees.** It's long enough for a customer to unpack the saree, check the colour in daylight and try the drape. It's also short enough that the saree is unlikely to have been worn to an event and sent back. Many Indian textile sellers use 7 to 10 days. If you want returns to feel safer for first-time buyers, you could offer 10 days for an exchange or store credit and 7 days for a refund.\n\nClear conditions matter more than the exact number of days:\n\n- **Condition:** the saree is unworn and unwashed, with its tags and original packaging.\n- **Blouse piece:** it hasn't been cut or separated from the saree.\n- **Custom work:** sarees with fall, pico or stitching done to order can't be returned.\n- **Handloom character:** small slubs, uneven weave and slight colour differences from the photos are part of handwoven fabric, not defects. Saying this on the product page heads off a lot of returns.\n- **Damaged items:** ask for an unboxing photo or video within 48 hours of delivery.\n- **Return shipping:** decide who pays. Many stores cover it for defects only.\n\nPure silk and high-value pieces often get exchange or store credit only, because a returned silk saree is hard to resell as new.\n\nWould you like me to turn this into a return policy for your store?",
+        "usedStore": false,
+        "claims": []
+      },
+      "checks": [
+        {
+          "name": "made a chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "chat-reply guide sent with the turn"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "0 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        },
+        {
+          "name": "needed no store data",
+          "ok": true,
+          "detail": "did not ask"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "c01",
+      "run": 3,
+      "store": "fernhill-goods",
+      "request": "How did sales go last month?",
+      "seconds": 7.4,
+      "calls": 2,
+      "toolsUsed": [
+        "ask_store"
+      ],
+      "made": {
+        "kind": "reply",
+        "text": "**September was down: $5,709.25 in revenue from 38 orders, 41.1% less than August.** These figures come from your store's fulfilled orders for September 1–30. Your store counts September as last month, and since today is the 30th, those numbers are final.\n\n- **Orders:** 38, down 22.4% from 49 in August\n- **Units sold:** 95, down from 135\n- **Net sales:** $5,655.25, down from $9,627.55\n- **Average order value:** $150.24, down 24% from $197.70\n\nRevenue fell faster than orders because people also spent less per order. If you meant August, it brought in $9,687.55 from 49 orders.\n\nI can break September down by product or by week to show where the drop came from.",
+        "usedStore": true,
+        "claims": [
+          {
+            "text": "$5,709.25",
+            "value": 5709.25,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$5,655.25",
+            "value": 5655.25,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$9,627.55",
+            "value": 9627.55,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$150.24",
+            "value": 150.24,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$197.70",
+            "value": 197.7,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$9,687.55",
+            "value": 9687.55,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "41.1%",
+            "value": 41.1,
+            "precision": 0.1,
+            "kind": "percent"
+          },
+          {
+            "text": "22.4%",
+            "value": 22.4,
+            "precision": 0.1,
+            "kind": "percent"
+          },
+          {
+            "text": "24%",
+            "value": 24,
+            "precision": 1,
+            "kind": "percent"
+          },
+          {
+            "text": "38 orders",
+            "value": 38,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "49 orders",
+            "value": 49,
+            "precision": 1,
+            "kind": "count"
+          }
+        ]
+      },
+      "checks": [
+        {
+          "name": "made a chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "ask_store"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "11 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        },
+        {
+          "name": "asked the store",
+          "ok": true,
+          "detail": "asked"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "c02",
+      "run": 3,
+      "store": "saffron-loom",
+      "request": "What were my top 3 products over the last 12 months?",
+      "seconds": 7.4,
+      "calls": 2,
+      "toolsUsed": [
+        "ask_store",
+        "ask_store"
+      ],
+      "made": {
+        "kind": "reply",
+        "text": "By units sold, your top 3 over the last 12 months were the **Quilted dohar in Madder red**, the Tablecloth in Indigo and the Cotton stole in Saffron. These figures come from your store's fulfilled orders, 1 Oct 2025 – 30 Sep 2026.\n\n1. Quilted dohar, Madder red: 40 units, ₹1,13,200.00\n2. Tablecloth, Indigo: 38 units, ₹1,10,200.00\n3. Cotton stole, Saffron: 34 units, ₹87,720.00\n\nBy sales value the top 3 are all sarees. They sell fewer units but cost more:\n\n1. Handloom cotton saree, Madder red: ₹2,53,760.00 (26 units)\n2. Silk-blend saree, Saffron: ₹2,17,790.00 (29 units)\n3. Handloom cotton saree, Saffron: ₹1,25,060.00 (13 units)\n\nDo you want me to break these down by month to see when each one sold best?",
+        "usedStore": true,
+        "claims": [
+          {
+            "text": "₹1,13,200.00",
+            "value": 113200,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹1,10,200.00",
+            "value": 110200,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹87,720.00",
+            "value": 87720,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹2,53,760.00",
+            "value": 253760,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹2,17,790.00",
+            "value": 217790,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹1,25,060.00",
+            "value": 125060,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "40 units",
+            "value": 40,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "38 units",
+            "value": 38,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "34 units",
+            "value": 34,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "26 units",
+            "value": 26,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "29 units",
+            "value": 29,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "13 units",
+            "value": 13,
+            "precision": 1,
+            "kind": "count"
+          }
+        ]
+      },
+      "checks": [
+        {
+          "name": "made a chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "ask_store → ask_store"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "12 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        },
+        {
+          "name": "asked the store",
+          "ok": true,
+          "detail": "asked"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "c03",
+      "run": 3,
+      "store": "fernhill-goods",
+      "request": "Which products are running low on stock?",
+      "seconds": 6.5,
+      "calls": 2,
+      "toolsUsed": [
+        "ask_store"
+      ],
+      "made": {
+        "kind": "reply",
+        "text": "Six products are at or below their reorder level. The Sand straight-leg jeans and the Forest insulated bottle are the most urgent, because each has about a third of its reorder level left.\n\n- **Straight-leg jeans, Sand** (FHG-0042): 5 in stock, reorder level 17\n- Insulated bottle, Forest (FHG-0021): 8 in stock, reorder level 24\n- Linen summer dress, Forest (FHG-0037): 13 in stock, reorder level 15\n- Merino crew, Charcoal (FHG-0047): 14 in stock, reorder level 23\n- Insulated bottle, Rust (FHG-0024): 19 in stock, reorder level 25\n- Folding stool, Sand (FHG-0054): 23 in stock, reorder level 24\n\nThese figures are your store's stock levels as of today, September 30. I can turn this into a spreadsheet or draft a purchase order if you'd like.",
+        "usedStore": true,
+        "claims": []
+      },
+      "checks": [
+        {
+          "name": "made a chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "ask_store"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "0 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        },
+        {
+          "name": "asked the store",
+          "ok": true,
+          "detail": "asked"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "c04",
+      "run": 3,
+      "store": "saffron-loom",
+      "request": "What's my average order value over the last three months?",
+      "seconds": 4.3,
+      "calls": 2,
+      "toolsUsed": [
+        "ask_store"
+      ],
+      "made": {
+        "kind": "reply",
+        "text": "Your average order value over the last three months is **₹8,958.98**. That's 19.3% higher than the three months before, when it was ₹7,509.51. These figures come from your store's fulfilled orders, 1 July to 30 September 2026.\n\nFewer people ordered: 118 orders, down 5.6% from 125. But each order was bigger, so revenue still rose 12.6% to ₹10,57,160.25.\n\nWant me to see which products are driving the bigger orders?",
+        "usedStore": true,
+        "claims": [
+          {
+            "text": "₹8,958.98",
+            "value": 8958.98,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹7,509.51",
+            "value": 7509.51,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "₹10,57,160.25",
+            "value": 1057160.25,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "19.3%",
+            "value": 19.3,
+            "precision": 0.1,
+            "kind": "percent"
+          },
+          {
+            "text": "5.6%",
+            "value": 5.6,
+            "precision": 0.1,
+            "kind": "percent"
+          },
+          {
+            "text": "12.6%",
+            "value": 12.6,
+            "precision": 0.1,
+            "kind": "percent"
+          },
+          {
+            "text": "118 orders",
+            "value": 118,
+            "precision": 1,
+            "kind": "count"
+          }
+        ]
+      },
+      "checks": [
+        {
+          "name": "made a chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "ask_store"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "7 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        },
+        {
+          "name": "asked the store",
+          "ok": true,
+          "detail": "asked"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "c05",
+      "run": 3,
+      "store": "fernhill-goods",
+      "request": "Why did sales drop last week?",
+      "seconds": 11.4,
+      "calls": 2,
+      "toolsUsed": [
+        "ask_store",
+        "ask_store",
+        "ask_store",
+        "ask_store"
+      ],
+      "made": {
+        "kind": "reply",
+        "text": "**Sales went up last week, not down.** From your store's fulfilled orders, Sep 21–27 brought in $1,613.10 from 12 orders. The week before (Sep 14–20) brought in $625.86 from 3 orders, so last week was up 157.7%.\n\nTwo things could make it feel like a drop:\n\n- **Smaller orders:** the average order was $134.42, down 35.6% from $208.62. More people bought, but each one spent less. Your top sellers were mostly lower-priced items, led by the Soy candle in Rust (5 sold, $274.95).\n- **Lower than August:** weekly sales were $3,033.79 (Aug 17–23) and $2,549.54 (Aug 24–30). Every week in September has been lower than that, and the totals have jumped around a lot.\n\nThere was also 1 cancelled order last week and no refunds. Your store's order data shows what sold, but not why fewer people bought than in August. Traffic or marketing data would help answer that.\n\nWant me to compare September with August product by product?",
+        "usedStore": true,
+        "claims": [
+          {
+            "text": "$1,613.10",
+            "value": 1613.1,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$625.86",
+            "value": 625.86,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$134.42",
+            "value": 134.42,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$208.62",
+            "value": 208.62,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$274.95",
+            "value": 274.95,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$3,033.79",
+            "value": 3033.79,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "$2,549.54",
+            "value": 2549.54,
+            "precision": 0.01,
+            "kind": "money"
+          },
+          {
+            "text": "157.7%",
+            "value": 157.7,
+            "precision": 0.1,
+            "kind": "percent"
+          },
+          {
+            "text": "35.6%",
+            "value": 35.6,
+            "precision": 0.1,
+            "kind": "percent"
+          },
+          {
+            "text": "12 orders",
+            "value": 12,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "3 orders",
+            "value": 3,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "1 cancelled order",
+            "value": 1,
+            "precision": 1,
+            "kind": "count"
+          }
+        ]
+      },
+      "checks": [
+        {
+          "name": "made a chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "ask_store → ask_store → ask_store → ask_store"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "12 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        },
+        {
+          "name": "asked the store",
+          "ok": true,
+          "detail": "asked"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "c06",
+      "run": 3,
+      "store": "saffron-loom",
+      "request": "How many orders were refunded last quarter?",
+      "seconds": 3.7,
+      "calls": 2,
+      "toolsUsed": [
+        "ask_store"
+      ],
+      "made": {
+        "kind": "reply",
+        "text": "**6 orders were refunded last quarter.** That's from your store's orders for 1 July to 30 September 2026.\n\nThat quarter had 126 orders in total: 118 were fulfilled and 2 were cancelled. Want me to pull the refunded orders into a file so you can see which ones they were?",
+        "usedStore": true,
+        "claims": [
+          {
+            "text": "6 orders",
+            "value": 6,
+            "precision": 1,
+            "kind": "count"
+          },
+          {
+            "text": "126 orders",
+            "value": 126,
+            "precision": 1,
+            "kind": "count"
+          }
+        ]
+      },
+      "checks": [
+        {
+          "name": "made a chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "ask_store"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "2 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        },
+        {
+          "name": "asked the store",
+          "ok": true,
+          "detail": "asked"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "c07",
+      "run": 3,
+      "store": "fernhill-goods",
+      "request": "Write a product title for our linen summer dress, under 60 characters.",
+      "seconds": 4.8,
+      "calls": 1,
+      "toolsUsed": [],
+      "made": {
+        "kind": "reply",
+        "text": "> Linen Summer Dress, Lightweight and Breathable\n\nThat's 46 characters. \"Linen\" comes first because it's the word shoppers search for most. I didn't add a length, fit or colour because I don't know them. If you tell me, for example \"Midi, Relaxed Fit, Natural\", there's room for about 13 more characters.",
+        "usedStore": false,
+        "claims": []
+      },
+      "checks": [
+        {
+          "name": "made a chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "chat-reply guide sent with the turn"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "0 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        },
+        {
+          "name": "needed no store data",
+          "ok": true,
+          "detail": "did not ask"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "id": "c08",
+      "run": 3,
+      "store": "saffron-loom",
+      "request": "What's a sensible return window for handloom sarees?",
+      "seconds": 8.4,
+      "calls": 1,
+      "toolsUsed": [],
+      "made": {
+        "kind": "reply",
+        "text": "**Most Indian handloom sellers give 7 days from delivery, and that's a good fit for sarees.** It's long enough for a customer to unfold the saree, check the colour and weave in daylight, and decide. It's also short enough that the saree is unlikely to be worn to an event and then sent back.\n\nA few conditions make the window work:\n\n- **Unworn and unwashed, with tags and folding intact.** Handloom can't be steamed back to new, so say this clearly.\n- **No alterations.** Leave out sarees that have had fall, pico or tassels added, and any blouse that's been stitched or custom-made.\n- **Natural handloom variation isn't a defect.** Small slubs, uneven dye and weave irregularities are part of the craft. Say so on product pages to cut down on \"flaw\" returns.\n- **Damaged or wrong items get a longer window and free pickup.** Ask for an unboxing photo or video within 48 hours of delivery.\n- **Exchange or store credit as the default, refund on request.** This keeps the sale but still treats the customer fairly.\n\nIf you sell high-value pieces like Kanjeevaram silks or Patola, you could offer 10 days. Shoppers spend longer deciding on these, and a slightly longer window can help win the first purchase.\n\nI can draft a return and exchange policy based on this if you'd like one.",
+        "usedStore": false,
+        "claims": []
+      },
+      "checks": [
+        {
+          "name": "made a chat_reply",
+          "ok": true,
+          "detail": "chat_reply"
+        },
+        {
+          "name": "read the guide before answering",
+          "ok": true,
+          "detail": "chat-reply guide sent with the turn"
+        },
+        {
+          "name": "every store number matches the sample data",
+          "ok": true,
+          "detail": "0 checked"
+        },
+        {
+          "name": "no system words on screen",
+          "ok": true
+        },
+        {
+          "name": "needed no store data",
+          "ok": true,
+          "detail": "did not ask"
+        }
+      ],
+      "ok": true
+    }
+  ]
+}

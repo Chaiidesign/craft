@@ -1,0 +1,1449 @@
+[
+  {
+    "id": "f01",
+    "store": "fernhill-goods",
+    "storeName": "Fernhill Goods Co.",
+    "request": "Export last month's orders as Excel.",
+    "made": {
+      "kind": "file",
+      "spec": {
+        "dataset": "orders",
+        "format": "xlsx",
+        "period": "last_month"
+      },
+      "note": "August 2026 orders, all statuses, one row per order."
+    },
+    "ok": true,
+    "checks": [
+      {
+        "name": "made a file",
+        "ok": true,
+        "detail": "file"
+      },
+      {
+        "name": "read the guide before answering",
+        "ok": true,
+        "detail": "read_guide → build_file"
+      },
+      {
+        "name": "format xlsx",
+        "ok": true,
+        "detail": "xlsx"
+      },
+      {
+        "name": "dataset orders",
+        "ok": true,
+        "detail": "orders"
+      },
+      {
+        "name": "rows match the sample store (41)",
+        "ok": true,
+        "detail": "41"
+      },
+      {
+        "name": "opens and parses back, one header row",
+        "ok": true
+      },
+      {
+        "name": "dates are real dates (ISO when read)",
+        "ok": true
+      },
+      {
+        "name": "currency in its own column",
+        "ok": true
+      }
+    ],
+    "seconds": 6.5,
+    "file": {
+      "name": "Fernhill Goods Co. Orders, 1 Sept 2026 to 30 Sept 2026.xlsx",
+      "path": "files/f01-Fernhill Goods Co. Orders, 1 Sept 2026 to 30 Sept 2026.xlsx",
+      "rows": 41,
+      "bytes": 6020,
+      "preview": [
+        [
+          "Order number",
+          "Date",
+          "Customer",
+          "Customer email",
+          "Status",
+          "Channel",
+          "Units",
+          "Subtotal",
+          "Discount",
+          "Shipping",
+          "Tax",
+          "Total",
+          "Currency"
+        ],
+        [
+          "FH-01460",
+          "2026-09-01",
+          "Owen Kim",
+          "owen.kim.63@example.com",
+          "Fulfilled",
+          "Marketplace",
+          1,
+          99.99,
+          0,
+          0,
+          0,
+          99.99,
+          "USD"
+        ],
+        [
+          "FH-01461",
+          "2026-09-01",
+          "Grace Hughes",
+          "grace.hughes.145@example.com",
+          "Fulfilled",
+          "Online store",
+          1,
+          117.99,
+          0,
+          0,
+          0,
+          117.99,
+          "USD"
+        ],
+        [
+          "FH-01462",
+          "2026-09-03",
+          "Caleb Rivera",
+          "caleb.rivera.60@example.com",
+          "Fulfilled",
+          "Online store",
+          1,
+          68.99,
+          0,
+          6,
+          0,
+          74.99,
+          "USD"
+        ],
+        [
+          "FH-01463",
+          "2026-09-03",
+          "Maya Nguyen",
+          "maya.nguyen.182@example.com",
+          "Fulfilled",
+          "Online store",
+          1,
+          66.99,
+          0,
+          6,
+          0,
+          72.99,
+          "USD"
+        ],
+        [
+          "FH-01464",
+          "2026-09-03",
+          "Owen Brooks",
+          "owen.brooks.151@example.com",
+          "Fulfilled",
+          "Online store",
+          1,
+          91.99,
+          0,
+          0,
+          0,
+          91.99,
+          "USD"
+        ],
+        [
+          "FH-01465",
+          "2026-09-06",
+          "Isaac Bennett",
+          "isaac.bennett.112@example.com",
+          "Fulfilled",
+          "Online store",
+          1,
+          57.99,
+          0,
+          6,
+          0,
+          63.99,
+          "USD"
+        ],
+        [
+          "FH-01466",
+          "2026-09-06",
+          "Elena Rivera",
+          "elena.rivera.11@example.com",
+          "Fulfilled",
+          "Online store",
+          3,
+          230.97,
+          0,
+          0,
+          0,
+          230.97,
+          "USD"
+        ],
+        [
+          "FH-01467",
+          "2026-09-07",
+          "Ruth Coleman",
+          "ruth.coleman.188@example.com",
+          "Fulfilled",
+          "Online store",
+          4,
+          271.96,
+          0,
+          0,
+          0,
+          271.96,
+          "USD"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "f02",
+    "store": "saffron-loom",
+    "storeName": "Saffron Loom Textiles",
+    "request": "Give me our product catalog as a CSV.",
+    "made": {
+      "kind": "file",
+      "spec": {
+        "dataset": "products",
+        "format": "csv"
+      },
+      "note": "Your full product catalog, one row per product."
+    },
+    "ok": true,
+    "checks": [
+      {
+        "name": "made a file",
+        "ok": true,
+        "detail": "file"
+      },
+      {
+        "name": "read the guide before answering",
+        "ok": true,
+        "detail": "read_guide → build_file"
+      },
+      {
+        "name": "format csv",
+        "ok": true,
+        "detail": "csv"
+      },
+      {
+        "name": "dataset products",
+        "ok": true,
+        "detail": "products"
+      },
+      {
+        "name": "rows match the sample store (60)",
+        "ok": true,
+        "detail": "60"
+      },
+      {
+        "name": "opens and parses back, one header row",
+        "ok": true
+      },
+      {
+        "name": "currency in its own column",
+        "ok": true
+      }
+    ],
+    "seconds": 6.2,
+    "file": {
+      "name": "Saffron Loom Textiles Products.csv",
+      "path": "files/f02-Saffron Loom Textiles Products.csv",
+      "rows": 60,
+      "bytes": 3969,
+      "preview": [
+        [
+          "SKU",
+          "Product",
+          "Category",
+          "Price",
+          "Currency",
+          "In stock",
+          "Reorder level"
+        ],
+        [
+          "SLT-0001",
+          "Handloom cotton saree, Indigo",
+          "Sarees",
+          "4770.00",
+          "INR",
+          "22",
+          "9"
+        ],
+        [
+          "SLT-0002",
+          "Handloom cotton saree, Madder red",
+          "Sarees",
+          "9760.00",
+          "INR",
+          "56",
+          "9"
+        ],
+        [
+          "SLT-0003",
+          "Handloom cotton saree, Saffron",
+          "Sarees",
+          "9620.00",
+          "INR",
+          "36",
+          "22"
+        ],
+        [
+          "SLT-0004",
+          "Handloom cotton saree, Ivory",
+          "Sarees",
+          "6290.00",
+          "INR",
+          "25",
+          "14"
+        ],
+        [
+          "SLT-0005",
+          "Silk-blend saree, Indigo",
+          "Sarees",
+          "2550.00",
+          "INR",
+          "14",
+          "17"
+        ],
+        [
+          "SLT-0006",
+          "Silk-blend saree, Madder red",
+          "Sarees",
+          "4680.00",
+          "INR",
+          "2",
+          "9"
+        ],
+        [
+          "SLT-0007",
+          "Silk-blend saree, Saffron",
+          "Sarees",
+          "7510.00",
+          "INR",
+          "96",
+          "21"
+        ],
+        [
+          "SLT-0008",
+          "Silk-blend saree, Ivory",
+          "Sarees",
+          "6070.00",
+          "INR",
+          "120",
+          "21"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "f03",
+    "store": "fernhill-goods",
+    "storeName": "Fernhill Goods Co.",
+    "request": "Export all our customers as JSON.",
+    "made": {
+      "kind": "file",
+      "spec": {
+        "dataset": "customers",
+        "format": "json"
+      },
+      "note": "All Fernhill Goods Co. customers as JSON, one record per customer."
+    },
+    "ok": true,
+    "checks": [
+      {
+        "name": "made a file",
+        "ok": true,
+        "detail": "file"
+      },
+      {
+        "name": "read the guide before answering",
+        "ok": true,
+        "detail": "read_guide → build_file"
+      },
+      {
+        "name": "format json",
+        "ok": true,
+        "detail": "json"
+      },
+      {
+        "name": "dataset customers",
+        "ok": true,
+        "detail": "customers"
+      },
+      {
+        "name": "rows match the sample store (200)",
+        "ok": true,
+        "detail": "200"
+      },
+      {
+        "name": "valid JSON, one record per row",
+        "ok": true
+      },
+      {
+        "name": "currency in its own column",
+        "ok": true
+      }
+    ],
+    "seconds": 4.6,
+    "file": {
+      "name": "Fernhill Goods Co. Customers.json",
+      "path": "files/f03-Fernhill Goods Co. Customers.json",
+      "rows": 200,
+      "bytes": 57697,
+      "preview": [
+        [
+          "Customer ID",
+          "Name",
+          "Email",
+          "City",
+          "Country",
+          "First order",
+          "Fulfilled orders",
+          "Total spent",
+          "Currency"
+        ],
+        [
+          "fernhill-goods-c001",
+          "Jordan Hughes",
+          "jordan.hughes.1@example.com",
+          "Austin",
+          "United States",
+          "2026-01-25",
+          5,
+          951.18,
+          "USD"
+        ],
+        [
+          "fernhill-goods-c002",
+          "Maya Rivera",
+          "maya.rivera.2@example.com",
+          "Portland",
+          "United States",
+          "2026-01-17",
+          3,
+          363.93,
+          "USD"
+        ],
+        [
+          "fernhill-goods-c003",
+          "Priya Coleman",
+          "priya.coleman.3@example.com",
+          "Portland",
+          "United States",
+          "2025-10-18",
+          2,
+          366.14,
+          "USD"
+        ],
+        [
+          "fernhill-goods-c004",
+          "Maya Lane",
+          "maya.lane.4@example.com",
+          "Chicago",
+          "United States",
+          "2026-01-18",
+          3,
+          590.9,
+          "USD"
+        ],
+        [
+          "fernhill-goods-c005",
+          "Hannah Hughes",
+          "hannah.hughes.5@example.com",
+          "Madison",
+          "United States",
+          "2025-10-16",
+          2,
+          342.96,
+          "USD"
+        ],
+        [
+          "fernhill-goods-c006",
+          "Elena Ortiz",
+          "elena.ortiz.6@example.com",
+          "Austin",
+          "United States",
+          "2026-05-07",
+          2,
+          210.55,
+          "USD"
+        ],
+        [
+          "fernhill-goods-c007",
+          "Caleb Foster",
+          "caleb.foster.7@example.com",
+          "Portland",
+          "United States",
+          "2025-11-05",
+          4,
+          602.91,
+          "USD"
+        ],
+        [
+          "fernhill-goods-c008",
+          "Priya Rivera",
+          "priya.rivera.8@example.com",
+          "Portland",
+          "United States",
+          "2025-11-09",
+          4,
+          869.89,
+          "USD"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "f04",
+    "store": "saffron-loom",
+    "storeName": "Saffron Loom Textiles",
+    "request": "Orders from July to September as a PDF.",
+    "made": {
+      "kind": "file",
+      "spec": {
+        "dataset": "orders",
+        "format": "pdf",
+        "period": {
+          "from": "2026-07-01",
+          "to": "2026-09-30"
+        }
+      },
+      "note": "All orders from 1 July to 30 September 2026, every status, one row each."
+    },
+    "ok": true,
+    "checks": [
+      {
+        "name": "made a file",
+        "ok": true,
+        "detail": "file"
+      },
+      {
+        "name": "read the guide before answering",
+        "ok": true,
+        "detail": "read_guide → build_file"
+      },
+      {
+        "name": "format pdf",
+        "ok": true,
+        "detail": "pdf"
+      },
+      {
+        "name": "dataset orders",
+        "ok": true,
+        "detail": "orders"
+      },
+      {
+        "name": "rows match the sample store (126)",
+        "ok": true,
+        "detail": "126"
+      },
+      {
+        "name": "a real PDF",
+        "ok": true
+      },
+      {
+        "name": "currency in its own column",
+        "ok": true
+      }
+    ],
+    "seconds": 5,
+    "file": {
+      "name": "Saffron Loom Textiles Orders, 1 Jul 2026 to 30 Sept 2026.pdf",
+      "path": "files/f04-Saffron Loom Textiles Orders, 1 Jul 2026 to 30 Sept 2026.pdf",
+      "rows": 126,
+      "bytes": 79349,
+      "preview": [
+        [
+          "Order number",
+          "Date",
+          "Customer",
+          "Customer email",
+          "Status",
+          "Channel",
+          "Units",
+          "Subtotal",
+          "Discount",
+          "Shipping",
+          "Tax",
+          "Total",
+          "Currency"
+        ],
+        [
+          "SL-01375",
+          "2026-07-01",
+          "Priya Sharma",
+          "priya.sharma.86@example.com",
+          "Fulfilled",
+          "Marketplace",
+          1,
+          3850,
+          0,
+          0,
+          192.5,
+          4042.5,
+          "INR"
+        ],
+        [
+          "SL-01376",
+          "2026-07-01",
+          "Aarav Iyer",
+          "aarav.iyer.107@example.com",
+          "Fulfilled",
+          "Online store",
+          4,
+          13510,
+          0,
+          0,
+          675.5,
+          14185.5,
+          "INR"
+        ],
+        [
+          "SL-01377",
+          "2026-07-02",
+          "Arjun Reddy",
+          "arjun.reddy.200@example.com",
+          "Fulfilled",
+          "Online store",
+          4,
+          11320,
+          0,
+          0,
+          566,
+          11886,
+          "INR"
+        ],
+        [
+          "SL-01378",
+          "2026-07-02",
+          "Arjun Pillai",
+          "arjun.pillai.128@example.com",
+          "Fulfilled",
+          "Marketplace",
+          6,
+          30090,
+          0,
+          0,
+          1504.5,
+          31594.5,
+          "INR"
+        ],
+        [
+          "SL-01379",
+          "2026-07-03",
+          "Kabir Rao",
+          "kabir.rao.178@example.com",
+          "Fulfilled",
+          "Online store",
+          5,
+          12170,
+          0,
+          0,
+          608.5,
+          12778.5,
+          "INR"
+        ],
+        [
+          "SL-01380",
+          "2026-07-05",
+          "Ishaan Joshi",
+          "ishaan.joshi.112@example.com",
+          "Refunded",
+          "Marketplace",
+          3,
+          6390,
+          0,
+          0,
+          319.5,
+          6709.5,
+          "INR"
+        ],
+        [
+          "SL-01381",
+          "2026-07-06",
+          "Dev Sharma",
+          "dev.sharma.124@example.com",
+          "Fulfilled",
+          "Online store",
+          4,
+          13150,
+          0,
+          0,
+          657.5,
+          13807.5,
+          "INR"
+        ],
+        [
+          "SL-01382",
+          "2026-07-07",
+          "Vikram Iyer",
+          "vikram.iyer.183@example.com",
+          "Fulfilled",
+          "Online store",
+          1,
+          2580,
+          0,
+          0,
+          129,
+          2709,
+          "INR"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "f05",
+    "store": "fernhill-goods",
+    "storeName": "Fernhill Goods Co.",
+    "request": "A CSV of every refunded order this year.",
+    "made": {
+      "kind": "file",
+      "spec": {
+        "dataset": "orders",
+        "format": "csv",
+        "period": "this_year",
+        "status": [
+          "refunded"
+        ]
+      },
+      "note": "Refunded orders, 1 January to 30 September 2026, one row per order."
+    },
+    "ok": true,
+    "checks": [
+      {
+        "name": "made a file",
+        "ok": true,
+        "detail": "file"
+      },
+      {
+        "name": "read the guide before answering",
+        "ok": true,
+        "detail": "read_guide → build_file"
+      },
+      {
+        "name": "format csv",
+        "ok": true,
+        "detail": "csv"
+      },
+      {
+        "name": "dataset orders",
+        "ok": true,
+        "detail": "orders"
+      },
+      {
+        "name": "rows match the sample store (26)",
+        "ok": true,
+        "detail": "26"
+      },
+      {
+        "name": "opens and parses back, one header row",
+        "ok": true
+      },
+      {
+        "name": "currency in its own column",
+        "ok": true
+      }
+    ],
+    "seconds": 7,
+    "file": {
+      "name": "Fernhill Goods Co. Refunded orders, 1 Jan 2026 to 30 Sept 2026.csv",
+      "path": "files/f05-Fernhill Goods Co. Refunded orders, 1 Jan 2026 to 30 Sept 2026.csv",
+      "rows": 26,
+      "bytes": 3151,
+      "preview": [
+        [
+          "Order number",
+          "Date",
+          "Customer",
+          "Customer email",
+          "Status",
+          "Channel",
+          "Units",
+          "Subtotal",
+          "Discount",
+          "Shipping",
+          "Tax",
+          "Total",
+          "Currency"
+        ],
+        [
+          "FH-01189",
+          "2026-02-10",
+          "Caleb Coleman",
+          "caleb.coleman.32@example.com",
+          "Refunded",
+          "Online store",
+          "2",
+          "111.98",
+          "0.00",
+          "0.00",
+          "0.00",
+          "111.98",
+          "USD"
+        ],
+        [
+          "FH-01193",
+          "2026-02-14",
+          "Nora Hughes",
+          "nora.hughes.10@example.com",
+          "Refunded",
+          "Online store",
+          "4",
+          "142.96",
+          "0.00",
+          "0.00",
+          "0.00",
+          "142.96",
+          "USD"
+        ],
+        [
+          "FH-01197",
+          "2026-02-17",
+          "Jordan Walsh",
+          "jordan.walsh.111@example.com",
+          "Refunded",
+          "Online store",
+          "6",
+          "441.94",
+          "44.19",
+          "0.00",
+          "0.00",
+          "397.75",
+          "USD"
+        ],
+        [
+          "FH-01203",
+          "2026-02-22",
+          "Marcus Rivera",
+          "marcus.rivera.96@example.com",
+          "Refunded",
+          "Online store",
+          "8",
+          "710.92",
+          "0.00",
+          "0.00",
+          "0.00",
+          "710.92",
+          "USD"
+        ],
+        [
+          "FH-01204",
+          "2026-02-22",
+          "Owen Kim",
+          "owen.kim.136@example.com",
+          "Refunded",
+          "Marketplace",
+          "3",
+          "157.97",
+          "0.00",
+          "0.00",
+          "0.00",
+          "157.97",
+          "USD"
+        ],
+        [
+          "FH-01212",
+          "2026-03-02",
+          "Hannah Bennett",
+          "hannah.bennett.104@example.com",
+          "Refunded",
+          "Online store",
+          "8",
+          "949.92",
+          "94.99",
+          "0.00",
+          "0.00",
+          "854.93",
+          "USD"
+        ],
+        [
+          "FH-01221",
+          "2026-03-07",
+          "Nora Foster",
+          "nora.foster.125@example.com",
+          "Refunded",
+          "Marketplace",
+          "5",
+          "153.95",
+          "0.00",
+          "0.00",
+          "0.00",
+          "153.95",
+          "USD"
+        ],
+        [
+          "FH-01226",
+          "2026-03-14",
+          "Luis Hughes",
+          "luis.hughes.167@example.com",
+          "Refunded",
+          "Online store",
+          "1",
+          "137.99",
+          "0.00",
+          "0.00",
+          "0.00",
+          "137.99",
+          "USD"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "f06",
+    "store": "saffron-loom",
+    "storeName": "Saffron Loom Textiles",
+    "request": "Products that are low on stock, as an Excel file.",
+    "made": {
+      "kind": "file",
+      "spec": {
+        "dataset": "products",
+        "format": "xlsx",
+        "lowStockOnly": true
+      },
+      "note": "Products at or below their reorder level, as of 30 September 2026."
+    },
+    "ok": true,
+    "checks": [
+      {
+        "name": "made a file",
+        "ok": true,
+        "detail": "file"
+      },
+      {
+        "name": "read the guide before answering",
+        "ok": true,
+        "detail": "read_guide → build_file"
+      },
+      {
+        "name": "format xlsx",
+        "ok": true,
+        "detail": "xlsx"
+      },
+      {
+        "name": "dataset products",
+        "ok": true,
+        "detail": "products"
+      },
+      {
+        "name": "rows match the sample store (8)",
+        "ok": true,
+        "detail": "8"
+      },
+      {
+        "name": "opens and parses back, one header row",
+        "ok": true
+      },
+      {
+        "name": "dates are real dates (ISO when read)",
+        "ok": true
+      },
+      {
+        "name": "currency in its own column",
+        "ok": true
+      }
+    ],
+    "seconds": 5.9,
+    "file": {
+      "name": "Saffron Loom Textiles Low-stock products.xlsx",
+      "path": "files/f06-Saffron Loom Textiles Low-stock products.xlsx",
+      "rows": 8,
+      "bytes": 3344,
+      "preview": [
+        [
+          "SKU",
+          "Product",
+          "Category",
+          "Price",
+          "Currency",
+          "In stock",
+          "Reorder level"
+        ],
+        [
+          "SLT-0006",
+          "Silk-blend saree, Madder red",
+          "Sarees",
+          4680,
+          "INR",
+          2,
+          9
+        ],
+        [
+          "SLT-0033",
+          "Woven cushion cover, Indigo",
+          "Cushion covers",
+          1310,
+          "INR",
+          3,
+          10
+        ],
+        [
+          "SLT-0021",
+          "Ikat stole, Indigo",
+          "Stoles",
+          1510,
+          "INR",
+          4,
+          23
+        ],
+        [
+          "SLT-0056",
+          "Quilted dohar, Ivory",
+          "Bedding",
+          1480,
+          "INR",
+          6,
+          11
+        ],
+        [
+          "SLT-0045",
+          "Tablecloth, Indigo",
+          "Table linen",
+          2900,
+          "INR",
+          9,
+          16
+        ],
+        [
+          "SLT-0050",
+          "Cotton bedspread, Madder red",
+          "Bedding",
+          1460,
+          "INR",
+          9,
+          21
+        ],
+        [
+          "SLT-0009",
+          "Block-print saree, Indigo",
+          "Sarees",
+          6370,
+          "INR",
+          10,
+          23
+        ],
+        [
+          "SLT-0005",
+          "Silk-blend saree, Indigo",
+          "Sarees",
+          2550,
+          "INR",
+          14,
+          17
+        ]
+      ]
+    }
+  },
+  {
+    "id": "f07",
+    "store": "fernhill-goods",
+    "storeName": "Fernhill Goods Co.",
+    "request": "I've attached our wholesale price list. Raise every price by 5% and round to the nearest .99.",
+    "made": {
+      "kind": "upload-change",
+      "changes": [
+        {
+          "change": "adjust_numbers",
+          "column": "Wholesale price (USD)",
+          "percent": 5,
+          "rounding": {
+            "mode": "ending",
+            "ending": 0.99
+          }
+        }
+      ],
+      "note": "Wholesale 2026 price list with all 8 prices raised 5% and rounded to the nearest .99."
+    },
+    "ok": true,
+    "checks": [
+      {
+        "name": "made a file",
+        "ok": true,
+        "detail": "file"
+      },
+      {
+        "name": "read the guide before answering",
+        "ok": true,
+        "detail": "read_guide → build_file"
+      },
+      {
+        "name": "opens and parses back",
+        "ok": true
+      },
+      {
+        "name": "same format",
+        "ok": true,
+        "detail": "xlsx"
+      },
+      {
+        "name": "same columns in the same order",
+        "ok": true,
+        "detail": "SKU | Product | Wholesale price (USD) | Case size"
+      },
+      {
+        "name": "same sheet name",
+        "ok": true
+      },
+      {
+        "name": "every price ends in .99 and is 5% higher before rounding",
+        "ok": true
+      }
+    ],
+    "seconds": 5.7,
+    "file": {
+      "name": "fernhill-wholesale-prices (changed).xlsx",
+      "path": "files/f07-fernhill-wholesale-prices (changed).xlsx",
+      "rows": 8,
+      "bytes": 3106,
+      "preview": [
+        [
+          "SKU",
+          "Product",
+          "Wholesale price (USD)",
+          "Case size"
+        ],
+        [
+          "FHG-0001",
+          "Alpine 30L backpack, Forest",
+          60.99,
+          6
+        ],
+        [
+          "FHG-0013",
+          "Travel mug, Forest",
+          9.99,
+          24
+        ],
+        [
+          "FHG-0025",
+          "Ceramic planter, Forest",
+          12.99,
+          12
+        ],
+        [
+          "FHG-0029",
+          "Linen throw, Forest",
+          32.99,
+          8
+        ],
+        [
+          "FHG-0033",
+          "Soy candle, Forest",
+          7.99,
+          24
+        ],
+        [
+          "FHG-0037",
+          "Linen summer dress, Forest",
+          26.99,
+          10
+        ],
+        [
+          "FHG-0041",
+          "Straight-leg jeans, Forest",
+          35.99,
+          10
+        ],
+        [
+          "FHG-0049",
+          "Camp blanket, Forest",
+          23.99,
+          8
+        ]
+      ],
+      "summary": [
+        "Raised 8 values in “Wholesale price (USD)” by 5%."
+      ]
+    }
+  },
+  {
+    "id": "f08",
+    "store": "saffron-loom",
+    "storeName": "Saffron Loom Textiles",
+    "request": "Here's our customer list. Remove the duplicate emails and fix the capitalisation of the names.",
+    "made": {
+      "kind": "upload-change",
+      "changes": [
+        {
+          "change": "trim_spaces"
+        },
+        {
+          "change": "remove_duplicates",
+          "column": "Email",
+          "ignoreCase": true
+        },
+        {
+          "change": "change_case",
+          "column": "Name",
+          "case": "title"
+        }
+      ],
+      "note": "Your customer list with duplicate emails removed and names in title case."
+    },
+    "ok": true,
+    "checks": [
+      {
+        "name": "made a file",
+        "ok": true,
+        "detail": "file"
+      },
+      {
+        "name": "read the guide before answering",
+        "ok": true,
+        "detail": "read_guide → build_file"
+      },
+      {
+        "name": "opens and parses back",
+        "ok": true
+      },
+      {
+        "name": "same format",
+        "ok": true,
+        "detail": "csv"
+      },
+      {
+        "name": "same columns in the same order",
+        "ok": true,
+        "detail": "Name | Email | City"
+      },
+      {
+        "name": "rows after the change = 6",
+        "ok": true,
+        "detail": "6"
+      }
+    ],
+    "seconds": 6.2,
+    "file": {
+      "name": "saffron-customers (changed).csv",
+      "path": "files/f08-saffron-customers (changed).csv",
+      "rows": 6,
+      "bytes": 276,
+      "preview": [
+        [
+          "Name",
+          "Email",
+          "City"
+        ],
+        [
+          "Ananya Iyer",
+          "ananya.iyer@example.com",
+          "Chennai"
+        ],
+        [
+          "Rohan Kapoor",
+          "rohan.kapoor@example.com",
+          "Delhi"
+        ],
+        [
+          "Meera Nair",
+          "meera.nair@example.com",
+          "Bengaluru"
+        ],
+        [
+          "Dev Joshi",
+          "dev.joshi@example.com",
+          "Pune"
+        ],
+        [
+          "Tara Das",
+          "tara.das@example.com",
+          "Kolkata"
+        ],
+        [
+          "Kabir Reddy",
+          "kabir.reddy@example.com",
+          "Hyderabad"
+        ]
+      ],
+      "summary": [
+        "Trimmed spaces in every column.",
+        "Removed 2 duplicate rows by “Email”, keeping the first of each.",
+        "Changed “Name” to title case."
+      ]
+    }
+  },
+  {
+    "id": "f09",
+    "store": "fernhill-goods",
+    "storeName": "Fernhill Goods Co.",
+    "request": "Export all our orders as a Word document.",
+    "made": {
+      "kind": "format-options",
+      "thing": "file",
+      "requestedFormat": "Word",
+      "offered": [
+        "PDF",
+        "Excel",
+        "CSV",
+        "JSON"
+      ],
+      "message": "I can't export orders as a Word document. I can give you all your orders as a PDF, which is closest to Word, or as an Excel, CSV or JSON file."
+    },
+    "ok": true,
+    "checks": [
+      {
+        "name": "made a format_not_supported",
+        "ok": true,
+        "detail": "format_not_supported"
+      },
+      {
+        "name": "read the guide before answering",
+        "ok": true,
+        "detail": "read_guide → show_format_options"
+      },
+      {
+        "name": "offers only formats the file kind exports",
+        "ok": true,
+        "detail": "PDF, Excel, CSV, JSON"
+      },
+      {
+        "name": "no system words on screen",
+        "ok": true
+      }
+    ],
+    "seconds": 8.5
+  },
+  {
+    "id": "f10",
+    "store": "saffron-loom",
+    "storeName": "Saffron Loom Textiles",
+    "request": "Our products as JSON, please.",
+    "made": {
+      "kind": "file",
+      "spec": {
+        "dataset": "products",
+        "format": "json"
+      },
+      "note": "Every product in your Saffron Loom Textiles catalogue, one entry each."
+    },
+    "ok": true,
+    "checks": [
+      {
+        "name": "made a file",
+        "ok": true,
+        "detail": "file"
+      },
+      {
+        "name": "read the guide before answering",
+        "ok": true,
+        "detail": "read_guide → build_file"
+      },
+      {
+        "name": "format json",
+        "ok": true,
+        "detail": "json"
+      },
+      {
+        "name": "dataset products",
+        "ok": true,
+        "detail": "products"
+      },
+      {
+        "name": "rows match the sample store (60)",
+        "ok": true,
+        "detail": "60"
+      },
+      {
+        "name": "valid JSON, one record per row",
+        "ok": true
+      },
+      {
+        "name": "currency in its own column",
+        "ok": true
+      }
+    ],
+    "seconds": 5.3,
+    "file": {
+      "name": "Saffron Loom Textiles Products.json",
+      "path": "files/f10-Saffron Loom Textiles Products.json",
+      "rows": 60,
+      "bytes": 12247,
+      "preview": [
+        [
+          "SKU",
+          "Product",
+          "Category",
+          "Price",
+          "Currency",
+          "In stock",
+          "Reorder level"
+        ],
+        [
+          "SLT-0001",
+          "Handloom cotton saree, Indigo",
+          "Sarees",
+          4770,
+          "INR",
+          22,
+          9
+        ],
+        [
+          "SLT-0002",
+          "Handloom cotton saree, Madder red",
+          "Sarees",
+          9760,
+          "INR",
+          56,
+          9
+        ],
+        [
+          "SLT-0003",
+          "Handloom cotton saree, Saffron",
+          "Sarees",
+          9620,
+          "INR",
+          36,
+          22
+        ],
+        [
+          "SLT-0004",
+          "Handloom cotton saree, Ivory",
+          "Sarees",
+          6290,
+          "INR",
+          25,
+          14
+        ],
+        [
+          "SLT-0005",
+          "Silk-blend saree, Indigo",
+          "Sarees",
+          2550,
+          "INR",
+          14,
+          17
+        ],
+        [
+          "SLT-0006",
+          "Silk-blend saree, Madder red",
+          "Sarees",
+          4680,
+          "INR",
+          2,
+          9
+        ],
+        [
+          "SLT-0007",
+          "Silk-blend saree, Saffron",
+          "Sarees",
+          7510,
+          "INR",
+          96,
+          21
+        ],
+        [
+          "SLT-0008",
+          "Silk-blend saree, Ivory",
+          "Sarees",
+          6070,
+          "INR",
+          120,
+          21
+        ]
+      ]
+    }
+  }
+]

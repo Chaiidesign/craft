@@ -66,7 +66,7 @@ describe('lane registry', () => {
   it('builds the four launch lanes and shows the rest as coming later', () => {
     const launch = REGISTRY.filter((e) => e.scope === 'launch').map((e) => e.lane).sort()
     expect(launch).toEqual(['chat_reply', 'composed_document', 'file', 'strict_document'])
-    for (const e of REGISTRY.filter((e) => e.scope !== 'launch')) expect(e.status).toBe('coming-later')
+    for (const e of REGISTRY.filter((e) => e.scope === 'later')) expect(e.status).toBe('coming-later')
     for (const e of REGISTRY) expect(e.action).toBeTruthy()
   })
 })

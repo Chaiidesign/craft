@@ -102,7 +102,7 @@ const SPECS: Record<Lane, Spec> = {
   inline_chart: {
     makes: 'A quick chart of your numbers.',
     scope: 'if-time',
-    status: 'coming-later',
+    status: 'being-built',
     templates: [],
     evalSet: null,
   },

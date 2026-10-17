@@ -24,25 +24,25 @@
       "label": "PNG image",
       "extension": "png",
       "mimeType": "image/png",
-      "status": "planned"
+      "status": "built"
     },
     "xlsx": {
       "label": "Excel",
       "extension": "xlsx",
       "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "status": "planned"
+      "status": "built"
     },
     "csv": {
       "label": "CSV",
       "extension": "csv",
       "mimeType": "text/csv",
-      "status": "planned"
+      "status": "built"
     },
     "json": {
       "label": "JSON",
       "extension": "json",
       "mimeType": "application/json",
-      "status": "planned"
+      "status": "built"
     },
     "link": {
       "label": "Private link",
@@ -70,13 +70,19 @@
     },
     "inline_chart": {
       "label": "Inline chart",
-      "status": "planned",
-      "planned": {
-        "formats": [
-          "png",
-          "csv"
-        ],
-        "note": "The picture of the chart, or the numbers behind it."
+      "status": "built",
+      "built": {
+        "covers": "Weekly and monthly sales, and top products, from store data",
+        "exports": [
+          {
+            "format": "png",
+            "supported": true
+          },
+          {
+            "format": "csv",
+            "supported": true
+          }
+        ]
       }
     },
     "strict_document": {
@@ -213,15 +219,27 @@
     },
     "file": {
       "label": "File",
-      "status": "planned",
-      "planned": {
-        "formats": [
-          "xlsx",
-          "csv",
-          "json",
-          "pdf"
-        ],
-        "note": "Raw data exports, and changed uploads in the format they arrived in."
+      "status": "built",
+      "built": {
+        "covers": "Raw data exports (orders, products, customers) and changes to uploaded CSV or Excel files",
+        "exports": [
+          {
+            "format": "xlsx",
+            "supported": true
+          },
+          {
+            "format": "csv",
+            "supported": true
+          },
+          {
+            "format": "json",
+            "supported": true
+          },
+          {
+            "format": "pdf",
+            "supported": true
+          }
+        ]
       }
     }
   }

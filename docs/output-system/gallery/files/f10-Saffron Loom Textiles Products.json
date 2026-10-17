@@ -1,0 +1,548 @@
+{
+  "store": "Saffron Loom Textiles",
+  "title": "Products",
+  "sampleData": true,
+  "count": 60,
+  "records": [
+    {
+      "sku": "SLT-0001",
+      "title": "Handloom cotton saree, Indigo",
+      "category": "Sarees",
+      "price": 4770,
+      "currency": "INR",
+      "stock": 22,
+      "reorderLevel": 9
+    },
+    {
+      "sku": "SLT-0002",
+      "title": "Handloom cotton saree, Madder red",
+      "category": "Sarees",
+      "price": 9760,
+      "currency": "INR",
+      "stock": 56,
+      "reorderLevel": 9
+    },
+    {
+      "sku": "SLT-0003",
+      "title": "Handloom cotton saree, Saffron",
+      "category": "Sarees",
+      "price": 9620,
+      "currency": "INR",
+      "stock": 36,
+      "reorderLevel": 22
+    },
+    {
+      "sku": "SLT-0004",
+      "title": "Handloom cotton saree, Ivory",
+      "category": "Sarees",
+      "price": 6290,
+      "currency": "INR",
+      "stock": 25,
+      "reorderLevel": 14
+    },
+    {
+      "sku": "SLT-0005",
+      "title": "Silk-blend saree, Indigo",
+      "category": "Sarees",
+      "price": 2550,
+      "currency": "INR",
+      "stock": 14,
+      "reorderLevel": 17
+    },
+    {
+      "sku": "SLT-0006",
+      "title": "Silk-blend saree, Madder red",
+      "category": "Sarees",
+      "price": 4680,
+      "currency": "INR",
+      "stock": 2,
+      "reorderLevel": 9
+    },
+    {
+      "sku": "SLT-0007",
+      "title": "Silk-blend saree, Saffron",
+      "category": "Sarees",
+      "price": 7510,
+      "currency": "INR",
+      "stock": 96,
+      "reorderLevel": 21
+    },
+    {
+      "sku": "SLT-0008",
+      "title": "Silk-blend saree, Ivory",
+      "category": "Sarees",
+      "price": 6070,
+      "currency": "INR",
+      "stock": 120,
+      "reorderLevel": 21
+    },
+    {
+      "sku": "SLT-0009",
+      "title": "Block-print saree, Indigo",
+      "category": "Sarees",
+      "price": 6370,
+      "currency": "INR",
+      "stock": 10,
+      "reorderLevel": 23
+    },
+    {
+      "sku": "SLT-0010",
+      "title": "Block-print saree, Madder red",
+      "category": "Sarees",
+      "price": 4000,
+      "currency": "INR",
+      "stock": 122,
+      "reorderLevel": 23
+    },
+    {
+      "sku": "SLT-0011",
+      "title": "Block-print saree, Saffron",
+      "category": "Sarees",
+      "price": 4960,
+      "currency": "INR",
+      "stock": 59,
+      "reorderLevel": 8
+    },
+    {
+      "sku": "SLT-0012",
+      "title": "Block-print saree, Ivory",
+      "category": "Sarees",
+      "price": 8120,
+      "currency": "INR",
+      "stock": 48,
+      "reorderLevel": 8
+    },
+    {
+      "sku": "SLT-0013",
+      "title": "Wool stole, Indigo",
+      "category": "Stoles",
+      "price": 1610,
+      "currency": "INR",
+      "stock": 85,
+      "reorderLevel": 20
+    },
+    {
+      "sku": "SLT-0014",
+      "title": "Wool stole, Madder red",
+      "category": "Stoles",
+      "price": 1120,
+      "currency": "INR",
+      "stock": 92,
+      "reorderLevel": 15
+    },
+    {
+      "sku": "SLT-0015",
+      "title": "Wool stole, Saffron",
+      "category": "Stoles",
+      "price": 2530,
+      "currency": "INR",
+      "stock": 75,
+      "reorderLevel": 11
+    },
+    {
+      "sku": "SLT-0016",
+      "title": "Wool stole, Ivory",
+      "category": "Stoles",
+      "price": 1190,
+      "currency": "INR",
+      "stock": 33,
+      "reorderLevel": 19
+    },
+    {
+      "sku": "SLT-0017",
+      "title": "Cotton stole, Indigo",
+      "category": "Stoles",
+      "price": 2300,
+      "currency": "INR",
+      "stock": 116,
+      "reorderLevel": 21
+    },
+    {
+      "sku": "SLT-0018",
+      "title": "Cotton stole, Madder red",
+      "category": "Stoles",
+      "price": 2270,
+      "currency": "INR",
+      "stock": 47,
+      "reorderLevel": 22
+    },
+    {
+      "sku": "SLT-0019",
+      "title": "Cotton stole, Saffron",
+      "category": "Stoles",
+      "price": 2580,
+      "currency": "INR",
+      "stock": 107,
+      "reorderLevel": 24
+    },
+    {
+      "sku": "SLT-0020",
+      "title": "Cotton stole, Ivory",
+      "category": "Stoles",
+      "price": 2450,
+      "currency": "INR",
+      "stock": 76,
+      "reorderLevel": 10
+    },
+    {
+      "sku": "SLT-0021",
+      "title": "Ikat stole, Indigo",
+      "category": "Stoles",
+      "price": 1510,
+      "currency": "INR",
+      "stock": 4,
+      "reorderLevel": 23
+    },
+    {
+      "sku": "SLT-0022",
+      "title": "Ikat stole, Madder red",
+      "category": "Stoles",
+      "price": 1220,
+      "currency": "INR",
+      "stock": 38,
+      "reorderLevel": 24
+    },
+    {
+      "sku": "SLT-0023",
+      "title": "Ikat stole, Saffron",
+      "category": "Stoles",
+      "price": 1520,
+      "currency": "INR",
+      "stock": 107,
+      "reorderLevel": 9
+    },
+    {
+      "sku": "SLT-0024",
+      "title": "Ikat stole, Ivory",
+      "category": "Stoles",
+      "price": 1860,
+      "currency": "INR",
+      "stock": 47,
+      "reorderLevel": 9
+    },
+    {
+      "sku": "SLT-0025",
+      "title": "Embroidered cushion cover, Indigo",
+      "category": "Cushion covers",
+      "price": 490,
+      "currency": "INR",
+      "stock": 117,
+      "reorderLevel": 25
+    },
+    {
+      "sku": "SLT-0026",
+      "title": "Embroidered cushion cover, Madder red",
+      "category": "Cushion covers",
+      "price": 1390,
+      "currency": "INR",
+      "stock": 78,
+      "reorderLevel": 22
+    },
+    {
+      "sku": "SLT-0027",
+      "title": "Embroidered cushion cover, Saffron",
+      "category": "Cushion covers",
+      "price": 950,
+      "currency": "INR",
+      "stock": 76,
+      "reorderLevel": 15
+    },
+    {
+      "sku": "SLT-0028",
+      "title": "Embroidered cushion cover, Ivory",
+      "category": "Cushion covers",
+      "price": 780,
+      "currency": "INR",
+      "stock": 97,
+      "reorderLevel": 11
+    },
+    {
+      "sku": "SLT-0029",
+      "title": "Kantha cushion cover, Indigo",
+      "category": "Cushion covers",
+      "price": 1390,
+      "currency": "INR",
+      "stock": 25,
+      "reorderLevel": 14
+    },
+    {
+      "sku": "SLT-0030",
+      "title": "Kantha cushion cover, Madder red",
+      "category": "Cushion covers",
+      "price": 1230,
+      "currency": "INR",
+      "stock": 127,
+      "reorderLevel": 14
+    },
+    {
+      "sku": "SLT-0031",
+      "title": "Kantha cushion cover, Saffron",
+      "category": "Cushion covers",
+      "price": 1030,
+      "currency": "INR",
+      "stock": 81,
+      "reorderLevel": 9
+    },
+    {
+      "sku": "SLT-0032",
+      "title": "Kantha cushion cover, Ivory",
+      "category": "Cushion covers",
+      "price": 1080,
+      "currency": "INR",
+      "stock": 87,
+      "reorderLevel": 19
+    },
+    {
+      "sku": "SLT-0033",
+      "title": "Woven cushion cover, Indigo",
+      "category": "Cushion covers",
+      "price": 1310,
+      "currency": "INR",
+      "stock": 3,
+      "reorderLevel": 10
+    },
+    {
+      "sku": "SLT-0034",
+      "title": "Woven cushion cover, Madder red",
+      "category": "Cushion covers",
+      "price": 1330,
+      "currency": "INR",
+      "stock": 35,
+      "reorderLevel": 22
+    },
+    {
+      "sku": "SLT-0035",
+      "title": "Woven cushion cover, Saffron",
+      "category": "Cushion covers",
+      "price": 480,
+      "currency": "INR",
+      "stock": 131,
+      "reorderLevel": 8
+    },
+    {
+      "sku": "SLT-0036",
+      "title": "Woven cushion cover, Ivory",
+      "category": "Cushion covers",
+      "price": 1090,
+      "currency": "INR",
+      "stock": 12,
+      "reorderLevel": 8
+    },
+    {
+      "sku": "SLT-0037",
+      "title": "Table runner, Indigo",
+      "category": "Table linen",
+      "price": 2610,
+      "currency": "INR",
+      "stock": 126,
+      "reorderLevel": 25
+    },
+    {
+      "sku": "SLT-0038",
+      "title": "Table runner, Madder red",
+      "category": "Table linen",
+      "price": 620,
+      "currency": "INR",
+      "stock": 44,
+      "reorderLevel": 23
+    },
+    {
+      "sku": "SLT-0039",
+      "title": "Table runner, Saffron",
+      "category": "Table linen",
+      "price": 1380,
+      "currency": "INR",
+      "stock": 92,
+      "reorderLevel": 8
+    },
+    {
+      "sku": "SLT-0040",
+      "title": "Table runner, Ivory",
+      "category": "Table linen",
+      "price": 1900,
+      "currency": "INR",
+      "stock": 58,
+      "reorderLevel": 20
+    },
+    {
+      "sku": "SLT-0041",
+      "title": "Napkin set of 4, Indigo",
+      "category": "Table linen",
+      "price": 2150,
+      "currency": "INR",
+      "stock": 89,
+      "reorderLevel": 12
+    },
+    {
+      "sku": "SLT-0042",
+      "title": "Napkin set of 4, Madder red",
+      "category": "Table linen",
+      "price": 1130,
+      "currency": "INR",
+      "stock": 19,
+      "reorderLevel": 12
+    },
+    {
+      "sku": "SLT-0043",
+      "title": "Napkin set of 4, Saffron",
+      "category": "Table linen",
+      "price": 3110,
+      "currency": "INR",
+      "stock": 29,
+      "reorderLevel": 10
+    },
+    {
+      "sku": "SLT-0044",
+      "title": "Napkin set of 4, Ivory",
+      "category": "Table linen",
+      "price": 790,
+      "currency": "INR",
+      "stock": 77,
+      "reorderLevel": 24
+    },
+    {
+      "sku": "SLT-0045",
+      "title": "Tablecloth, Indigo",
+      "category": "Table linen",
+      "price": 2900,
+      "currency": "INR",
+      "stock": 9,
+      "reorderLevel": 16
+    },
+    {
+      "sku": "SLT-0046",
+      "title": "Tablecloth, Madder red",
+      "category": "Table linen",
+      "price": 2780,
+      "currency": "INR",
+      "stock": 92,
+      "reorderLevel": 19
+    },
+    {
+      "sku": "SLT-0047",
+      "title": "Tablecloth, Saffron",
+      "category": "Table linen",
+      "price": 2530,
+      "currency": "INR",
+      "stock": 30,
+      "reorderLevel": 8
+    },
+    {
+      "sku": "SLT-0048",
+      "title": "Tablecloth, Ivory",
+      "category": "Table linen",
+      "price": 2590,
+      "currency": "INR",
+      "stock": 135,
+      "reorderLevel": 11
+    },
+    {
+      "sku": "SLT-0049",
+      "title": "Cotton bedspread, Indigo",
+      "category": "Bedding",
+      "price": 4010,
+      "currency": "INR",
+      "stock": 24,
+      "reorderLevel": 13
+    },
+    {
+      "sku": "SLT-0050",
+      "title": "Cotton bedspread, Madder red",
+      "category": "Bedding",
+      "price": 1460,
+      "currency": "INR",
+      "stock": 9,
+      "reorderLevel": 21
+    },
+    {
+      "sku": "SLT-0051",
+      "title": "Cotton bedspread, Saffron",
+      "category": "Bedding",
+      "price": 4750,
+      "currency": "INR",
+      "stock": 78,
+      "reorderLevel": 17
+    },
+    {
+      "sku": "SLT-0052",
+      "title": "Cotton bedspread, Ivory",
+      "category": "Bedding",
+      "price": 4620,
+      "currency": "INR",
+      "stock": 121,
+      "reorderLevel": 23
+    },
+    {
+      "sku": "SLT-0053",
+      "title": "Quilted dohar, Indigo",
+      "category": "Bedding",
+      "price": 3170,
+      "currency": "INR",
+      "stock": 60,
+      "reorderLevel": 23
+    },
+    {
+      "sku": "SLT-0054",
+      "title": "Quilted dohar, Madder red",
+      "category": "Bedding",
+      "price": 2830,
+      "currency": "INR",
+      "stock": 17,
+      "reorderLevel": 14
+    },
+    {
+      "sku": "SLT-0055",
+      "title": "Quilted dohar, Saffron",
+      "category": "Bedding",
+      "price": 5310,
+      "currency": "INR",
+      "stock": 79,
+      "reorderLevel": 17
+    },
+    {
+      "sku": "SLT-0056",
+      "title": "Quilted dohar, Ivory",
+      "category": "Bedding",
+      "price": 1480,
+      "currency": "INR",
+      "stock": 6,
+      "reorderLevel": 11
+    },
+    {
+      "sku": "SLT-0057",
+      "title": "Pillow cover pair, Indigo",
+      "category": "Bedding",
+      "price": 4130,
+      "currency": "INR",
+      "stock": 36,
+      "reorderLevel": 13
+    },
+    {
+      "sku": "SLT-0058",
+      "title": "Pillow cover pair, Madder red",
+      "category": "Bedding",
+      "price": 1370,
+      "currency": "INR",
+      "stock": 28,
+      "reorderLevel": 18
+    },
+    {
+      "sku": "SLT-0059",
+      "title": "Pillow cover pair, Saffron",
+      "category": "Bedding",
+      "price": 4800,
+      "currency": "INR",
+      "stock": 130,
+      "reorderLevel": 12
+    },
+    {
+      "sku": "SLT-0060",
+      "title": "Pillow cover pair, Ivory",
+      "category": "Bedding",
+      "price": 3850,
+      "currency": "INR",
+      "stock": 134,
+      "reorderLevel": 16
+    }
+  ]
+}

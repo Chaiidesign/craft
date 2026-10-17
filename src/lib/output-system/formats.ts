@@ -1,7 +1,8 @@
 // Builds docs/output-system/formats.json: which formats each kind of thing can
 // be exported to (D-76). Where the document engine has code, the answer is
 // read from src/lib/documents/export/capabilities.ts, so the list cannot claim
-// a format the engine doesn't export. Kinds with no code yet are marked
+// a format the engine doesn't export. Raw data files (Session 1, D-83) are read
+// from DATA_FORMATS in files/datasets.ts, the formats buildFile writes. Kinds with no code yet are marked
 // "planned", and their formats are proposals, not capabilities.
 //
 // Regenerate with: npx vite-node scripts/output-system/build-formats.ts
@@ -9,11 +10,12 @@
 
 import { capability, FORMAT_FILE, FORMAT_LABEL, formatsFor } from '../documents/export/capabilities'
 import type { DocumentKind, ExportFormat } from '../documents/model'
+import { DATA_FORMATS } from './files/datasets'
 import { LANE_LABELS, LANES, type Lane } from './lanes'
 
 export const FORMATS_FORMAT_VERSION = 1
 
-/** Formats with no exporter in the engine yet: named so planned kinds can refer to them. */
+/** Formats beyond the engine's three: Excel, CSV and JSON are written by files/ (built); PNG and links are planned. */
 const PLANNED_FORMATS = {
   png: { label: 'PNG image', extension: 'png', mimeType: 'image/png' },
   xlsx: { label: 'Excel', extension: 'xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' },
@@ -49,7 +51,7 @@ function formatTable() {
   const built = Object.fromEntries(
     (Object.keys(FORMAT_FILE) as ExportFormat[]).map((f) => [f, { label: FORMAT_LABEL[f], ...FORMAT_FILE[f], status: 'built' }]),
   )
-  const planned = Object.fromEntries(Object.entries(PLANNED_FORMATS).map(([f, v]) => [f, { ...v, status: 'planned' }]))
+  const planned = Object.fromEntries(Object.entries(PLANNED_FORMATS).map(([f, v]) => [f, { ...v, status: (DATA_FORMATS as readonly string[]).includes(f) || f === 'png' ? 'built' : 'planned' }]))
   return { ...built, ...planned }
 }
 
@@ -70,6 +72,22 @@ export function buildOutputFormats() {
       LANES.map((lane) => {
         const built = BUILT[lane]
         const planned = PLANNED[lane]
+        if (lane === 'inline_chart') {
+          return [
+            lane,
+            { label: LANE_LABELS[lane], status: 'built', built: { covers: 'Weekly and monthly sales, and top products, from store data', exports: [{ format: 'png', supported: true }, { format: 'csv', supported: true }] } },
+          ]
+        }
+        if (lane === 'file') {
+          return [
+            lane,
+            {
+              label: LANE_LABELS[lane],
+              status: 'built',
+              built: { covers: 'Raw data exports (orders, products, customers) and changes to uploaded CSV or Excel files', exports: DATA_FORMATS.map((format) => ({ format, supported: true })) },
+            },
+          ]
+        }
         return [
           lane,
           {
