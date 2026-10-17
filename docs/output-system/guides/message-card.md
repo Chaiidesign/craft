@@ -14,6 +14,7 @@ Draft something the person will send to a particular person or list, such as an 
 - **Not a message card:** a message *about* money or legal terms that must be exact, such as a refund agreement or a payment demand, is a strict document. A short covering note can go with it as a card.
 
 ## Layout rules
+- **Formats:** which formats this can be exported to is listed in [formats.json](../formats.json) under `kinds.message_card`, closest first. Offer only formats listed there as supported or planned. If the person names one that isn't, say so and offer the closest ones listed.
 - **Fields, in this order:**
   1. **To:** who it's for, such as a customer name or a list name
   2. **Subject:** emails only; under 60 characters

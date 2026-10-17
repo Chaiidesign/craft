@@ -15,6 +15,7 @@ Make a document where money, legal terms or required facts must be exact: an inv
 - **Changes** to an invoice already made, such as "add a line item" or "due in 30 days", make a new version of the same document, never a second invoice.
 
 ## Layout rules
+- **Formats:** which formats this can be exported to is listed in [formats.json](../formats.json) under `kinds.strict_document`, closest first. Offer only formats listed there as supported or planned. If the person names one that isn't, say so and offer the closest ones listed.
 - **Fixed sections for each type,** in a fixed order. An invoice has:
   1. the letterhead
   2. title and number

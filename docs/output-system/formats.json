@@ -1,0 +1,228 @@
+{
+  "$comment": "Generated from src/lib/documents/export/capabilities.ts by scripts/output-system/build-formats.ts. Do not edit by hand. \"built\" exports are what the document engine does today; \"planned\" formats are proposals for kinds with no code yet. Formats are listed closest first, so the first supported one is the closest offer when a named format is not supported.",
+  "version": 1,
+  "formats": {
+    "pdf": {
+      "label": "PDF",
+      "extension": "pdf",
+      "mimeType": "application/pdf",
+      "status": "built"
+    },
+    "docx": {
+      "label": "Word",
+      "extension": "docx",
+      "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "status": "built"
+    },
+    "pptx": {
+      "label": "PowerPoint",
+      "extension": "pptx",
+      "mimeType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "status": "built"
+    },
+    "png": {
+      "label": "PNG image",
+      "extension": "png",
+      "mimeType": "image/png",
+      "status": "planned"
+    },
+    "xlsx": {
+      "label": "Excel",
+      "extension": "xlsx",
+      "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "status": "planned"
+    },
+    "csv": {
+      "label": "CSV",
+      "extension": "csv",
+      "mimeType": "text/csv",
+      "status": "planned"
+    },
+    "json": {
+      "label": "JSON",
+      "extension": "json",
+      "mimeType": "application/json",
+      "status": "planned"
+    },
+    "link": {
+      "label": "Private link",
+      "extension": null,
+      "mimeType": null,
+      "status": "planned"
+    }
+  },
+  "kinds": {
+    "chat_reply": {
+      "label": "Chat reply",
+      "status": "planned",
+      "planned": {
+        "formats": [],
+        "note": "A chat reply is not exported. To pass it on, it becomes a composed document first."
+      }
+    },
+    "message_card": {
+      "label": "Message card",
+      "status": "planned",
+      "planned": {
+        "formats": [],
+        "note": "A message is copied or sent, not exported."
+      }
+    },
+    "inline_chart": {
+      "label": "Inline chart",
+      "status": "planned",
+      "planned": {
+        "formats": [
+          "png",
+          "csv"
+        ],
+        "note": "The picture of the chart, or the numbers behind it."
+      }
+    },
+    "strict_document": {
+      "label": "Strict document",
+      "status": "built",
+      "built": {
+        "covers": "Invoices",
+        "engineKind": "invoice",
+        "exports": [
+          {
+            "format": "pdf",
+            "supported": true
+          },
+          {
+            "format": "docx",
+            "supported": true
+          },
+          {
+            "format": "pptx",
+            "supported": false,
+            "reason": "Invoices and briefs have no slide format."
+          }
+        ]
+      },
+      "planned": {
+        "types": [
+          "quote",
+          "purchase order",
+          "receipt",
+          "returns policy"
+        ],
+        "formats": [
+          "pdf",
+          "docx"
+        ],
+        "note": "Planned types follow the invoice: PDF and Word, never slides."
+      }
+    },
+    "composed_document": {
+      "label": "Composed document",
+      "status": "built",
+      "built": {
+        "covers": "Briefs, memos and reports",
+        "engineKind": "brief",
+        "exports": [
+          {
+            "format": "pdf",
+            "supported": true
+          },
+          {
+            "format": "docx",
+            "supported": true
+          },
+          {
+            "format": "pptx",
+            "supported": false,
+            "reason": "Invoices and briefs have no slide format."
+          }
+        ]
+      },
+      "planned": {
+        "types": [
+          "campaign plan",
+          "spec sheet",
+          "guide",
+          "letter",
+          "one-pager",
+          "proposal"
+        ],
+        "formats": [
+          "pdf",
+          "docx"
+        ],
+        "note": "Planned types follow the brief: PDF and Word, never slides."
+      }
+    },
+    "design": {
+      "label": "Design",
+      "status": "built",
+      "built": {
+        "covers": "Slides and decks",
+        "engineKind": "deck",
+        "exports": [
+          {
+            "format": "pptx",
+            "supported": true
+          },
+          {
+            "format": "pdf",
+            "supported": true
+          },
+          {
+            "format": "docx",
+            "supported": false,
+            "reason": "Decks export as PowerPoint or PDF."
+          }
+        ]
+      },
+      "planned": {
+        "types": [
+          "ad",
+          "social post",
+          "banner",
+          "product page mockup"
+        ],
+        "formats": [
+          "png",
+          "pdf"
+        ],
+        "note": "Single designs (ads, posts, banners, mockups) as an image or PDF; slides keep the deck formats."
+      }
+    },
+    "dashboard": {
+      "label": "Dashboard",
+      "status": "planned",
+      "planned": {
+        "formats": [
+          "link",
+          "pdf",
+          "xlsx"
+        ],
+        "note": "A dashboard lives at its link; a PDF or Excel file is a snapshot of one moment."
+      }
+    },
+    "published_page": {
+      "label": "Published page",
+      "status": "planned",
+      "planned": {
+        "formats": [
+          "link"
+        ],
+        "note": "An interactive page only works at its link. It cannot become a document, slides or a spreadsheet."
+      }
+    },
+    "file": {
+      "label": "File",
+      "status": "planned",
+      "planned": {
+        "formats": [
+          "xlsx",
+          "csv",
+          "json",
+          "pdf"
+        ],
+        "note": "Raw data exports, and changed uploads in the format they arrived in."
+      }
+    }
+  }
+}

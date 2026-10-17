@@ -39,28 +39,32 @@ Updated 2026-10-17.
   - D-72: router change, approved
   - D-73: guide rules beyond the plan, assumed
   - D-74: prompt version 3, approved
+  - D-75: `system-prompt.md` is the source of truth, approved
+  - D-76: prompt version 4, `format_not_supported` and `formats.json`, approved
   - D-71 is left for S1.
 - **Branch:** stacked on `feat/chat-document-flow` (D-68).
 
 **What works:**
-- the system prompt, version 3: the updated plan's draft, with the share-this rule worded by meaning and `export_version` named (D-74)
+- the system prompt, version 4, which is the source of truth (D-75); it adds `show_format_options` (D-76)
+- `formats.json`: which formats each kind exports, generated from `export/capabilities.ts`, with kinds that have no code marked planned
 - `tokens.json`, generated from the engine
 - nine guides
 - 34 eval requests (the original 30, plus r31 to r34)
 - the routing harness: `npx vite-node scripts/output-system/route-eval.ts -- --env-file <path to .env.local>`
-- 30 tests in `src/lib/output-system/`
+- 33 tests in `src/lib/output-system/`
 
 **Scores:**
 - **Phase 1 baseline (prompt version 1):** 30, 29 and 29 of 30. The miss was r29.
 - **After D-72 (prompt version 2):** 30, 30 and 30 of 30. This is weak evidence, because the share-this rule quotes r29 (see the report).
 - **Prompt version 3:** the original 30 scored 30/30 in all three runs. The new four scored 2/4 each time. r33 and r34, the closest-format cases, were labelled as a chat reply rather than a question, but the model did what the rule asks.
+- **Prompt version 4:** 34/34 in all three runs. This fixed how r33 and r34 were labelled, not how they were routed. The harness doesn't send `formats.json` (see the report).
 - **Gate:** at least 27 of 30, passed in every run.
 
 **Engineering item: progress labels use system words.** The real chat shows the app's own progress events while it works: "Running sandbox command", "Running tool", "Loading skill" (baseline run, `chore/doc-gen-baseline`). These labels don't come from the model, so the prompt can't fix them. Replace them in the app with the person's words, for example "Making your document" or "Checking your store data", before any lane ships.
 
 **Next:**
 - Chaitanya adds `evals/heldout.jsonl` (about 20 requests). Run it three times, never tune against it, and change nothing in it except to run it.
-- Chaitanya decides on the r33 and r34 fixes in the report, under "Prompt version 3".
+- Phase 2: send the guides and `formats.json` with the prompt, and test a borderline format request.
 - Phase 2 does not start until the held-out set passes.
 
 ## In progress: chat → document flow (S1), branch `feat/chat-document-flow`

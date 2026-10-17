@@ -13,6 +13,7 @@ Make a page people interact with, such as a shipping calculator, a size guide, a
 - **Changes**, such as "add express shipping" or "make the button say Calculate", make a new version of the same page.
 
 ## Layout rules
+- **Formats:** which formats this can be exported to is listed in [formats.json](../formats.json) under `kinds.published_page`, closest first. Offer only formats listed there as supported or planned. If the person names one that isn't, say so and offer the closest ones listed.
 - **One job per page,** with a title that names it, like "Shipping cost calculator".
 - **Inputs:**
   - Each input has a visible label, sensible defaults and plain error messages ("Enter a weight in kg").

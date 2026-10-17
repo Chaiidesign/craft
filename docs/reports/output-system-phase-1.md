@@ -207,3 +207,38 @@ The model read the rule correctly both times. What differs is the label: it call
 1. **Accept a chat reply for the closest-format cases.** Set r33 and r34 to expect `["ask", "chat_reply"]`. Saying so and offering another format is a short chat reply that ends in an offer, which is what the prompt asks for. This is the smallest fix.
 2. **Or make it a separate outcome.** A harness choice such as `offer_other_format` would be scored on its own, so "can't do that format" is measured rather than folded into chat replies. The prompt would also need a matching action, which is more machinery than the rule may need.
 3. **Tell the model which formats each kind exports.** The prompt never says which formats each kind can export, so the model inferred that an ad can't be Excel. That inference is easy here, but borderline cases ("the dashboard as a PDF") will vary. A short list in the prompt or in each guide would settle it.
+
+## Prompt version 4 (D-75, D-76), 2026-10-17
+
+**What changed:**
+- **New action:** the named-format rule now names `show_format_options`. The harness scores it as its own outcome, `format_not_supported`.
+- **r33 and r34** now expect that outcome. They changed because the outcome was added, not because of the version 3 results (D-76).
+- **`formats.json`** is generated from the engine's export table, and the guides point to it. The prompt doesn't.
+- **`system-prompt.md` is now the source of truth** (D-75), and `plan.md` carries a note saying so.
+
+**Setup:**
+- Model: OpenRouter, requested `anthropic/claude-opus-5.5`, and the replies came from `anthropic/claude-opus-5.5`.
+- Effort medium.
+- Prompt hash `f368cc732b1b`, test instruction `59dd7b3f2ce6`.
+
+**Version 4 scores,** reported separately from versions 1 to 3:
+
+| Run | Original 30 | r31–r34 | All 34 |
+|---|---|---|---|
+| `2026-10-17T09-02-35-v4-run1` | **30 / 30** | 4 / 4 | **34 / 34** |
+| `2026-10-17T09-03-04-v4-run2` | **30 / 30** | 4 / 4 | **34 / 34** |
+| `2026-10-17T09-03-32-v4-run3` | **30 / 30** | 4 / 4 | **34 / 34** |
+
+**No misses.** r33 and r34 chose `format_not_supported` every time. Run 3's reasons:
+- r33: "an Instagram ad design can't be exported as Excel, so I'd say so and offer the closest formats"
+- r34: "an interactive page, which can't be exported as PowerPoint, so the rule is to say so and offer the closest formats"
+
+### What this does and doesn't show
+
+- **The version 3 misses were about labelling.** The model's behaviour on r33 and r34 was the same in version 3. What changed is that it now has a choice that names that behaviour. This is a better measure, not better routing.
+- **`formats.json` isn't tested by this harness.** The routing test sends only the prompt, never the guides or the formats list. So the model still decided for itself that an ad can't be Excel. Both cases here are obvious ones. Borderline ones, like "the dashboard as a PDF", depend on Souvenir reading the guide and `formats.json`. That gets tested in Phase 2, when guides are loaded for real.
+- **The 34 requests are now well known to this prompt.** The held-out set is still the real measure.
+
+### Proposed fixes (not applied)
+
+There were no misses. One gap: the harness could send the matching guide and `formats.json` along with the prompt, and include a borderline format request ("the weekly dashboard as a PDF"). That would test the formats list itself. It belongs with Phase 2, when guides are loaded for real.

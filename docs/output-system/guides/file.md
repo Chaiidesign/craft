@@ -11,9 +11,10 @@ Make a file straight from data: a raw export of store data (orders as Excel, pro
 - **Uploaded files:** a change to a file the person shared, such as "fix the prices in my uploaded price list" or "clean up this CSV". The result is the same kind of file, changed.
 - **A named format alone doesn't make it a file.** "Purchase order as a PDF" is a strict document, "campaign plan as Word" a composed document and "the deck as PowerPoint" a design. Each is made as its own kind, then exported in that format, so it keeps its layout and exact figures.
 - **"Make it a PDF"** about something already made exports its current version. That belongs to the kind it was made as, not to this guide.
-- **A format a kind can't be exported in:** say so in one line and offer the closest format. For example, "Dashboards stay live at their link; I can give you this week's numbers as a PDF instead."
+- **A format a kind can't be exported in:** say so in one line and offer the closest formats from [formats.json](../formats.json). They are shown as a card with those formats to choose from. For example, "An ad can't be a spreadsheet. I can give it to you as an image or a PDF."
 
 ## Layout rules
+- **Formats:** which formats this can be exported to is listed in [formats.json](../formats.json) under `kinds.file`, closest first. Offer only formats listed there as supported or planned. If the person names one that isn't, say so and offer the closest ones listed.
 - **Name:** says what it is and when, such as "Orders, September 2026.xlsx" or "Invoice INV-0042, Bloom & Co.pdf". No random strings.
 - **File card:** the card shows the name, the format and the size, with download as the main action. The chat reply doesn't repeat the link. This applies to every file Souvenir delivers, including documents and designs exported in a named format.
 - **Documents (PDF, Word):**

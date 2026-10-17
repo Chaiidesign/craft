@@ -13,6 +13,7 @@ Give a quick look at numbers inside the conversation, such as sales by week or t
 - Charts inside a report belong to that composed document, not to the chat.
 
 ## Layout rules
+- **Formats:** which formats this can be exported to is listed in [formats.json](../formats.json) under `kinds.inline_chart`, closest first. Offer only formats listed there as supported or planned. If the person names one that isn't, say so and offer the closest ones listed.
 - **One chart, one question.** Choose the chart from what the question compares:
   - a bar chart for comparing categories or a handful of periods
   - a line for a trend over many periods

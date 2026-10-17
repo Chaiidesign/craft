@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 
 import { coverage, isRight, lastMade, loadPrompt, parseEvalSet, EvalSetError, type EvalRequest } from './evals'
 import { ACTIONS, LANES, outcomeOf } from './lanes'
+import { outputFormatsJson } from './formats'
 import { outputTokensJson } from './tokens'
 import { findForbiddenWords } from './words'
 
@@ -56,6 +57,14 @@ describe('scoring', () => {
     expect(isRight(r, outcomeOf('update_existing', lastMade(r)))).toBe(true)
   })
 
+  it('scores format-not-supported as its own outcome', () => {
+    const r: EvalRequest = { ...base, expected: ['format_not_supported'] }
+    expect(outcomeOf('show_format_options', undefined)).toBe('format_not_supported')
+    expect(isRight(r, 'format_not_supported')).toBe(true)
+    expect(isRight(r, 'ask')).toBe(false)
+    expect(isRight(r, 'chat_reply')).toBe(false)
+  })
+
   it('maps an export to the lane of the last thing made, and keeps it apart from an update', () => {
     const r: EvalRequest = {
       ...base,
@@ -70,7 +79,7 @@ describe('scoring', () => {
   })
 
   it('has one action per lane', () => {
-    const targets = Object.values(ACTIONS).filter((t) => t !== 'ask' && t !== 'update' && t !== 'export')
+    const targets = Object.values(ACTIONS).filter((t) => !['ask', 'update', 'export', 'format_not_supported'].includes(t))
     expect([...targets].sort()).toEqual([...LANES].sort())
   })
 })
@@ -93,6 +102,21 @@ describe('system prompt', () => {
 describe('tokens.json', () => {
   it('matches what the document engine renders (regenerate with scripts/output-system/build-tokens.ts)', () => {
     expect(read('tokens.json')).toBe(outputTokensJson())
+  })
+})
+
+describe('formats.json', () => {
+  it('matches the engine\'s export capabilities (regenerate with scripts/output-system/build-formats.ts)', () => {
+    expect(read('formats.json')).toBe(outputFormatsJson())
+  })
+
+  it('lists every kind, and marks kinds without code as planned', () => {
+    const formats = JSON.parse(read('formats.json'))
+    expect(Object.keys(formats.kinds).sort()).toEqual([...LANES].sort())
+    expect(formats.kinds.strict_document.status).toBe('built')
+    expect(formats.kinds.dashboard.status).toBe('planned')
+    const invoice = formats.kinds.strict_document.built.exports
+    expect(invoice.find((e: { format: string }) => e.format === 'pptx').supported).toBe(false)
   })
 })
 

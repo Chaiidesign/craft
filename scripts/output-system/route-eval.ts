@@ -51,6 +51,7 @@ Choose action from: ${Object.keys(ACTIONS).join(', ')}.
 - ask_question: you would ask the person one question before making anything; put the question in question.
 - update_existing: you would update something already made in this conversation as a new version.
 - export_version: you would export something already made in this conversation in a format, without changing it.
+- show_format_options: you would tell the person it can't be made in the format they named, and offer the closest formats.
 - Any other action: the action named in the instructions above that you would use first.`
 
 const REPORT_TOOL: Anthropic.Tool = {
@@ -199,6 +200,7 @@ async function main() {
     if (isLane(o)) return LANE_LABELS[o]
     const acted = o.match(/^(update|export):(.+)$/)
     if (acted && isLane(acted[2])) return `${acted[1] === 'update' ? 'Update' : 'Export'} (${LANE_LABELS[acted[2]]})`
+    if (o === 'format_not_supported') return 'Format not supported (offer closest)'
     return o === 'ask' ? 'Ask a question' : o
   }
   const cell = (s: string) => s.replace(/\|/g, '\\|').replace(/\n/g, ' ')

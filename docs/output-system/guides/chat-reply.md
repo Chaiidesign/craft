@@ -18,6 +18,7 @@ Answer a question, explain something, or give a short piece of copy, directly in
 - **Upgrading later:** if the person later says "share this", "share this with my team" or "make it a document", the reply becomes a composed document. It is not a message card, and it is not a second answer.
 
 ## Layout rules
+- **Formats:** which formats this can be exported to is listed in [formats.json](../formats.json) under `kinds.chat_reply`, closest first. Offer only formats listed there as supported or planned. If the person names one that isn't, say so and offer the closest ones listed.
 - **Lead with the answer** in the first sentence. Reasons come after it.
 - **Short:** one to four short paragraphs, or a list of up to seven items. Anything longer is probably writing to keep, so offer a document.
 - **Lists and emphasis:** use a list only when the items are parallel. Bold at most one phrase per paragraph.

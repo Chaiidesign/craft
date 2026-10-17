@@ -18,6 +18,8 @@ One guide for each kind of thing Souvenir makes. Souvenir reads the matching gui
 
 **Words.** Guides use the concept map's words: *document*, *version*, *file*, *Missing*. Every line here can end up in front of the person, so a test fails if a guide uses a word that describes Souvenir's insides, or a name the concept map rejected. The full lists are in `src/lib/output-system/words.ts`. Say "Souvenir", not the name of a machine part. Say "version", never another word for it. Use "draft" only as a verb ("draft the email") or a status ("Draft"), never as the name of the thing made.
 
+**Formats.** [formats.json](../formats.json) lists which formats each kind of thing can be exported to, closest first. It is generated from the document engine's export table. Kinds with no code yet are marked planned. Guides point to it instead of listing formats themselves.
+
 **Look.** Sizes and colours come from [tokens.json](../tokens.json), which is read from the document engine. Guides refer to tokens by name ("body text", "neutral ink"). They don't restate numbers, so a guide can't drift from what is rendered. Font families are placeholders until the final pick, so guides name the four type roles instead:
 - **voice** is for reading text
 - **display** is for titles

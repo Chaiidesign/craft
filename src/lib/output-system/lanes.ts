@@ -31,10 +31,16 @@ export const LANE_LABELS: Record<Lane, string> = {
 }
 
 /**
- * What the model can say it would do first. Every lane has one action; two
- * more are not lanes: asking one question (allowed only when the format is
- * truly open) and updating something already made as a new version (router
- * step 1), which keeps the lane of the thing it updates.
+ * What the model can say it would do first. Every lane has one action; four
+ * more are not lanes:
+ * - asking one question (allowed only when the format is truly open);
+ * - updating something already made as a new version (router step 1);
+ * - exporting something already made in a named format without changing it
+ *   ("make it a PDF", router step 1 since D-72; named export_version, D-74);
+ * - saying the named format isn't possible for that kind and offering the
+ *   closest formats (D-76). The app will show this as a card, so it is
+ *   scored as its own outcome.
+ * Updates and exports keep the lane of the thing they act on.
  */
 export const ACTIONS = {
   reply_in_chat: 'chat_reply',
@@ -49,12 +55,13 @@ export const ACTIONS = {
   ask_question: 'ask',
   update_existing: 'update',
   export_version: 'export',
-} as const satisfies Record<string, Lane | 'ask' | 'update' | 'export'>
+  show_format_options: 'format_not_supported',
+} as const satisfies Record<string, Lane | 'ask' | 'update' | 'export' | 'format_not_supported'>
 
 export type Action = keyof typeof ACTIONS
 
 /** A routing result: a lane, "ask", "update:<lane>" or "export:<lane>" (the lane of the thing acted on). */
-export type Outcome = Lane | 'ask' | `update:${Lane}` | `export:${Lane}` | 'update:unknown' | 'export:unknown' | 'unparsed'
+export type Outcome = Lane | 'ask' | 'format_not_supported' | `update:${Lane}` | `export:${Lane}` | 'update:unknown' | 'export:unknown' | 'unparsed'
 
 export function isLane(value: unknown): value is Lane {
   return typeof value === 'string' && (LANES as readonly string[]).includes(value)
@@ -81,7 +88,7 @@ export function laneOf(outcome: Outcome): Lane | undefined {
 
 export function isOutcome(value: unknown): value is Outcome {
   if (typeof value !== 'string') return false
-  if (value === 'ask' || value === 'unparsed' || value === 'update:unknown' || value === 'export:unknown') return true
+  if (value === 'ask' || value === 'format_not_supported' || value === 'unparsed' || value === 'update:unknown' || value === 'export:unknown') return true
   const m = value.match(/^(update|export):(.+)$/)
   return isLane(value) || (m !== null && isLane(m[2]))
 }

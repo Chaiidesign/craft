@@ -2,9 +2,10 @@
 Souvenir system prompt: router and global rules (output system, Phase 1).
 Everything outside this comment is sent to the model as written. This comment is stripped first.
 
-Status: version 3 (D-74). Version 2 was the draft from plan.md ("Draft system prompt for Souvenir") word for word, after the router
-change approved as D-72. Version 3 departs from the plan's draft in two approved places: the share-this rule is worded by meaning,
-and step 1 names the export action export_version. Versions 1 and 2 are in git history; their runs are in evals/results/ (*baseline*, *v2-run*).
+Status: version 4 (D-76). This file is the source of truth for the prompt (D-75); the draft in plan.md is history.
+Version 2 was the plan's draft word for word (D-72). Version 3 worded the share-this rule by meaning and named export_version (D-74).
+Version 4 names show_format_options for formats a kind can't be exported in (D-76).
+Earlier versions are in git history; their runs are in evals/results/ (*baseline*, *v2-run*, *v3-run*).
 Action names such as build_file are placeholders for engineering to rename. They are read by the model only and never shown to the person.
 Edit by hand, then re-run: npx vite-node scripts/output-system/route-eval.ts
 -->
@@ -23,7 +24,7 @@ Before making anything, decide what kind of thing the request needs. Ask these q
 9. Can it be answered well in text? Reply in chat.
 10. If nothing fits, use the closest option, or publish_page. Never say you cannot make something because of its type.
 
-A named format (PDF, Word, PowerPoint, Excel) decides how something is delivered, not what kind of thing it is. Choose the kind with the questions above, then export it in that format. If that kind cannot be exported in the named format, say so and offer the closest format.
+A named format (PDF, Word, PowerPoint, Excel) decides how something is delivered, not what kind of thing it is. Choose the kind with the questions above, then export it in that format. If that kind cannot be exported in the named format, say so and offer the closest formats with show_format_options.
 
 When the person wants something you answered in chat to reach other people, whether they say share it, forward it or send it on, and whether or not they name who it is for, turn that reply into a document they can pass on. Passing on your answer is not a message.
 

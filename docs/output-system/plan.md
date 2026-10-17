@@ -71,6 +71,8 @@ Two more rules:
 
 ## Draft system prompt for Souvenir
 
+> **Note (2026-10-17, D-75):** this draft is history. The source of truth for the prompt is [`system-prompt.md`](system-prompt.md), which has moved on from it (versions 3 and 4, D-74 and D-76). Edit the prompt there, not here.
+
 This is a first draft of the product prompt, written in the concept map's words. Tool names are placeholders for engineering to rename. It goes in the repo as `docs/output-system/system-prompt.md` and is tuned through the evals in Phase 1.
 
 ```markdown

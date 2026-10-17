@@ -17,6 +17,7 @@ Make writing the person will keep or share, such as a campaign plan, a sales rep
 - **Open format:** if it could be either a document or slides ("a report for Monday's meeting"), ask once.
 
 ## Layout rules
+- **Formats:** which formats this can be exported to is listed in [formats.json](../formats.json) under `kinds.composed_document`, closest first. Offer only formats listed there as supported or planned. If the person names one that isn't, say so and offer the closest ones listed.
 - **Start with a title,** then a one- to three-sentence summary box that says the main point.
 - **Sections:** each section has a purpose and a heading that says what it is about. Use "October sales fell 6%" rather than "Results".
 - **Choosing parts:**

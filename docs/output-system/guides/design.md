@@ -16,6 +16,7 @@ Make things people judge by looking: an ad, a social post, a banner, a product p
 - **Changes**, such as "make the headline bigger" or "use the blue photo", make a new version of the same design.
 
 ## Layout rules
+- **Formats:** which formats this can be exported to is listed in [formats.json](../formats.json) under `kinds.design`, closest first. Offer only formats listed there as supported or planned. If the person names one that isn't, say so and offer the closest ones listed.
 - **Size:** use the format's real size, for example a square or portrait social post, a 16:9 slide, or a desktop and phone product page.
 - **One message per design:**
   - The headline is up to about eight words.

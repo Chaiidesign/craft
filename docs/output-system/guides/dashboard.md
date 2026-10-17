@@ -12,6 +12,7 @@ Make a page of numbers the person checks again and again, such as weekly sales o
 - **Changes**, such as "add returns to it" or "show last 12 weeks", make a new version of the same dashboard.
 
 ## Layout rules
+- **Formats:** which formats this can be exported to is listed in [formats.json](../formats.json) under `kinds.dashboard`, closest first. Offer only formats listed there as supported or planned. If the person names one that isn't, say so and offer the closest ones listed.
 - **Top row:** three to five headline numbers. Each one has:
   - its label
   - the value
