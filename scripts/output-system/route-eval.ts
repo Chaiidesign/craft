@@ -50,7 +50,7 @@ Choose action from: ${Object.keys(ACTIONS).join(', ')}.
 - reply_in_chat: you would answer in chat.
 - ask_question: you would ask the person one question before making anything; put the question in question.
 - update_existing: you would update something already made in this conversation as a new version.
-- export_existing: you would export something already made in this conversation in a format, without changing it.
+- export_version: you would export something already made in this conversation in a format, without changing it.
 - Any other action: the action named in the instructions above that you would use first.`
 
 const REPORT_TOOL: Anthropic.Tool = {

@@ -38,25 +38,29 @@ Updated 2026-10-17.
   - D-68 to D-70: proposed
   - D-72: router change, approved
   - D-73: guide rules beyond the plan, assumed
+  - D-74: prompt version 3, approved
   - D-71 is left for S1.
 - **Branch:** stacked on `feat/chat-document-flow` (D-68).
 
 **What works:**
-- the system prompt, version 2 (the updated plan's draft, word for word)
+- the system prompt, version 3: the updated plan's draft, with the share-this rule worded by meaning and `export_version` named (D-74)
 - `tokens.json`, generated from the engine
 - nine guides
-- 30 eval requests
+- 34 eval requests (the original 30, plus r31 to r34)
 - the routing harness: `npx vite-node scripts/output-system/route-eval.ts -- --env-file <path to .env.local>`
 - 30 tests in `src/lib/output-system/`
 
 **Scores:**
 - **Phase 1 baseline (prompt version 1):** 30, 29 and 29 of 30. The miss was r29.
 - **After D-72 (prompt version 2):** 30, 30 and 30 of 30. This is weak evidence, because the share-this rule quotes r29 (see the report).
+- **Prompt version 3:** the original 30 scored 30/30 in all three runs. The new four scored 2/4 each time. r33 and r34, the closest-format cases, were labelled as a chat reply rather than a question, but the model did what the rule asks.
 - **Gate:** at least 27 of 30, passed in every run.
 
+**Engineering item: progress labels use system words.** The real chat shows the app's own progress events while it works: "Running sandbox command", "Running tool", "Loading skill" (baseline run, `chore/doc-gen-baseline`). These labels don't come from the model, so the prompt can't fix them. Replace them in the app with the person's words, for example "Making your document" or "Checking your store data", before any lane ships.
+
 **Next:**
-- Chaitanya adds `evals/heldout.jsonl` (about 20 requests). Run it three times, and never tune against it.
-- Chaitanya decides on the four gap fixes in the report.
+- Chaitanya adds `evals/heldout.jsonl` (about 20 requests). Run it three times, never tune against it, and change nothing in it except to run it.
+- Chaitanya decides on the r33 and r34 fixes in the report, under "Prompt version 3".
 - Phase 2 does not start until the held-out set passes.
 
 ## In progress: chat → document flow (S1), branch `feat/chat-document-flow`

@@ -14,9 +14,9 @@ const read = (path: string) => readFileSync(join(DOCS, path), 'utf8')
 describe('eval set', () => {
   const set = parseEvalSet(read('evals/requests.jsonl'))
 
-  it('has 30 requests covering every lane, with at least 5 ambiguous', () => {
+  it('has 34 requests covering every lane, with at least 5 ambiguous', () => {
     const c = coverage(set)
-    expect(c.total).toBe(30)
+    expect(c.total).toBe(34)
     expect(c.missingLanes).toEqual([])
     expect(c.ambiguous).toBeGreaterThanOrEqual(5)
   })
@@ -62,8 +62,8 @@ describe('scoring', () => {
       expected: ['export:strict_document'],
       context: [{ role: 'person', text: 'invoice' }, { role: 'souvenir', text: 'made it', made: 'strict_document' }],
     }
-    expect(outcomeOf('export_existing', lastMade(r))).toBe('export:strict_document')
-    expect(outcomeOf('export_existing', undefined)).toBe('export:unknown')
+    expect(outcomeOf('export_version', lastMade(r))).toBe('export:strict_document')
+    expect(outcomeOf('export_version', undefined)).toBe('export:unknown')
     expect(isRight(r, 'export:strict_document')).toBe(true)
     expect(isRight(r, 'update:strict_document')).toBe(false)
     expect(isRight(r, 'file')).toBe(false)
@@ -84,7 +84,7 @@ describe('system prompt', () => {
   })
 
   it('names an action for every lane', () => {
-    for (const action of Object.keys(ACTIONS).filter((a) => !['reply_in_chat', 'ask_question', 'update_existing', 'export_existing'].includes(a))) {
+    for (const action of Object.keys(ACTIONS).filter((a) => !['reply_in_chat', 'ask_question', 'update_existing'].includes(a))) {
       expect(prompt, action).toContain(action)
     }
   })

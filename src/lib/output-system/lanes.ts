@@ -48,7 +48,7 @@ export const ACTIONS = {
   build_file: 'file',
   ask_question: 'ask',
   update_existing: 'update',
-  export_existing: 'export',
+  export_version: 'export',
 } as const satisfies Record<string, Lane | 'ask' | 'update' | 'export'>
 
 export type Action = keyof typeof ACTIONS

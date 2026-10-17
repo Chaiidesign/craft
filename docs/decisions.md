@@ -12,6 +12,23 @@ Status is **approved** unless marked otherwise. When a later decision replaces a
 
 The plan is [output-system/plan.md](output-system/plan.md) (Chaitanya, 2026-10-17): nine output lanes, a ten-question router, one guide per lane, design tokens and an eval set, built in five gated phases. This branch is Phase 1 only. D-68 to D-70 were made during the build and are **proposed** until Chaitanya approves them. D-71 is left for S1's next decision.
 
+### D-74 · 2026-10-17 · Prompt version 3: share-this by meaning, `export_version`, four new requests
+**Status: approved** (Chaitanya, 2026-10-17, answering the four gap fixes in the Phase 1 report).
+
+**Rule.**
+- **Share-this by meaning.** The rule in `system-prompt.md` now reads: "When the person wants something you answered in chat to reach other people, whether they say share it, forward it or send it on, and whether or not they name who it is for, turn that reply into a document they can pass on. Passing on your answer is not a message."
+  - The aim is to cover phrasings like "forward this to Priya" without quoting any eval request.
+  - Prompt version 3 therefore departs from the plan's draft in this rule. `plan.md` is Chaitanya's and is not edited.
+- **Export action.** Router step 1 now names the export action: "'Make it a PDF' exports the current version with export_version."
+  - The harness choice `export_existing` is renamed `export_version` to match.
+  - The test instruction hash changes with it, to `3bf4e190a6d0`.
+- **System words stay out of the prompt.** Proposal 2, which would have listed tools, sandboxes and skills in "Words on screen", is **rejected**. Listing the words can prime the model to use them. "Running sandbox command" came from the app's progress events, not from the model. Replacing those labels is recorded in `progress.md` as an engineering item.
+- **New requests in `requests.jsonl`, r31 to r34.** The set now has 34 requests. Scores on the original 30 are still reported on their own.
+  - r31 and r32 are changes to uploaded files, expected to go to File.
+  - r33 and r34 test the closest-format rule: an ad as Excel, and a calculator page as PowerPoint. Both are expected to be one question.
+
+Applied in: `docs/output-system/system-prompt.md`, `docs/output-system/evals/requests.jsonl`, `src/lib/output-system/lanes.ts`, `scripts/output-system/route-eval.ts`.
+
 ### D-73 · 2026-10-17 · Guide rules that go beyond the plan are assumed
 **Status: assumed.** Chaitanya asked for these to be marked as assumptions, not decisions. They hold until the plan's open questions are answered, and each guide still states them as rules so it reads cleanly. Changing one means editing the guides it appears in and this entry.
 
